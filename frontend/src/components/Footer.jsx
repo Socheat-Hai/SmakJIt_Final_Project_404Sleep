@@ -14,7 +14,7 @@ const Footer = () => {
           <div>
             <h4 className="text-sm font-bold text-gray-200 mb-4 uppercase tracking-wider">Volunteer</h4>
             <div className="flex flex-col gap-2.5">
-              <Link to="/opportunities" className="text-gray-200 text-sm hover:text-brand-green">Opportunities</Link>
+              <Link to="/opportunities" className="text-gray-200 text-sm hover:text-brand-green">Category</Link>
               <Link to="/survey" className="text-gray-200 text-sm hover:text-brand-green">Interest Survey</Link>
               <Link to="/login" className="text-gray-200 text-sm hover:text-brand-green">Log In</Link>
             </div>
@@ -22,13 +22,14 @@ const Footer = () => {
           <div>
             <h4 className="text-sm font-bold text-gray-200 mb-4 uppercase tracking-wider">For Organizations</h4>
             <div className="flex flex-col gap-2.5">
-              <Link to="/role-selection" className="text-gray-200 text-sm hover:text-brand-green">Post Opportunities</Link>
+              <Link to="/role-selection" className="text-gray-200 text-sm hover:text-brand-green">Post Category</Link>
               <Link to="/register" className="text-gray-200 text-sm hover:text-brand-green">Partner With Us</Link>
             </div>
           </div>
           <div>
             <h4 className="text-sm font-bold text-gray-200 mb-4 uppercase tracking-wider">Support</h4>
             <div className="flex flex-col gap-2.5">
+              <Link to="/about" className="text-gray-200 text-sm hover:text-brand-green">About Us</Link>
               <span className="text-gray-200 text-sm hover:text-brand-green">Help Center</span>
               <a href="mailto:hello@smakjit.com" className="text-gray-200 text-sm hover:text-brand-green">Contact Us</a>
               <span className="text-gray-200 text-sm hover:text-brand-green">Privacy Policy</span>

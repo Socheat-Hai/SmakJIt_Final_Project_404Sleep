@@ -21,7 +21,7 @@ const Register = () => {
     try {
       const data = await authService.register(name, email, password, role);
       login(data.token, data.user);
-      navigate(role === 'volunteer' ? '/survey' : '/');
+      navigate(role === 'volunteer' ? '/survey' : '/opportunities');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {

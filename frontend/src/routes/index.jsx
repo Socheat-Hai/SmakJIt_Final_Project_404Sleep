@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 import Home from '../pages/Home';
+import AboutUs from '../pages/AboutUs';
 import Login from '../pages/Login';
 import RoleSelection from '../pages/RoleSelection';
 import Register from '../pages/Register';
@@ -25,6 +26,7 @@ const AppRoutes = () => {
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/about" element={<AboutUs />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/role-selection" element={<RoleSelection />} />
                 <Route path="/register" element={<Register />} />
