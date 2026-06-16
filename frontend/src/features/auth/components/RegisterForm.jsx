@@ -1,6 +1,4 @@
-import React from 'react';
-
-const RegisterForm: React.FC = () => {
+const RegisterForm = () => {
   return <div>RegisterForm</div>;
 };
 

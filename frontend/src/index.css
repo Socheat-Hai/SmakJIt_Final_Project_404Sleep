@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans font-normal text-gray-900 antialiased;
+    background: #F8F7F4;
+  }
+
+  a { @apply no-underline text-inherit; }
+  button { @apply font-sans cursor-pointer border-none bg-transparent; }
+  input, textarea, select { @apply font-sans font-normal; }
+  h1, h2, h3, h4, h5, h6 { @apply font-medium leading-tight; }
+  img { @apply max-w-full block; }
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-content mx-auto px-6;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3 rounded-sm text-[15px] font-medium transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-brand-green text-white;
+  }
+  .btn-primary:hover {
+    @apply bg-brand-green-dark;
+  }
+
+  .btn-secondary {
+    @apply bg-brand-purple text-white;
+  }
+  .btn-secondary:hover {
+    @apply bg-brand-purple-dark;
+  }
+
+  .btn-outline {
+    @apply border-2 border-brand-green text-brand-green bg-transparent;
+  }
+  .btn-outline:hover {
+    @apply bg-brand-green-light;
+  }
+
+  .btn-ghost {
+    @apply text-gray-600;
+  }
+  .btn-ghost:hover {
+    @apply text-gray-900 bg-gray-100;
+  }
+
+  .btn-lg { @apply px-9 py-3.5 text-base; }
+  .btn-sm { @apply px-[18px] py-2 text-[13px]; }
+  .btn-block { @apply w-full; }
+
+  .card {
+    @apply bg-white rounded shadow-[0_2px_12px_rgba(0,0,0,0.06)] p-6;
+  }
+
+  .input-group {
+    @apply flex flex-col gap-1.5;
+  }
+  .input-group label {
+    @apply text-sm font-medium text-gray-600;
+  }
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    @apply px-4 py-3 border-2 border-gray-200 rounded-sm text-[15px] bg-white transition-colors duration-200 outline-none;
+  }
+  .input-group input:focus,
+  .input-group select:focus,
+  .input-group textarea:focus {
+    @apply border-brand-green;
+  }
+
+  .form-error { @apply text-red-500 text-[13px]; }
+
+  .chip {
+    @apply inline-flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium cursor-pointer transition-all duration-200 border border-gray-300 text-gray-600 bg-white;
+  }
+  .chip:hover { @apply border-brand-green text-brand-green; }
+  .chip.active { @apply bg-brand-green text-white border-brand-green; }
+
+  .section { @apply py-20; }
+  .section-label { @apply text-[13px] font-medium text-brand-green uppercase tracking-wider mb-3; }
+  .section-title { @apply text-4xl font-medium mb-4 text-gray-900; }
+  .section-subtitle { @apply text-[17px] text-gray-500 max-w-[600px] leading-relaxed; }
+}
+
+@layer utilities {
+  .grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  .grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+}

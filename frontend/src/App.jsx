@@ -1,7 +1,6 @@
-import React from 'react';
 import AppRoutes from './routes';
 
-const App: React.FC = () => {
+const App = () => {
   return <AppRoutes />;
 };
 
