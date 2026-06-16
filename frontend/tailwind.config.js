@@ -15,7 +15,10 @@ export default {
         },
       },
       fontFamily: {
+        'irish': ['"Irish Grover"', 'cursive'],
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+
+  
       },
       borderRadius: {
         DEFAULT: '12px',

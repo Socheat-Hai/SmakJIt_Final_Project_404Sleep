@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Navbar = () => {
+const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,7 +15,7 @@ const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-[100]">
       <div className="container-custom flex items-center justify-between h-16">
-        <Link to="/" className="text-[22px] font-medium text-brand-green tracking-tight">
+        <Link to="/" className="text-[22px] font-irish text-4xl font-bold text-brand-green tracking-tight">
           SmakJit
         </Link>
 
@@ -51,4 +51,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Header;
