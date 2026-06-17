@@ -57,7 +57,7 @@ const Register = () => {
       const payload = { name: `${firstName} ${lastName}`, email, password, role };
       const data = await authService.register(payload);
       login(data.token, data.user);
-      navigate('/survey');
+      navigate(role === 'volunteer' ? '/survey' : '/opportunities');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
