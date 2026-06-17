@@ -7,15 +7,13 @@ const allOpportunities = [
   { id: 1, title: 'Community Garden Volunteer', org: 'Green Earth Initiative', category: 'Environment', location: 'Downtown Area', date: 'Flexible', spots: 12, description: 'Help maintain and grow our community garden. Tasks include planting, watering, weeding, and harvesting fresh produce for local food banks.', applicants: 8 },
   { id: 2, title: 'Math Tutor for Teens', org: 'Teach For Tomorrow', category: 'Education', location: 'Online', date: 'Weekdays', spots: 5, description: 'Provide one-on-one math tutoring to high school students. Subjects include algebra, geometry, and calculus.', applicants: 3 },
   { id: 3, title: 'Health Screening Assistant', org: 'HealthBridge', category: 'Healthcare', location: 'Community Center', date: 'Sat, Jun 20', spots: 8, description: 'Assist with community health screening events. Take vitals, register patients, and provide health education materials.', applicants: 6 },
-  { id: 4, title: 'Animal Shelter Caretaker', org: 'Paws & Claws Rescue', category: 'Animal Welfare', location: 'North Side Shelter', date: 'Flexible', spots: 3, description: 'Care for rescued animals. Duties include feeding, cleaning enclosures, walking dogs, and socializing with cats.', applicants: 10 },
-  { id: 5, title: 'Art Workshop Assistant', org: 'Creative Minds', category: 'Arts & Culture', location: 'Art Center', date: 'Weekends', spots: 6, description: 'Assist with children and adult art workshops. Help set up materials, guide participants, and clean up.', applicants: 4 },
-  { id: 6, title: 'Community Clean-Up Lead', org: 'Green Earth Initiative', category: 'Environment', location: 'Various Parks', date: 'Jun 25', spots: 20, description: 'Lead community clean-up events. Coordinate volunteers, distribute supplies, and ensure proper waste sorting.', applicants: 12 },
-  { id: 7, title: 'Senior Companion Program', org: 'Golden Years Foundation', category: 'Elderly Care', location: 'Senior Center', date: 'Flexible', spots: 10, description: 'Visit and engage with seniors. Play games, read books, or simply have meaningful conversations.', applicants: 5 },
-  { id: 8, title: 'Youth Soccer Coach', org: 'Active Kids Alliance', category: 'Sports', location: 'City Park Field', date: 'Sat & Sun', spots: 4, description: 'Coach youth soccer for ages 8-12. Teach fundamentals, sportsmanship, and teamwork.', applicants: 7 },
-  { id: 9, title: 'Food Bank Sorters', org: 'Community Food Network', category: 'Food', location: 'Food Bank Warehouse', date: 'Flexible', spots: 15, description: 'Sort, organize, and pack donated food items for distribution to families in need.', applicants: 9 },
+  { id: 4, title: 'Community Clean-Up Lead', org: 'Green Earth Initiative', category: 'Environment', location: 'Various Parks', date: 'Jun 25', spots: 20, description: 'Lead community clean-up events. Coordinate volunteers, distribute supplies, and ensure proper waste sorting.', applicants: 12 },
+  { id: 5, title: 'Coding Workshop Mentor', org: 'Tech for Good', category: 'Technology', location: 'Online', date: 'Weekends', spots: 8, description: 'Mentor beginners through introductory coding workshops in Python and web development. No prior teaching experience required.', applicants: 6 },
+  { id: 6, title: 'App Testing Volunteer', org: 'Digital Inclusion Lab', category: 'Technology', location: 'Downtown Hub', date: 'Flexible', spots: 10, description: 'Test new accessibility apps and provide feedback to developers to make technology more inclusive for all users.', applicants: 4 },
+  { id: 7, title: 'IT Support for Seniors', org: 'Silver Tech Bridge', category: 'Technology', location: 'Senior Center', date: 'Tue & Thu', spots: 5, description: 'Help seniors learn to use smartphones, tablets, and computers. Guide them through video calls, emails, and online safety.', applicants: 7 },
 ];
 
-const categories = ['All', 'Education', 'Environment', 'Healthcare', 'Animal Welfare', 'Arts & Culture', 'Elderly Care', 'Sports', 'Food'];
+const categories = ['All', 'Education', 'Environment', 'Healthcare', 'Technology'];
 
 const Opportunities = () => {
   const [search, setSearch] = useState('');

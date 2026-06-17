@@ -6,9 +6,11 @@ import Footer from '../components/Footer';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 import Home from '../pages/Home';
+import About from '../pages/About';
 import Login from '../pages/Login';
 import RoleSelection from '../pages/RoleSelection';
 import Register from '../pages/Register';
+import OrganizationDetails from '../pages/OrganizationDetails';
 import InterestSurvey from '../pages/InterestSurvey';
 import Opportunities from '../pages/Opportunities';
 import OpportunityDetail from '../pages/OpportunityDetail';
@@ -25,9 +27,11 @@ const AppRoutes = () => {
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/role-selection" element={<RoleSelection />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/register/organization-details" element={<OrganizationDetails />} />
                 <Route path="/survey" element={
                   <ProtectedRoute><InterestSurvey /></ProtectedRoute>
                 } />

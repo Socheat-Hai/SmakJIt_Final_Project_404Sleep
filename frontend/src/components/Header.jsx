@@ -20,6 +20,8 @@ const Header = () => {
         </Link>
 
         <div className="flex items-center gap-2">
+          <Link to="/" className="btn btn-ghost btn-sm">Home</Link>
+          <Link to="/about" className="btn btn-ghost btn-sm">About</Link>
           <Link to="/opportunities" className="btn btn-ghost btn-sm">Opportunities</Link>
 
           {user ? (
