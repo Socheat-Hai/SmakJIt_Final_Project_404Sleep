@@ -23,7 +23,7 @@ const Login = () => {
       if (location.state?.from?.pathname) {
         navigate(from, { replace: true });
       } else {
-        navigate(data.user?.role === 'organization' ? '/' : '/opportunities', { replace: true });
+        navigate(data.user?.user_type === 'organization' ? '/' : '/opportunities', { replace: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');

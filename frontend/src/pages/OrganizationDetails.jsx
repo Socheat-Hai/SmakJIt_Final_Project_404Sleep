@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../features/auth/services/authService';
+import { orgService } from '../services/orgService';
 
 const focusAreas = ['Education', 'Technology', 'Human Right', 'Women and Girls'];
 
@@ -44,25 +45,24 @@ const OrganizationDetails = () => {
     setLoading(true);
     try {
       const payload = {
-        firstName: step1.firstName,
-        lastName: step1.lastName,
         name: `${step1.firstName} ${step1.lastName}`,
         email: step1.email,
         password: step1.password,
         role: 'organization',
-        orgName: step1.orgName,
-        orgType: step1.orgType,
-        website: step1.website,
-        mission,
-        province,
-        focusAreas: focusAreasSelected,
-        orgSize,
-        yearFounded: Number(yearFounded),
-        facebook,
-        linkedin,
       };
       const data = await authService.register(payload);
       login(data.token, data.user);
+
+      if (data.user) {
+        await orgService.register({
+          name: step1.orgName,
+          email: step1.email,
+          bio: mission,
+          address: province,
+          website: step1.website,
+        });
+      }
+
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -75,7 +75,6 @@ const OrganizationDetails = () => {
     <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#F8F7F4' }}>
       <div className="card w-full max-w-[520px] p-10">
         <Link to="/" className="block text-center mb-2">
-          <span className="text-[22px] text-4xl font-inknut" style={{ fontFamily: 'Inknut Antiqua' }}>Welcome to </span>
           <span className="text-[22px] font-irish text-4xl font-bold text-brand-green tracking-tight">SmakJit</span>
         </Link>
 

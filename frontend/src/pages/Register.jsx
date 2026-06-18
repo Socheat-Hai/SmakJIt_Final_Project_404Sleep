@@ -83,7 +83,6 @@ const Register = () => {
           <span className="text-[22px] font-irish text-4xl font-bold text-brand-green tracking-tight">SmakJit</span>
         </Link>
 
-
         <h2 className="text-lg font-medium mb-2">Create your account</h2>
         <p className="text-gray-500 text-sm mb-8">
           {role === 'volunteer' ? 'Find opportunities that match your skills' : 'Post opportunities and find volunteers'}

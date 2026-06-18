@@ -45,7 +45,9 @@ const Header = () => {
 
           {user ? (
             <>
-              <Link to="/survey" className="btn btn-ghost btn-sm">Survey</Link>
+              {user.user_type === 'organization' && (
+                <Link to="/org/applications" className="btn btn-ghost btn-sm">Dashboard</Link>
+              )}
               <Link to="/profile" className="w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center text-sm font-medium ml-2">
                 {user.name?.charAt(0).toUpperCase()}
               </Link>

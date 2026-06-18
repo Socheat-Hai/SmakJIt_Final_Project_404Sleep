@@ -1,109 +1,134 @@
 # Roadmap — 404Sleep
 
-## Phase 1: Backend Foundation (Current)
+## Phase 0: Backend Audit & Mongoose Removal (Completed)
+
+- [x] Removed MongoDB/Mongoose entirely — migrated User model to Prisma/MySQL
+- [x] Rewrote user.service.js, auth.controller.js, user.controller.js for Prisma
+- [x] Deleted `user.model.js`, `config/db.js`, removed `mongoose` from package.json
+- [x] Regenerated Prisma client with User model and FK relations to all child tables
+
+- [x] Fix `src/app.js` — removed undefined `adminRoute` reference (was not imported, would crash on startup)
+- [x] Create `src/lib/prisma.js` — Prisma client singleton (was missing, `adminRoute.js` required it)
+- [x] Fix `prisma/schema.prisma` — added `isSuspended` field to User model, `createdAt` to Organization model
+- [x] Fix `.env` — removed duplicate `JWT_SECRET` and `PORT` entries, cleaned up prisma-init comments
+- [x] Fix role mismatch — simplified to a flat admin model (`admin` is sole privileged role, not publicly registerable)
+
+## Phase 1: Backend Foundation (Completed)
 
 - [x] Express server setup with middleware (helmet, cors, morgan, JSON parser)
-- [x] MongoDB connection via Mongoose (`config/db.js`)
-- [x] Environment variables in `.env` (PORT, MONGO_URI, JWT_SECRET, NODE_ENV)
+- [x] MySQL database via Prisma ORM (single database — no more MongoDB/Mongoose)
+- [x] Environment variables in `.env`
 - [x] Global error handling middleware
 - [x] Logger utility (`utils/logger.js`)
-- [x] Directory structure: `routes/`, `controllers/`, `services/`, `models/`, `middleware/`
+- [x] Directory structure: `routes/`, `controllers/`, `services/`, `middleware/`, `lib/`
+- [x] Prisma schema with full data models (User, Organization, Project, Application, Survey, ContentReport, SavedProject)
+- [x] Prisma client singleton (`src/lib/prisma.js`)
 
-## Phase 2: Authentication & Authorization
+## Phase 2: Authentication & Authorization (Completed)
 
-- [ ] Install `bcryptjs` for password hashing
-- [ ] Create `auth.controller.js`, `auth.service.js`, `auth.routes.js`
-- [ ] `POST /api/auth/register` — hash password, create user, return JWT
-- [ ] `POST /api/auth/login` — verify credentials, return JWT
-- [ ] `GET /api/auth/profile` — return current user from token
-- [ ] Add role-based authorization middleware (`requireRole`)
-- [ ] Protect admin-only routes (e.g., `DELETE /api/users/:id`)
+- [x] User registration (`POST /api/auth/register`) — hashed passwords, JWT returned
+- [x] User login (`POST /api/auth/login`) — credential verification, JWT returned
+- [x] Profile endpoints (`GET/PUT /api/auth/profile`, `PUT /api/auth/password`)
+- [x] JWT auth middleware (`auth.middleware.js`)
+- [x] Role-based admin middleware (`requireAdmin.js` — `admin` role only)
+- [x] Admin routes with role guard (stats, org approval, user suspend)
 
-## Phase 3: Data Validation & Security
+## Phase 3: User & Organization Management (Completed)
 
-- [ ] Install `joi` or `express-validator` for request validation
-- [ ] Create validation schemas for auth & user input
-- [ ] Add validation middleware to routes
-- [ ] Rate limiting with `express-rate-limit`
-- [ ] Input sanitization & XSS protection
+- [x] User CRUD (`GET/POST/PUT/DELETE /api/users`)
+- [x] Organization self-registration (`POST /api/orgs/register`)
+- [x] Organization profile (`GET /api/orgs/:id`, `PUT /api/orgs/:id`, `GET /api/orgs/my`)
+- [x] Admin org approval workflow (`GET /api/admin/orgs/pending`, `PATCH approve/reject`)
+- [x] Admin user management (`GET /api/admin/users`, `PATCH suspend`)
 
-## Phase 4: Repository Layer (Separation of Concerns)
+## Phase 4: Opportunity Lifecycle (Completed)
 
-- [ ] Create `src/repositories/user.repository.js`
-- [ ] Move raw DB queries from services to repositories
-- [ ] Services call repositories instead of models directly
+- [x] Create opportunity (`POST /api/opportunities`) — title, description, skills, location, deadline
+- [x] List opportunities with search & filters (`GET /api/opportunities`)
+  - Search by title/description (`?search=`)
+  - Filter by skill (`?skill=`), location (`?location=`), organization (`?orgId=`)
+  - Pagination (`?page=&limit=`)
+- [x] Get opportunity details (`GET /api/opportunities/:id`)
+- [x] Update / delete opportunity (`PUT/DELETE /api/opportunities/:id`)
+- [x] Save / unsave opportunity (`POST/DELETE /api/opportunities/:id/save`)
+- [x] List saved opportunities (`GET /api/opportunities/saved`)
 
-## Phase 5: Main Resource CRUD (Products)
+## Phase 5: Application Lifecycle (Completed)
 
-- [ ] Create `Product` Mongoose model (`models/product.model.js`)
-- [ ] Create `product.repository.js`
-- [ ] Create `product.service.js`
-- [ ] Create `product.controller.js`
-- [ ] Create `product.routes.js` (CRUD + auth-protected)
-- [ ] Register product routes in `routes/index.js`
+- [x] Submit application (`POST /api/applications`) — with optional message
+- [x] List user's applications (`GET /api/applications/mine`)
+- [x] List applications for a project (`GET /api/applications/project/:projectId`)
+- [x] Accept / reject application (`PATCH /api/applications/:id/review`)
+- [x] Prevents duplicate applications (unique constraint on userId + projectId)
 
-## Phase 6: Additional Resources (Orders / Cart / etc.)
+## Phase 6: Surveys (Completed)
 
-- [ ] Create Order model, repository, service, controller, routes
-- [ ] Create Cart model, repository, service, controller, routes
-- [ ] Wire all routes into `routes/index.js`
+- [x] Create survey (`POST /api/surveys`) — title, description, questions (JSON)
+- [x] List surveys with response counts (`GET /api/surveys`)
+- [x] Get survey details with responses (`GET /api/surveys/:id`)
+- [x] Submit survey response (`POST /api/surveys/:id/respond`)
+- [x] Prevents duplicate responses (one response per user per survey)
 
-## Phase 7: Swagger API Documentation
+## Phase 7: Content Moderation (Completed)
 
-- [ ] Install `swagger-jsdoc` and `swagger-ui-express`
-- [ ] Define Swagger specification with JSDoc annotations on routes
-- [ ] Mount Swagger UI at `/api-docs`
-- [ ] Ensure all endpoints are documented with request/response schemas
-- [ ] Enable "Try it out" for testable requests
+- [x] Report content (`POST /api/moderation`) — targetType, targetId, reason, description
+- [x] List reports with optional status filter (`GET /api/moderation?status=`)
+- [x] Get report details (`GET /api/moderation/:id`)
+- [x] Review report — dismiss or resolve (`PATCH /api/moderation/:id/review`)
 
-## Phase 8: Error Handling & HTTP Status Codes
+## Phase 8: Admin Dashboard (Completed)
 
-- [ ] Create custom error classes (`AppError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`)
-- [ ] Refactor global error handler to use custom errors
-- [ ] Ensure all controllers return proper HTTP codes (200, 201, 400, 401, 403, 404, 500)
-- [ ] Add 404 catch-all for unknown routes
+- [x] Stats endpoint (`GET /api/admin/stats`) — total users, orgs, projects, applications
+- [x] Org approval workflow
+- [x] User management (list, suspend)
 
-## Phase 9: Testing
+## Phase 10: Frontend — Auth & Navigation (Completed)
 
-- [ ] Install testing framework (`jest` + `supertest`)
-- [ ] Write unit tests for services & repositories
-- [ ] Write integration tests for API endpoints
-- [ ] Add test script to `package.json`
+- [x] Vite + React + TailwindCSS + React Router setup with backend proxy
+- [x] Auth context (`AuthContext.jsx`) — JWT token management, profile fetch, login/logout
+- [x] Axios API service with interceptor (auto-attach Bearer token, handle 401)
+- [x] Login page — form validation, calls `POST /api/auth/login`, stores JWT
+- [x] Register page — form with validation, calls `POST /api/auth/register`
+- [x] Role selection page — pick volunteer or organization path
+- [x] Protected route wrapper — redirects to login if unauthenticated
+- [x] Header — nav links, search input, user avatar dropdown, login/signup CTA
+- [x] Footer — links to all sections, social placeholders
+- [x] Toast notification system
 
-## Phase 10: Frontend Integration — Setup & Auth
+## Phase 11: Frontend — Pages (Completed)
 
-- [ ] Create `index.html` (Vite requirement)
-- [ ] Create `vite.config.ts` with proxy to backend
-- [ ] Wire `AuthProvider` into the component tree (`main.tsx` / `App.tsx`)
-- [ ] Build out `LoginForm` (email, password, submit, error display)
-- [ ] Build out `RegisterForm` (name, email, password, confirm)
-- [ ] Create Login page & Register page with routing
-- [ ] Create protected route wrapper (`PrivateRoute` component)
-- [ ] Redirect to login if unauthenticated
-- [ ] Fix `authService.ts` to use shared `api.ts` instance
+- [x] Home page — hero, stats, category filter, opportunity cards, featured orgs, how-it-works
+- [x] About Us page — mission, story, values, team
+- [x] Opportunities listing page — category filter, search, pagination, save/unsave toggle (connected to API)
+- [x] Opportunity detail page — full info, skills, org bio, apply + save buttons (connected to API)
+- [x] Apply success page — confirmation with summary (uses navigation state)
+- [x] Profile page — account info, applications list, saved list, password change (all connected to API)
+- [x] Interest Survey page — fetch surveys from API, answer questions, submit response
+- [x] Organization registration page — two-step form with org details, calls auth + org APIs
+- [x] Organization dashboard — view applications per opportunity, accept/reject
+- [x] Create opportunity form — title, description, skills, location, deadline (calls POST /api/opportunities)
 
-## Phase 11: Frontend — Dashboard & Main Pages
+## Phase 12: Frontend — API Service Layer (Completed)
 
-- [ ] Create layout component (navbar, sidebar, main content area)
-- [ ] Create Dashboard page
-- [ ] Create Product list page (fetch & display products)
-- [ ] Create Product detail page
-- [ ] Create Order history page
-- [ ] Create Cart page
-- [ ] Create Profile/Account page
+- [x] `services/api.js` — shared Axios instance with auth interceptor
+- [x] `services/opportunityService.js` — list, getById, create, update, delete, save, unsave, getSaved
+- [x] `services/applicationService.js` — submit, getMine, getByProject, review
+- [x] `services/surveyService.js` — list, getById, create, respond
+- [x] `services/orgService.js` — register, getAll, getById, update
+- [x] `features/auth/services/authService.js` — login, register, getProfile, updateProfile, changePassword
+- [x] `utils/formatDate.js` — date formatting utility
 
-## Phase 12: Frontend — API Integration
+## Phase 13: Planned Improvements
 
-- [ ] Create `features/products/services/productService.ts`
-- [ ] Create `features/products/hooks/useProducts.ts`
-- [ ] Create `features/orders/services/orderService.ts`
-- [ ] Create `features/cart/services/cartService.ts`
-- [ ] Connect all pages to real API endpoints
-
-## Phase 13: Frontend — Polish & Deployment
-
-- [ ] Add loading states & error boundaries
-- [ ] Responsive design
-- [ ] Environment config for production API URL
-- [ ] Build & deploy frontend
-- [ ] Build & deploy backend
+- [ ] Admin dashboard frontend (manage users, orgs, content reports)
+- [x] Opportunity creation form for organizations (`/org/opportunities/new`)
+- [x] Application review UI for organizations (`/org/applications`)
+- [ ] Content moderation UI
+- [ ] Email notifications
+- [ ] File uploads (profile images, org logos)
+- [ ] Input validation (`joi` or `express-validator`)
+- [ ] Rate limiting (`express-rate-limit`)
+- [ ] Swagger API documentation
+- [ ] Custom error classes
+- [ ] Unit & integration tests (jest + supertest)
+- [ ] Password reset flow

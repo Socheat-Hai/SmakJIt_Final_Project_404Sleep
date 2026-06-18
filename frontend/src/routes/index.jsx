@@ -16,6 +16,8 @@ import Opportunities from '../pages/Opportunities';
 import OpportunityDetail from '../pages/OpportunityDetail';
 import ApplySuccess from '../pages/ApplySuccess';
 import Profile from '../pages/Profile';
+import CreateOpportunity from '../pages/CreateOpportunity';
+import OrgApplications from '../pages/OrgApplications';
 
 const AppRoutes = () => {
   return (
@@ -42,6 +44,12 @@ const AppRoutes = () => {
                 } />
                 <Route path="/profile" element={
                   <ProtectedRoute><Profile /></ProtectedRoute>
+                } />
+                <Route path="/org/applications" element={
+                  <ProtectedRoute><OrgApplications /></ProtectedRoute>
+                } />
+                <Route path="/org/opportunities/new" element={
+                  <ProtectedRoute><CreateOpportunity /></ProtectedRoute>
                 } />
               </Routes>
             </main>
