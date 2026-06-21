@@ -1,10 +1,20 @@
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+
+const allOpportunities = [
+  { id: 1, title: 'Community Garden Volunteer', org: 'Green Earth Initiative', date: 'Flexible', location: 'Downtown Area' },
+  { id: 2, title: 'Math Tutor for Teens', org: 'Teach For Tomorrow', date: 'Weekdays', location: 'Online' },
+  { id: 3, title: 'Health Screening Assistant', org: 'HealthBridge', date: 'Sat, Jun 20', location: 'Community Center' },
+  { id: 4, title: 'Animal Shelter Caretaker', org: 'Paws & Claws Rescue', date: 'Flexible', location: 'North Side Shelter' },
+  { id: 5, title: 'Art Workshop Assistant', org: 'Creative Minds', date: 'Weekends', location: 'Art Center' },
+  { id: 6, title: 'Community Clean-Up Lead', org: 'Green Earth Initiative', date: 'Jun 25', location: 'Various Parks' },
+  { id: 7, title: 'Senior Companion Program', org: 'Golden Years Foundation', date: 'Flexible', location: 'Senior Center' },
+  { id: 8, title: 'Youth Soccer Coach', org: 'Active Kids Alliance', date: 'Sat & Sun', location: 'City Park Field' },
+  { id: 9, title: 'Food Bank Sorters', org: 'Community Food Network', date: 'Flexible', location: 'Food Bank Warehouse' },
+];
 
 const ApplySuccess = () => {
   const { id } = useParams();
-  const location = useLocation();
-  const state = location.state;
-  const opp = state || {};
+  const opp = allOpportunities.find((o) => o.id === Number(id));
 
   return (
     <div className="py-20">
@@ -18,7 +28,7 @@ const ApplySuccess = () => {
           Your application has been received. The organization will review it and get back to you shortly.
         </p>
 
-        {opp.title && (
+        {opp && (
           <div className="card text-left mb-8 p-7">
             <h3 className="text-base font-medium mb-4">Application Summary</h3>
             <div className="flex flex-col gap-3">
@@ -41,9 +51,9 @@ const ApplySuccess = () => {
         <div className="bg-amber-50 rounded-xl p-5 mb-9 flex items-center gap-3 text-left">
           <span className="text-xl">✉️</span>
           <div>
-            <div className="text-sm font-medium mb-0.5">Application received</div>
+            <div className="text-sm font-medium mb-0.5">Check your email</div>
             <p className="text-[13px] text-gray-500">
-              The organization will review your application and respond. You can track your application status from your profile.
+              We've sent a confirmation to your email address. You'll also receive updates when the organization responds.
             </p>
           </div>
         </div>

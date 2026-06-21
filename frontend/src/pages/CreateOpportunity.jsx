@@ -1,40 +1,40 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../components/Toast';
+import { useNavigate } from 'react-router-dom';
 import { opportunityService } from '../services/opportunityService';
+import { useToast } from '../components/Toast';
+
+const categories = ['Education', 'Environment', 'Healthcare', 'Animal Welfare', 'Technology', 'Arts & Culture', 'Elderly Care', 'Sports', 'Food'];
 
 const CreateOpportunity = () => {
-  const { org } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [requirements, setRequirements] = useState('');
-  const [benefits, setBenefits] = useState('');
-  const [location, setLocation] = useState('');
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    location: '',
+    date: '',
+    spots: '',
+    requirements: '',
+    commitment: '',
+  });
   const [loading, setLoading] = useState(false);
+
+  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!org) {
-      showToast('No organization profile found. Please register your organization first.', 'error');
+    if (!form.title || !form.description || !form.category || !form.location || !form.date || !form.spots) {
+      showToast('Please fill in all required fields', 'error');
       return;
     }
     setLoading(true);
     try {
-      await opportunityService.create({
-        title,
-        description,
-        requirements,
-        benefits,
-        location,
-        org_id: org.org_id,
-      });
-      showToast('Opportunity created successfully!');
-      navigate('/org/applications');
+      await opportunityService.create({ ...form, spots: Number(form.spots) });
+      showToast('Opportunity posted successfully');
+      navigate('/my-opportunities');
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to create opportunity', 'error');
+      showToast(err.response?.data?.message || 'Failed to post opportunity', 'error');
     } finally {
       setLoading(false);
     }
@@ -42,64 +42,63 @@ const CreateOpportunity = () => {
 
   return (
     <div className="py-12">
-      <div className="container-custom max-w-[640px]">
-        <Link to="/org/applications" className="text-gray-500 text-sm inline-flex items-center gap-1.5 mb-6 hover:text-gray-700">
-          ← Back to dashboard
-        </Link>
+      <div className="container-custom max-w-[680px]">
+        <h1 className="text-2xl font-medium mb-2">Post an Opportunity</h1>
+        <p className="text-gray-500 text-sm mb-8">Fill in the details to create a new volunteer opportunity.</p>
 
-        <div className="card p-8">
-          <h2 className="text-2xl font-medium mb-2">Post a New Opportunity</h2>
-          <p className="text-gray-500 text-sm mb-8">
-            {org ? `Creating as ${org.name}` : 'Register your organization first'}
-          </p>
+        <form onSubmit={handleSubmit} className="card p-8 flex flex-col gap-5">
+          <div className="input-group">
+            <label>Title <span className="text-red-400">*</span></label>
+            <input type="text" value={form.title} onChange={update('title')} placeholder="e.g. Community Garden Volunteer" />
+          </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="input-group">
+            <label>Category <span className="text-red-400">*</span></label>
+            <select value={form.category} onChange={update('category')}>
+              <option value="">Select a category</option>
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Description <span className="text-red-400">*</span></label>
+            <textarea value={form.description} onChange={update('description')} rows={4} placeholder="Describe what volunteers will do..." />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="input-group">
-              <label>Title *</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Community Garden Volunteer" required />
+              <label>Location <span className="text-red-400">*</span></label>
+              <input type="text" value={form.location} onChange={update('location')} placeholder="e.g. Downtown Area" />
             </div>
-
             <div className="input-group">
-              <label>Description *</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe the opportunity, responsibilities, and impact"
-                rows={4}
-                required
-              />
+              <label>Date / Schedule <span className="text-red-400">*</span></label>
+              <input type="text" value={form.date} onChange={update('date')} placeholder="e.g. Flexible, Weekends" />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="input-group">
-              <label>Requirements</label>
-              <textarea
-                value={requirements}
-                onChange={(e) => setRequirements(e.target.value)}
-                placeholder="What skills or qualifications are needed?"
-                rows={2}
-              />
+              <label>Available Spots <span className="text-red-400">*</span></label>
+              <input type="number" min="1" value={form.spots} onChange={update('spots')} placeholder="e.g. 10" />
             </div>
-
             <div className="input-group">
-              <label>Benefits</label>
-              <textarea
-                value={benefits}
-                onChange={(e) => setBenefits(e.target.value)}
-                placeholder="What volunteers will gain from this experience"
-                rows={2}
-              />
+              <label>Commitment</label>
+              <input type="text" value={form.commitment} onChange={update('commitment')} placeholder="e.g. 2-4 hrs/week" />
             </div>
+          </div>
 
-            <div className="input-group">
-              <label>Location</label>
-              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Downtown Area, Online" />
-            </div>
+          <div className="input-group">
+            <label>Requirements</label>
+            <textarea value={form.requirements} onChange={update('requirements')} rows={3} placeholder="Any skills or requirements volunteers should know..." />
+          </div>
 
-            <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loading || !org}>
+          <div className="flex gap-3 pt-2">
+            <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
               {loading ? 'Posting...' : 'Post Opportunity'}
             </button>
-          </form>
-        </div>
+            <button type="button" onClick={() => navigate(-1)} className="btn btn-ghost btn-lg">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
   );

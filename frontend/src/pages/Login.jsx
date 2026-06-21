@@ -20,11 +20,7 @@ const Login = () => {
     try {
       const data = await authService.login(email, password);
       login(data.token, data.user);
-      if (location.state?.from?.pathname) {
-        navigate(from, { replace: true });
-      } else {
-        navigate(data.user?.user_type === 'organization' ? '/' : '/opportunities', { replace: true });
-      }
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {

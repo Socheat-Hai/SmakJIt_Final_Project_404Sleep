@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const stats = [
   { value: '12,000+', label: 'Volunteers' },
@@ -39,6 +40,7 @@ const opportunities = [
 ];
 
 const Home = () => {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState(null);
 
   const filteredOpportunities = activeCategory
@@ -59,7 +61,9 @@ const Home = () => {
             </p>
             <div className="flex gap-3 max-lg:justify-center">
               <Link to="/opportunities" className="btn btn-primary btn-lg">Browse Opportunities</Link>
-              <Link to="/role-selection" className="btn btn-outline btn-lg">Join Now</Link>
+              {!user && (
+                <Link to="/role-selection" className="btn btn-outline btn-lg">Join Now</Link>
+              )}
             </div>
           </div>
           <div className="flex-1 flex justify-center items-center">
