@@ -19,7 +19,7 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      const data = await authService.register(name, email, password, role);
+      const data = await authService.register({name, email, password, role});
       login(data.token, data.user);
       navigate(role === 'volunteer' ? '/survey' : '/');
     } catch (err) {

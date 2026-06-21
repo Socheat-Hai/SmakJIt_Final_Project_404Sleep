@@ -22,7 +22,9 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <Link to="/" className="btn btn-ghost btn-sm">Home</Link>
           <Link to="/about" className="btn btn-ghost btn-sm">About Us</Link>
-          <Link to="/opportunities" className="btn btn-ghost btn-sm">Opportunities</Link>
+          {user?.role !== 'organization' && (
+            <Link to="/opportunities" className="btn btn-ghost btn-sm">Opportunities</Link>
+          )}
 
           {user ? (
             <>
@@ -30,10 +32,13 @@ const Header = () => {
                 <Link to="/admin" className="btn btn-ghost btn-sm text-brand-purple font-medium">Admin</Link>
               )}
               {user.role === 'organization' && (
-                <Link to="/my-opportunities" className="btn btn-ghost btn-sm">My Opportunities</Link>
+                <Link to="/my-opportunities" className="btn btn-ghost btn-sm">My Postings</Link>
               )}
-              <Link to="/profile" className="w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center text-sm font-medium ml-2">
+              <Link to="/profile" className="relative w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center text-sm font-medium ml-2">
                 {user.name?.charAt(0).toUpperCase()}
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold uppercase bg-gray-900 text-white px-1.5 py-[1px] rounded-full whitespace-nowrap leading-tight">
+                  {user.role === 'organization' ? 'NGO' : user.role === 'admin' ? 'Admin' : 'Volunteer'}
+                </span>
               </Link>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm !text-red-500">
                 Logout

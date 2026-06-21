@@ -52,19 +52,36 @@ const Home = () => {
       <section className="py-[100px] max-md:py-16" style={{ background: 'linear-gradient(135deg, #e8f8f2 0%, #f0eeff 100%)' }}>
         <div className="container-custom flex items-center gap-[60px] max-lg:flex-col max-lg:text-center">
           <div className="flex-1">
-            <div className="section-label !text-brand-purple">Volunteer Matching Platform</div>
-            <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
-              Find volunteer opportunities that match your skills
-            </h1>
-            <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
-              Discover meaningful ways to give back. SmakJit connects passionate volunteers with organizations that need your unique talents.
-            </p>
-            <div className="flex gap-3 max-lg:justify-center">
-              <Link to="/opportunities" className="btn btn-primary btn-lg">Browse Opportunities</Link>
-              {!user && (
-                <Link to="/role-selection" className="btn btn-outline btn-lg">Join Now</Link>
-              )}
-            </div>
+            {user?.role === 'organization' ? (
+              <>
+                <div className="section-label !text-brand-purple">NGO Management Portal</div>
+                <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
+                  Connect with passionate volunteers for your mission
+                </h1>
+                <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
+                  Post opportunities, manage applicants, and grow your impact.
+                </p>
+                <div className="flex gap-3 max-lg:justify-center">
+                  <Link to="/my-opportunities" className="btn btn-primary btn-lg">Post an Opportunity</Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="section-label !text-brand-purple">Volunteer Matching Platform</div>
+                <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
+                  Find volunteer opportunities that match your skills
+                </h1>
+                <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
+                  Discover meaningful ways to give back. SmakJit connects passionate volunteers with organizations that need your unique talents.
+                </p>
+                <div className="flex gap-3 max-lg:justify-center">
+                  <Link to="/opportunities" className="btn btn-primary btn-lg">Browse Opportunities</Link>
+                  {!user && (
+                    <Link to="/role-selection" className="btn btn-outline btn-lg">Join Now</Link>
+                  )}
+                </div>
+              </>
+            )}
           </div>
           <div className="flex-1 flex justify-center items-center">
             <div className="w-[400px] max-md:w-[280px] h-[400px] max-md:h-[280px] rounded-full flex items-center justify-center text-[120px] max-md:text-7xl opacity-90"

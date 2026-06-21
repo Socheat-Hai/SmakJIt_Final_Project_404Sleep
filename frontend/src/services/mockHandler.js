@@ -1,12 +1,12 @@
 let users = [
   { _id: '1', name: 'John Volunteer', email: 'john@test.com', role: 'user', status: 'active', createdAt: '2025-01-15T10:00:00Z' },
-  { _id: '2', name: 'Green Earth Org', email: 'org@test.com', role: 'organization', status: 'active', verificationStatus: 'approved', createdAt: '2025-02-01T10:00:00Z' },
+  { _id: '2', name: 'Green Earth Org', email: 'org@test.com', role: 'organization', org_name: 'Green Earth Org', social_link: '', status: 'active', verificationStatus: 'approved', createdAt: '2025-02-01T10:00:00Z' },
   { _id: '3', name: 'Admin User', email: 'admin@test.com', role: 'admin', status: 'active', createdAt: '2024-12-01T10:00:00Z' },
-  { _id: '4', name: 'Teach For Tomorrow', email: 'teach@test.com', role: 'organization', status: 'active', verificationStatus: 'approved', createdAt: '2025-03-01T10:00:00Z' },
+  { _id: '4', name: 'Teach For Tomorrow', email: 'teach@test.com', role: 'organization', org_name: 'Teach For Tomorrow', social_link: '', status: 'active', verificationStatus: 'approved', createdAt: '2025-03-01T10:00:00Z' },
   { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com', role: 'user', status: 'active', createdAt: '2025-04-10T10:00:00Z' },
-  { _id: '6', name: 'Hope Foundation', email: 'hope@test.com', role: 'organization', status: 'active', verificationStatus: 'pending', createdAt: '2025-05-01T10:00:00Z' },
-  { _id: '7', name: 'Community Builders', email: 'build@test.com', role: 'organization', status: 'suspended', verificationStatus: 'pending', createdAt: '2025-05-10T10:00:00Z' },
-  { _id: '8', name: 'Care Alliance', email: 'care@test.com', role: 'organization', status: 'active', verificationStatus: 'rejected', createdAt: '2025-04-20T10:00:00Z' },
+  { _id: '6', name: 'Hope Foundation', email: 'hope@test.com', role: 'organization', org_name: 'Hope Foundation', social_link: '', status: 'active', verificationStatus: 'pending', createdAt: '2025-05-01T10:00:00Z' },
+  { _id: '7', name: 'Community Builders', email: 'build@test.com', role: 'organization', org_name: 'Community Builders', social_link: '', status: 'suspended', verificationStatus: 'pending', createdAt: '2025-05-10T10:00:00Z' },
+  { _id: '8', name: 'Care Alliance', email: 'care@test.com', role: 'organization', org_name: 'Care Alliance', social_link: '', status: 'active', verificationStatus: 'rejected', createdAt: '2025-04-20T10:00:00Z' },
 ];
 
 let nextUserId = 9;
@@ -35,7 +35,7 @@ let applications = [
   { _id: '7', opportunity: '4', opportunityTitle: 'Animal Shelter Caretaker', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I love animals and have experience with dogs and cats.', createdAt: '2025-05-01T10:00:00Z' },
 ];
 
-const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+const delay = (ms = 50) => new Promise((r) => setTimeout(r, ms));
 
 export const setMockToken = (token) => {
   localStorage.setItem('token', token);
@@ -86,7 +86,8 @@ export const mockHandler = async (config) => {
   if (method === 'post' && path === '/auth/register') {
     const body = typeof data === 'string' ? JSON.parse(data) : data;
     if (findUserByEmail(body.email)) { throw { response: { status: 400, data: { message: 'Email already in use' } } }; }
-    const newUser = { _id: String(nextUserId++), name: body.name, email: body.email, role: body.role === 'volunteer' ? 'user' : body.role || 'user', status: 'active', verificationStatus: body.role === 'organization' ? 'pending' : undefined, createdAt: new Date().toISOString() };
+    const orgFields = body.role === 'organization' ? { org_name: body.org_name || body.name, social_link: '' } : {};
+    const newUser = { _id: String(nextUserId++), name: body.name, email: body.email, role: body.role === 'volunteer' ? 'user' : body.role || 'user', status: 'active', verificationStatus: body.role === 'organization' ? 'pending' : undefined, ...orgFields, createdAt: new Date().toISOString() };
     users.push(newUser);
     const token = btoa(JSON.stringify({ id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }));
     setMockToken(token);

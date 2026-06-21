@@ -22,7 +22,7 @@ const skills = [
   { id: 'photography', label: 'Photography & Video', icon: '📷' },
 ];
 
-const tabs = [
+const allTabs = [
   { id: 'account', label: 'Account Info' },
   { id: 'interests', label: 'Interests' },
   { id: 'applications', label: 'Applications' },
@@ -36,6 +36,8 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('account');
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [orgName, setOrgName] = useState(user?.org_name || '');
+  const [socialLink, setSocialLink] = useState(user?.social_link || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [experienceBio, setExperienceBio] = useState('');
@@ -43,6 +45,15 @@ const Profile = () => {
   const [newSkill, setNewSkill] = useState('');
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
+      setOrgName(user.org_name || '');
+      setSocialLink(user.social_link || '');
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -62,6 +73,9 @@ const Profile = () => {
   }, [user?.id]);
 
   const userInterests = user?.interests || [];
+  const tabs = user?.role === 'organization'
+    ? allTabs.filter((t) => t.id !== 'interests' && t.id !== 'experience')
+    : allTabs;
 
   const addSkill = () => {
     const trimmed = newSkill.trim();
@@ -78,7 +92,12 @@ const Profile = () => {
   const handleSaveAccount = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.put('/auth/profile', { name, email });
+      const payload = { name, email };
+      if (user?.role === 'organization') {
+        payload.org_name = orgName;
+        payload.social_link = socialLink;
+      }
+      const res = await api.put('/auth/profile', payload);
       updateUser(res.data);
       showToast('Profile updated successfully');
     } catch {
@@ -130,6 +149,18 @@ const Profile = () => {
                 <label>Full Name</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
+              {user?.role === 'organization' && (
+                <>
+                  <div className="input-group">
+                    <label>Organization Name</label>
+                    <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
+                  </div>
+                  <div className="input-group">
+                    <label>Social Platform Link</label>
+                    <input type="url" value={socialLink} onChange={(e) => setSocialLink(e.target.value)} placeholder="https://facebook.com/your-org" />
+                  </div>
+                </>
+              )}
               <div className="input-group">
                 <label>Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
