@@ -1,15 +1,22 @@
 require('dotenv').config();
-const { PrismaClient } = require('@prisma/client');
-const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 
-const adapter = new PrismaMariaDb({
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+
+const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
 });
 
-const prisma = new PrismaClient({ adapter });
-console.log('PrismaClient created successfully');
+const prisma = new PrismaClient({
+  adapter,
+});
+
+console.log("PrismaClient created");
 
 prisma.$connect()
-  .then(() => console.log('Connected to database!'))
-  .catch(e => console.log('Error:', e.message.substring(0, 200)))
-  .finally(() => prisma.$disconnect());
+  .then(() => {
+    console.log("Connected to PostgreSQL!");
+  })
+  .catch((err) => {
+    console.log(err);
+  });

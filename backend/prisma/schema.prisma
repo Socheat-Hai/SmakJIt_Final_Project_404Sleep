@@ -3,7 +3,154 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
+}
+
+model User {
+  user_id       Int            @id @default(autoincrement())
+  full_name     String         @db.VarChar(255)
+  email         String         @unique @db.VarChar(255)
+  password_hash String         @db.VarChar(255)
+  user_type     UserType
+  status        UserStatus     @default(active)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  admin         Admin?
+  notifications Notification[]
+  organization  Organization?
+  volunteer     Volunteer?
+
+  @@map("users")
+}
+
+model Admin {
+  admin_id      Int            @id @default(autoincrement())
+  user_id       Int            @unique
+  name          String         @db.VarChar(255)
+  email         String         @db.VarChar(255)
+  dob           DateTime?      @db.Date
+  phone         String?        @db.VarChar(20)
+  gender        String?        @db.VarChar(50)
+  user          User           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  reviewed_orgs Organization[] @relation("AdminReviews")
+
+  @@map("admins")
+}
+
+model Organization {
+  org_id        Int           @id @default(autoincrement())
+  user_id       Int           @unique
+  reviewed_by   Int?
+  name          String        @db.VarChar(255)
+  contact_email String?       @db.VarChar(255)
+  contact_phone String?       @db.VarChar(20)
+  location      String?       @db.VarChar(255)
+  logo          String?       @db.VarChar(500)
+  description   String?
+  website       String?       @db.VarChar(500)
+  status        OrgStatus     @default(pending)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  opportunities Opportunity[]
+  reviewer      Admin?        @relation("AdminReviews", fields: [reviewed_by], references: [admin_id])
+  user          User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("organizations")
+}
+
+model Volunteer {
+  profile_id       Int              @id @default(autoincrement())
+  user_id          Int              @unique
+  phone_num        String?          @db.VarChar(20)
+  profile_photo    String?          @db.VarChar(500)
+  dob              DateTime?        @db.Date
+  location         String?          @db.VarChar(255)
+  gender           String?          @db.VarChar(50)
+  bio              String?
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  applications     Application[]
+  volunteer_skills VolunteerSkill[]
+  user             User             @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("volunteers")
+}
+
+model Skill {
+  skill_id           Int                @id @default(autoincrement())
+  skill_name         String             @unique @db.VarChar(255)
+  opportunity_skills OpportunitySkill[]
+  volunteer_skills   VolunteerSkill[]
+
+  @@map("skills")
+}
+
+model Opportunity {
+  opp_id             Int                @id @default(autoincrement())
+  org_id             Int
+  title              String             @db.VarChar(255)
+  description        String?
+  requirements       String?
+  benefits           String?
+  work_time          String?            @db.VarChar(255)
+  start_date         DateTime?          @db.Date
+  end_date           DateTime?          @db.Date
+  location           String?            @db.VarChar(255)
+  format             OppFormat?
+  max_volunteers     Int?
+  status             OppStatus          @default(draft)
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
+  applications       Application[]
+  organization       Organization       @relation(fields: [org_id], references: [org_id], onDelete: Cascade)
+  opportunity_skills OpportunitySkill[]
+
+  @@map("opportunities")
+}
+
+model OpportunitySkill {
+  opp_id      Int
+  skill_id    Int
+  opportunity Opportunity @relation(fields: [opp_id], references: [opp_id], onDelete: Cascade)
+  skill       Skill       @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
+
+  @@id([opp_id, skill_id])
+  @@map("opportunity_skills")
+}
+
+model VolunteerSkill {
+  profile_id Int
+  skill_id   Int
+  volunteer  Volunteer @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade)
+  skill      Skill     @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
+
+  @@id([profile_id, skill_id])
+  @@map("volunteer_skills")
+}
+
+model Application {
+  application_id Int               @id @default(autoincrement())
+  profile_id     Int
+  opp_id         Int
+  status         ApplicationStatus @default(pending)
+  applied_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+  opportunity    Opportunity       @relation(fields: [opp_id], references: [opp_id], onDelete: Cascade)
+  volunteer      Volunteer         @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade)
+
+  @@unique([profile_id, opp_id])
+  @@map("applications")
+}
+
+model Notification {
+  notification_id Int      @id @default(autoincrement())
+  user_id         Int
+  message         String
+  is_read         Boolean  @default(false)
+  created_at      DateTime @default(now())
+  user            User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 enum UserType {
@@ -40,147 +187,5 @@ enum ApplicationStatus {
   pending
   accepted
   rejected
-}
-
-model User {
-  user_id       Int        @id @default(autoincrement())
-  full_name     String     @db.VarChar(255)
-  email         String     @unique @db.VarChar(255)
-  password_hash String     @db.VarChar(255)
-  user_type     UserType
-  status        UserStatus @default(active)
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
-
-  volunteer    Volunteer?
-  organization Organization?
-  admin        Admin?
-
-  @@map("users")
-}
-
-model Admin {
-  admin_id Int       @id @default(autoincrement())
-  user_id  Int       @unique
-  name     String    @db.VarChar(255)
-  email    String    @db.VarChar(255)
-  dob      DateTime? @db.Date
-  phone    String?   @db.VarChar(20)
-  gender   String?   @db.VarChar(50)
-
-  user          User           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  reviewed_orgs Organization[] @relation("AdminReviews")
-
-  @@map("admins")
-}
-
-model Organization {
-  org_id        Int       @id @default(autoincrement())
-  user_id       Int       @unique
-  reviewed_by   Int?
-  name          String    @db.VarChar(255)
-  contact_email String?   @db.VarChar(255)
-  contact_phone String?   @db.VarChar(20)
-  location      String?   @db.VarChar(255)
-  logo          String?   @db.VarChar(500)
-  description   String?   @db.Text
-  website       String?   @db.VarChar(500)
-  status        OrgStatus @default(pending)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-
-  user          User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  reviewer      Admin?        @relation("AdminReviews", fields: [reviewed_by], references: [admin_id], onDelete: SetNull)
-  opportunities Opportunity[]
-
-  @@map("organizations")
-}
-
-model Volunteer {
-  profile_id    Int       @id @default(autoincrement())
-  user_id       Int       @unique
-  phone_num     String?   @db.VarChar(20)
-  profile_photo String?   @db.VarChar(500)
-  dob           DateTime? @db.Date
-  location      String?   @db.VarChar(255)
-  gender        String?   @db.VarChar(50)
-  bio           String?   @db.Text
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-
-  user             User             @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  applications     Application[]
-  volunteer_skills VolunteerSkill[]
-
-  @@map("volunteers")
-}
-
-model Skill {
-  skill_id   Int    @id @default(autoincrement())
-  skill_name String @unique @db.VarChar(255)
-
-  opportunity_skills OpportunitySkill[]
-  volunteer_skills   VolunteerSkill[]
-
-  @@map("skills")
-}
-
-model Opportunity {
-  opp_id       Int        @id @default(autoincrement())
-  org_id       Int
-  title        String     @db.VarChar(255)
-  description  String?    @db.Text
-  requirements String?    @db.Text
-  benefits     String?    @db.Text
-  work_time    String?    @db.VarChar(255)
-  start_date   DateTime?  @db.Date
-  end_date     DateTime?  @db.Date
-  location     String?    @db.VarChar(255)
-  format       OppFormat?
-  status       OppStatus  @default(draft)
-  created_at   DateTime   @default(now())
-  updated_at   DateTime   @updatedAt
-
-  organization       Organization       @relation(fields: [org_id], references: [org_id], onDelete: Cascade)
-  applications       Application[]
-  opportunity_skills OpportunitySkill[]
-
-  @@map("opportunities")
-}
-
-model OpportunitySkill {
-  opp_id   Int
-  skill_id Int
-
-  opportunity Opportunity @relation(fields: [opp_id], references: [opp_id], onDelete: Cascade)
-  skill       Skill       @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
-
-  @@id([opp_id, skill_id])
-  @@map("opportunity_skills")
-}
-
-model VolunteerSkill {
-  profile_id Int
-  skill_id   Int
-
-  volunteer Volunteer @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade)
-  skill     Skill     @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
-
-  @@id([profile_id, skill_id])
-  @@map("volunteer_skills")
-}
-
-model Application {
-  application_id Int               @id @default(autoincrement())
-  profile_id     Int
-  opp_id         Int
-  status         ApplicationStatus @default(pending)
-  applied_at     DateTime          @default(now())
-  updated_at     DateTime          @updatedAt
-
-  volunteer   Volunteer   @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade)
-  opportunity Opportunity @relation(fields: [opp_id], references: [opp_id], onDelete: Cascade)
-
-  @@unique([profile_id, opp_id])
-  @@map("applications")
+  cancelled
 }

@@ -102,6 +102,7 @@ const login = async (req, res) => {
 
     res.status(200).json({ token, user: safe });
   } catch (error) {
+    console.error('LOGIN ERROR:', error);
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 };
