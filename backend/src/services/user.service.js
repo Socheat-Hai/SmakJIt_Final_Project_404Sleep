@@ -6,7 +6,22 @@ const findAll = async () => {
 };
 
 const findById = async (id) => {
-  return prisma.user.findUnique({ where: { user_id: id } });
+  return prisma.user.findUnique({
+    where: { user_id: id },
+    include: {
+      organization: {
+        select: {
+          name: true,
+          website: true,
+          social_link: true,
+          contact_email: true,
+          contact_phone: true,
+          location: true,
+          description: true,
+        },
+      },
+    },
+  });
 };
 
 const findByEmail = async (email) => {
@@ -30,6 +45,7 @@ const update = async (id, data) => {
   const updateData = {};
   if (data.full_name !== undefined) updateData.full_name = data.full_name;
   if (data.name !== undefined) updateData.full_name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
   if (data.status !== undefined) updateData.status = data.status;
   if (data.password_hash !== undefined) updateData.password_hash = data.password_hash;
   if (data.password !== undefined) {
@@ -49,13 +65,16 @@ const comparePassword = async (candidatePassword, hashedPassword) => {
 
 const sanitizeUser = (user) => {
   if (!user) return null;
-  const { password_hash, ...safe } = user;
+  const { password_hash, organization, ...safe } = user;
   return {
     ...safe,
     id: safe.user_id,
     name: safe.full_name,
     role: safe.user_type,
     user_type: safe.user_type,
+    org_name: organization?.name || null,
+    org_website: organization?.website || null,
+    social_link: organization?.social_link || null,
   };
 };
 

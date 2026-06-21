@@ -121,16 +121,33 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const allowedFields = ['name'];
-    const updates = {};
-    for (const field of allowedFields) {
+    const userFields = ['name', 'email'];
+    const userUpdates = {};
+    for (const field of userFields) {
       if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
+        userUpdates[field] = req.body[field];
       }
     }
 
-    const user = await userService.update(req.user.user_id, updates);
-    res.status(200).json(userService.sanitizeUser(user));
+    const user = await userService.update(req.user.user_id, userUpdates);
+
+    if (user.user_type === 'organization') {
+      const orgFields = ['org_name', 'social_link', 'org_website'];
+      const orgUpdates = {};
+      if (req.body.org_name !== undefined) orgUpdates.name = req.body.org_name;
+      if (req.body.social_link !== undefined) orgUpdates.social_link = req.body.social_link;
+      if (req.body.org_website !== undefined) orgUpdates.website = req.body.org_website;
+
+      if (Object.keys(orgUpdates).length > 0) {
+        await prisma.organization.update({
+          where: { user_id: req.user.user_id },
+          data: orgUpdates,
+        });
+      }
+    }
+
+    const updated = await userService.findById(req.user.user_id);
+    res.status(200).json(userService.sanitizeUser(updated));
   } catch (error) {
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
