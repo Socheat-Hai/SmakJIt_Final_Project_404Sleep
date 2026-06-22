@@ -61,6 +61,9 @@ const AppContent = () => {
           <Route path="/opportunities/create" element={
             <ProtectedRoute><CreateOpportunity /></ProtectedRoute>
           } />
+          <Route path="/opportunities/edit/:id" element={
+            <ProtectedRoute><CreateOpportunity /></ProtectedRoute>
+          } />
           <Route path="/my-opportunities" element={
             <ProtectedRoute><MyOpportunities /></ProtectedRoute>
           } />

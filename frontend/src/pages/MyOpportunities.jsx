@@ -2,34 +2,43 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/opportunityService';
+import api from '../services/api';
+import { useToast } from '../components/Toast';
 
 const MyOpportunities = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [orgId, setOrgId] = useState(null);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchOrgAndOpps = async () => {
       try {
-        const res = await opportunityService.getAll();
-        const mine = res.data.filter((opp) => opp.organization?._id === user?.id || opp.orgName === user?.name);
-        setOpportunities(mine);
+        const orgRes = await api.get('/orgs/my');
+        const myOrgId = orgRes.data?.org_id;
+        if (myOrgId) {
+          setOrgId(myOrgId);
+          const oppRes = await opportunityService.getAll({ orgId: myOrgId, limit: 100 });
+          setOpportunities(oppRes.data.data || oppRes.data || []);
+        }
       } catch {
         setOpportunities([]);
       } finally {
         setLoading(false);
       }
     };
-    if (user) fetchAll();
+    if (user) fetchOrgAndOpps();
   }, [user]);
 
   const toggleStatus = async (opp) => {
     try {
       const newStatus = opp.status === 'open' ? 'closed' : 'open';
-      await opportunityService.update(opp._id, { status: newStatus });
-      setOpportunities((prev) => prev.map((o) => (o._id === opp._id ? { ...o, status: newStatus } : o)));
+      await opportunityService.update(opp.opp_id, { status: newStatus });
+      setOpportunities((prev) => prev.map((o) => (o.opp_id === opp.opp_id ? { ...o, status: newStatus } : o)));
+      showToast(`Opportunity ${newStatus === 'open' ? 'reopened' : 'closed'}`);
     } catch {
-      // ignore
+      showToast('Failed to update status', 'error');
     }
   };
 
@@ -57,7 +66,7 @@ const MyOpportunities = () => {
         ) : (
           <div className="flex flex-col gap-3">
             {opportunities.map((opp) => (
-              <div key={opp._id} className="card flex items-center justify-between py-5 px-6">
+              <div key={opp.opp_id} className="card flex items-center justify-between py-5 px-6">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-1">
                     <h3 className="text-[15px] font-medium">{opp.title}</h3>
@@ -66,7 +75,8 @@ const MyOpportunities = () => {
                     }`}>{opp.status}</span>
                   </div>
                   <div className="text-[13px] text-gray-500">
-                    {opp.category} · {opp.location} · {opp.spots} spots · {opp.date}
+                    {opp.location} · {opp.max_volunteers || 'Unlimited'} spots · {opp.work_time || 'Flexible'}
+                    {opp.external_link && ' · External Link'}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
@@ -76,7 +86,7 @@ const MyOpportunities = () => {
                   >
                     {opp.status === 'open' ? 'Close' : 'Reopen'}
                   </button>
-                  <Link to={`/opportunities/${opp._id}`} className="btn btn-ghost btn-sm">View</Link>
+                  <Link to={`/opportunities/edit/${opp.opp_id}`} className="btn btn-ghost btn-sm">Edit</Link>
                 </div>
               </div>
             ))}

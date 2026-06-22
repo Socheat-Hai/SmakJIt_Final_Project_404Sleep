@@ -1,23 +1,103 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const allOpportunities = [
-  { id: 1, title: 'Community Garden Volunteer', org: 'Green Earth Initiative', category: 'Environment', location: 'Downtown Area', date: 'Flexible', spots: 12, description: 'Help maintain and grow our community garden. Tasks include planting, watering, weeding, and harvesting fresh produce for local food banks. Volunteers work alongside experienced gardeners and learn sustainable practices. All tools and training provided.', applicants: 8, organization: 'Green Earth Initiative is a nonprofit dedicated to urban sustainability and food justice. We believe access to fresh food is a right, not a privilege.', requirements: 'No prior experience needed. Must be comfortable outdoors and able to lift 20lbs. All ages welcome (under 16 with guardian).', commitment: '2-4 hours per week, flexible scheduling' },
-  { id: 2, title: 'Math Tutor for Teens', org: 'Teach For Tomorrow', category: 'Education', location: 'Online', date: 'Weekdays', spots: 5, description: 'Provide one-on-one math tutoring to high school students. Subjects include algebra, geometry, and calculus. Sessions are conducted via video call.', applicants: 3, organization: 'Teach For Tomorrow works to close the education equity gap by connecting students with dedicated tutors.', requirements: 'Strong math skills, patient demeanor, reliable internet connection. Teaching experience a plus.', commitment: '2 hours per week, semester commitment preferred' },
-  { id: 3, title: 'Health Screening Assistant', org: 'HealthBridge', category: 'Healthcare', location: 'Community Center', date: 'Sat, Jun 20', spots: 8, description: 'Assist with community health screening events. Take vitals, register patients, and provide health education materials.', applicants: 6, organization: 'HealthBridge brings preventive healthcare services to underserved communities.', requirements: 'Comfortable with basic medical equipment (training provided). Friendly and organized.', commitment: 'Full day event (8am-4pm). Lunch provided.' },
-  { id: 4, title: 'Animal Shelter Caretaker', org: 'Paws & Claws Rescue', category: 'Animal Welfare', location: 'North Side Shelter', date: 'Flexible', spots: 3, description: 'Care for rescued animals. Duties include feeding, cleaning enclosures, walking dogs, and socializing with cats.', applicants: 10, organization: 'Paws & Claws Rescue saves and rehabilitates abandoned animals, finding them loving forever homes.', requirements: 'Love for animals, physical stamina, ability to handle medium/large dogs.', commitment: '3-4 hour shifts, minimum 2 shifts per month' },
-  { id: 5, title: 'Art Workshop Assistant', org: 'Creative Minds', category: 'Arts & Culture', location: 'Art Center', date: 'Weekends', spots: 6, description: 'Assist with children and adult art workshops. Help set up materials, guide participants, and clean up.', applicants: 4, organization: 'Creative Minds makes art accessible to everyone, regardless of background or skill level.', requirements: 'Interest in arts and crafts. Patient and creative. No formal art education needed.', commitment: 'Saturday mornings, 9am-1pm' },
-  { id: 6, title: 'Community Clean-Up Lead', org: 'Green Earth Initiative', category: 'Environment', location: 'Various Parks', date: 'Jun 25', spots: 20, description: 'Lead community clean-up events. Coordinate volunteers, distribute supplies, and ensure proper waste sorting.', applicants: 12, organization: 'Green Earth Initiative is a nonprofit dedicated to urban sustainability and food justice.', requirements: 'Leadership skills, comfortable speaking to groups, physically active.', commitment: 'Event day + 1 hour prep call during the week' },
-  { id: 7, title: 'Senior Companion Program', org: 'Golden Years Foundation', category: 'Elderly Care', location: 'Senior Center', date: 'Flexible', spots: 10, description: 'Visit and engage with seniors. Play games, read books, or simply have meaningful conversations.', applicants: 5, organization: 'Golden Years Foundation enhances the quality of life for seniors through companionship and community programs.', requirements: 'Patient, empathetic, good conversationalist. Background check required.', commitment: '1-2 hours per week, consistent schedule' },
-  { id: 8, title: 'Youth Soccer Coach', org: 'Active Kids Alliance', category: 'Sports', location: 'City Park Field', date: 'Sat & Sun', spots: 4, description: 'Coach youth soccer for ages 8-12. Teach fundamentals, sportsmanship, and teamwork.', applicants: 7, organization: 'Active Kids Alliance promotes physical activity and healthy lifestyles for children.', requirements: 'Soccer knowledge, experience working with children, patience.', commitment: 'Saturdays and Sundays, 10am-12pm. Season runs 8 weeks.' },
-  { id: 9, title: 'Food Bank Sorters', org: 'Community Food Network', category: 'Food', location: 'Food Bank Warehouse', date: 'Flexible', spots: 15, description: 'Sort, organize, and pack donated food items for distribution to families in need.', applicants: 9, organization: 'Community Food Network works to end hunger by distributing food to over 50 local agencies.', requirements: 'Able to stand for extended periods, lift up to 30lbs.', commitment: '2-4 hour shifts, flexible scheduling' },
-];
+import { useToast } from '../components/Toast';
+import { opportunityService } from '../services/opportunityService';
+import api from '../services/api';
 
 const OpportunityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const opp = allOpportunities.find((o) => o.id === Number(id));
+  const { showToast } = useToast();
+  const [opp, setOpp] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [recommended, setRecommended] = useState([]);
+  const [isOrgOwner, setIsOrgOwner] = useState(false);
+
+  useEffect(() => {
+    const fetchOpp = async () => {
+      try {
+        const res = await opportunityService.getById(id);
+        setOpp(res.data);
+        if (user?.role === 'organization' && res.data?.organization?.org_id) {
+          try {
+            const orgRes = await api.get('/orgs/my');
+            setIsOrgOwner(orgRes.data?.org_id === res.data.organization.org_id);
+          } catch {}
+        }
+      } catch {
+        setOpp(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOpp();
+  }, [id, user]);
+
+  useEffect(() => {
+    const checkApplication = async () => {
+      if (!user || user.role !== 'volunteer') return;
+      try {
+        const res = await api.get('/applications/mine');
+        const applied = res.data.some((a) => a.opp_id === Number(id) || a.opportunity?.opp_id === Number(id));
+        setHasApplied(applied);
+      } catch {}
+    };
+    checkApplication();
+  }, [user, id]);
+
+  useEffect(() => {
+    const fetchRecommended = async () => {
+      if (!opp?.opportunity_skills?.length) return;
+      try {
+        const res = await api.get('/opportunities/recommended');
+        const filtered = (res.data || []).filter((o) => o.opp_id !== opp.opp_id).slice(0, 3);
+        setRecommended(filtered);
+      } catch {}
+    };
+    if (opp) fetchRecommended();
+  }, [opp]);
+
+  const handleApply = async () => {
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: `/opportunities/${id}` } } });
+      return;
+    }
+    if (opp.external_link) {
+      window.open(opp.external_link, '_blank', 'noopener,noreferrer');
+      showToast('Redirecting to external application...');
+      return;
+    }
+    if (user.role !== 'volunteer') {
+      showToast('Only volunteers can apply', 'error');
+      return;
+    }
+    setApplying(true);
+    try {
+      await api.post('/applications', { opp_id: Number(id) });
+      setHasApplied(true);
+      showToast('Application submitted successfully!');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to apply', 'error');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const getSkillMatchCount = () => {
+    if (!user?.volunteer_skills || !opp?.opportunity_skills) return 0;
+    const userSkillNames = user.volunteer_skills.map((s) => s.skill_name?.toLowerCase());
+    return opp.opportunity_skills.filter((os) =>
+      userSkillNames.includes(os.skill?.skill_name?.toLowerCase())
+    ).length;
+  };
+
+  if (loading) {
+    return <div className="container-custom text-center py-20 text-gray-500">Loading...</div>;
+  }
 
   if (!opp) {
     return (
@@ -29,13 +109,8 @@ const OpportunityDetail = () => {
     );
   }
 
-  const handleApply = () => {
-    if (!user) {
-      navigate('/login', { state: { from: { pathname: `/opportunities/${id}` } } });
-      return;
-    }
-    navigate(`/opportunities/${id}/apply-success`);
-  };
+  const skillMatchCount = getSkillMatchCount();
+  const totalOppSkills = opp.opportunity_skills?.length || 0;
 
   return (
     <div className="py-12">
@@ -46,53 +121,163 @@ const OpportunityDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 items-start">
           <div>
-            <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-brand-green-light text-brand-green text-xs font-medium uppercase tracking-wider mb-4">
-              {opp.category}
-            </span>
-            <h1 className="text-[32px] font-medium mb-2">{opp.title}</h1>
-            <p className="text-[15px] text-gray-500 mb-6">by {opp.org}</p>
+            {opp.image && (
+              <div className="relative rounded-xl overflow-hidden mb-8 bg-gray-100">
+                <img src={opp.image} alt={opp.title} className="w-full aspect-[21/9] object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute bottom-5 left-6 right-6">
+                  <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-white/90 text-brand-green text-xs font-medium uppercase tracking-wider mb-3">
+                    {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                  </span>
+                  <h1 className="text-white text-[28px] font-medium leading-tight">{opp.title}</h1>
+                </div>
+              </div>
+            )}
+            {!opp.image && (
+              <>
+                <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-brand-green-light text-brand-green text-xs font-medium uppercase tracking-wider mb-4">
+                  {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                </span>
+                <h1 className="text-[32px] font-medium mb-2">{opp.title}</h1>
+              </>
+            )}
+            <p className="text-[15px] text-gray-500 mb-6">by {opp.organization?.name}</p>
+
+            {skillMatchCount > 0 && (
+              <div className="bg-brand-green-light/50 border border-brand-green/20 rounded-lg px-4 py-3 mb-6">
+                <p className="text-sm text-brand-green font-medium">
+                  🎯 Your skills match {skillMatchCount}/{totalOppSkills} requirements for this role
+                </p>
+              </div>
+            )}
 
             <section className="mb-8">
               <h3 className="text-lg font-medium mb-3">About this opportunity</h3>
               <p className="text-gray-600 text-[15px] leading-relaxed">{opp.description}</p>
             </section>
 
-            <section className="mb-8">
-              <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <p className="text-gray-600 text-[15px] leading-relaxed">{opp.requirements}</p>
-            </section>
+            {opp.requirements && (
+              <section className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Requirements</h3>
+                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.requirements}</p>
+              </section>
+            )}
 
-            <section className="mb-8">
-              <h3 className="text-lg font-medium mb-3">Time Commitment</h3>
-              <p className="text-gray-600 text-[15px] leading-relaxed">{opp.commitment}</p>
-            </section>
+            {opp.benefits && (
+              <section className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.benefits}</p>
+              </section>
+            )}
 
-            <section>
-              <h3 className="text-lg font-medium mb-3">About {opp.org}</h3>
-              <p className="text-gray-600 text-[15px] leading-relaxed">{opp.organization}</p>
-            </section>
+            {opp.work_time && (
+              <section className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Time Commitment</h3>
+                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.work_time}</p>
+              </section>
+            )}
+
+            {opp.opportunity_skills?.length > 0 && (
+              <section className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Skills Needed</h3>
+                <div className="flex flex-wrap gap-2">
+                  {opp.opportunity_skills.map((os) => (
+                    <span key={os.skill_id} className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-[13px] font-medium">
+                      {os.skill?.skill_name}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {opp.organization && (
+              <section>
+                <h3 className="text-lg font-medium mb-3">About {opp.organization.name}</h3>
+                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.organization.description || 'No description provided.'}</p>
+              </section>
+            )}
+
+            {recommended.length > 0 && (
+              <section className="mt-10 pt-8 border-t border-gray-200">
+                <h3 className="text-lg font-medium mb-4">Similar Opportunities You Might Like</h3>
+                <div className="flex flex-col gap-3">
+                  {recommended.map((r) => (
+                    <Link key={r.opp_id} to={`/opportunities/${r.opp_id}`} className="card flex items-center justify-between py-3 px-4 hover:shadow-sm transition-shadow">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{r.title}</div>
+                        <div className="text-[12px] text-gray-500">{r.organization?.name}</div>
+                      </div>
+                      <span className="text-[11px] text-brand-green font-medium shrink-0">View →</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           <div className="card sticky top-20">
+            {opp.start_date && (
+              <div className="mb-5">
+                <div className="text-[13px] text-gray-500 mb-1">Start Date</div>
+                <div className="text-[15px] font-medium">📅 {new Date(opp.start_date).toLocaleDateString()}</div>
+              </div>
+            )}
             <div className="mb-5">
               <div className="text-[13px] text-gray-500 mb-1">Location</div>
-              <div className="text-[15px] font-medium">📍 {opp.location}</div>
+              <div className="text-[15px] font-medium">📍 {opp.location || 'Not specified'}</div>
             </div>
+            {opp.work_time && (
+              <div className="mb-5">
+                <div className="text-[13px] text-gray-500 mb-1">Schedule</div>
+                <div className="text-[15px] font-medium">🕐 {opp.work_time}</div>
+              </div>
+            )}
             <div className="mb-5">
-              <div className="text-[13px] text-gray-500 mb-1">Date / Schedule</div>
-              <div className="text-[15px] font-medium">📅 {opp.date}</div>
+              <div className="text-[13px] text-gray-500 mb-1">Format</div>
+              <div className="text-[15px] font-medium capitalize">
+                {opp.format === 'online' ? '🖥️ Remote' : opp.format === 'hybrid' ? '🔄 Hybrid' : '📍 In-person'}
+              </div>
             </div>
             <div className="mb-6">
               <div className="text-[13px] text-gray-500 mb-1">Available Spots</div>
-              <div className={`text-[15px] font-medium ${opp.spots > 5 ? 'text-brand-green' : 'text-red-500'}`}>
-                {opp.spots} / {opp.spots + opp.applicants} remaining
+              <div className={`text-[15px] font-medium ${opp.max_volunteers > 5 ? 'text-brand-green' : 'text-red-500'}`}>
+                {opp.max_volunteers || 'Unlimited'}
               </div>
             </div>
 
-            <button onClick={handleApply} className="btn btn-primary btn-block btn-lg mb-3">
-              Apply Now
-            </button>
-            <p className="text-xs text-gray-400 text-center">{opp.applicants} people have applied</p>
+            {isOrgOwner ? (
+              <Link to={`/opportunities/edit/${id}`} className="btn btn-primary btn-block btn-lg mb-3 inline-block text-center">
+                Edit Opportunity
+              </Link>
+            ) : opp.external_link ? (
+              <a
+                href={opp.external_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary btn-block btn-lg mb-3 inline-block text-center"
+              >
+                Apply on External Site →
+              </a>
+            ) : (
+              <button
+                onClick={handleApply}
+                disabled={applying || hasApplied}
+                className={`btn btn-block btn-lg mb-3 ${hasApplied ? 'btn-outline !text-brand-green !border-brand-green cursor-default' : 'btn-primary'}`}
+              >
+                {applying ? 'Applying...' : hasApplied ? 'Applied ✓' : 'Apply Now'}
+              </button>
+            )}
+            {isOrgOwner ? (
+              <p className="text-xs text-gray-400 text-center">You are the owner of this opportunity</p>
+            ) : (
+              <p className="text-xs text-gray-400 text-center">{opp._count?.applications || 0} people have applied</p>
+            )}
+
+            {opp.external_link && !isOrgOwner && (
+              <p className="text-[11px] text-gray-400 text-center mt-2">
+                You'll be redirected to an external site to complete your application.
+              </p>
+            )}
           </div>
         </div>
       </div>

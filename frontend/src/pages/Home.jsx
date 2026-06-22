@@ -1,21 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { opportunityService } from '../services/opportunityService';
 
 const stats = [
   { value: '12,000+', label: 'Volunteers' },
   { value: '3,500+', label: 'Opportunities' },
   { value: '850+', label: 'Organizations' },
   { value: '45,000+', label: 'Hours Served' },
-];
-
-const categories = [
-  { name: 'Education', icon: '📚', color: '#e8f8f2' },
-  { name: 'Environment', icon: '🌱', color: '#e3f5eb' },
-  { name: 'Healthcare', icon: '❤️', color: '#fef0f0' },
-  { name: 'Animal Welfare', icon: '🐾', color: '#fef7e6' },
-  { name: 'Community Dev', icon: '🏘️', color: '#f0eeff' },
-  { name: 'Arts & Culture', icon: '🎨', color: '#fce8f0' },
 ];
 
 const steps = [
@@ -30,65 +22,71 @@ const featuredOrgs = [
   { name: 'HealthBridge', focus: 'Community Healthcare', image: '🏥' },
 ];
 
-const opportunities = [
-  { title: 'Community Garden Volunteer', org: 'Green Earth Initiative', category: 'Environment', location: 'Downtown Area', date: 'Flexible', spots: 12 },
-  { title: 'Math Tutor for Teens', org: 'Teach For Tomorrow', category: 'Education', location: 'Online', date: 'Weekdays', spots: 5 },
-  { title: 'Health Screening Assistant', org: 'HealthBridge', category: 'Healthcare', location: 'Community Center', date: 'Sat, Jun 20', spots: 8 },
-  { title: 'Animal Shelter Caretaker', org: 'Paws & Claws Rescue', category: 'Animal Welfare', location: 'North Side Shelter', date: 'Flexible', spots: 3 },
-  { title: 'Art Workshop Assistant', org: 'Creative Minds', category: 'Arts & Culture', location: 'Art Center', date: 'Weekends', spots: 6 },
-  { title: 'Community Clean-Up Lead', org: 'Green Earth Initiative', category: 'Environment', location: 'Various Parks', date: 'Jun 25', spots: 20 },
-];
-
 const Home = () => {
   const { user } = useAuth();
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [opportunities, setOpportunities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredOpportunities = activeCategory
-    ? opportunities.filter((opp) => opp.category === activeCategory)
-    : opportunities;
+  useEffect(() => {
+    const fetchOpps = async () => {
+      try {
+        const res = await opportunityService.getAll({ page: 1, limit: 6 });
+        setOpportunities(res.data.data || res.data || []);
+      } catch {
+        setOpportunities([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOpps();
+  }, []);
 
   return (
     <div>
-      <section className="py-[100px] max-md:py-16" style={{ background: 'linear-gradient(135deg, #e8f8f2 0%, #f0eeff 100%)' }}>
-        <div className="container-custom flex items-center gap-[60px] max-lg:flex-col max-lg:text-center">
-          <div className="flex-1">
-            {user?.role === 'organization' ? (
-              <>
-                <div className="section-label !text-brand-purple">NGO Management Portal</div>
-                <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
-                  Connect with passionate volunteers for your mission
-                </h1>
-                <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
-                  Post opportunities, manage applicants, and grow your impact.
-                </p>
-                <div className="flex gap-3 max-lg:justify-center">
-                  <Link to="/my-opportunities" className="btn btn-primary btn-lg">Post an Opportunity</Link>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="section-label !text-brand-purple">Volunteer Matching Platform</div>
-                <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
-                  Find volunteer opportunities that match your skills
-                </h1>
-                <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
-                  Discover meaningful ways to give back. SmakJit connects passionate volunteers with organizations that need your unique talents.
-                </p>
-                <div className="flex gap-3 max-lg:justify-center">
-                  <Link to="/opportunities" className="btn btn-primary btn-lg">Browse Opportunities</Link>
-                  {!user && (
-                    <Link to="/role-selection" className="btn btn-outline btn-lg">Join Now</Link>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-          <div className="flex-1 flex justify-center items-center">
-            <div className="w-[400px] max-md:w-[280px] h-[400px] max-md:h-[280px] rounded-full flex items-center justify-center text-[120px] max-md:text-7xl opacity-90"
-              style={{ background: 'linear-gradient(135deg, #1D9E75 0%, #534AB7 100%)' }}>
-              🤝
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #e8f8f2 0%, #f0eeff 100%)' }}>
+        <div className="relative z-10 py-[100px] max-md:py-16">
+          <div className="container-custom">
+            <div className="max-w-[560px] max-lg:mx-auto max-lg:text-center">
+              {user?.role === 'organization' ? (
+                <>
+                  <div className="section-label !text-brand-purple">NGO Management Portal</div>
+                  <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
+                    Connect with passionate volunteers for your mission
+                  </h1>
+                  <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
+                    Post opportunities, manage applicants, and grow your impact.
+                  </p>
+                  <div className="flex gap-3 max-lg:justify-center">
+                    <Link to="/my-opportunities" className="btn btn-primary btn-lg">Post an Opportunity</Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="section-label !text-brand-purple">Volunteer Matching Platform</div>
+                  <h1 className="text-5xl max-md:text-4xl font-medium leading-[1.15] mb-5 text-gray-900">
+                    Find volunteer opportunities that match your skills
+                  </h1>
+                  <p className="text-[17px] text-gray-600 leading-relaxed mb-9 max-w-[520px] max-lg:mx-auto">
+                    Discover meaningful ways to give back. SmakJit connects passionate volunteers with organizations that need your unique talents.
+                  </p>
+                  <div className="flex gap-3 max-lg:justify-center">
+                    <Link to="/opportunities" className="btn btn-primary btn-lg">Browse Opportunities</Link>
+                    {!user && (
+                      <Link to="/role-selection" className="btn btn-outline btn-lg">Join Now</Link>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
+        </div>
+        <div className="absolute top-0 right-0 w-1/2 h-full max-lg:hidden">
+          <img
+            src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1000&q=80"
+            alt="Team working together"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#e8f8f2]" />
         </div>
       </section>
 
@@ -108,54 +106,52 @@ const Home = () => {
       <section className="section">
         <div className="container-custom">
           <div className="text-center mb-12">
-            <div className="section-label">Browse by Category</div>
+            <div className="section-label">Featured Opportunities</div>
             <h2 className="section-title">Find your perfect opportunity</h2>
             <p className="section-subtitle mx-auto">
               Explore opportunities across various causes and find where your skills can make the biggest impact.
             </p>
           </div>
 
-          <div className="flex justify-center gap-2.5 flex-wrap mb-10">
-            <button
-              className={`chip ${activeCategory === null ? 'active' : ''}`}
-              onClick={() => setActiveCategory(null)}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.name}
-                className={`chip ${activeCategory === cat.name ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.name)}
-                style={{
-                  background: activeCategory === cat.name ? undefined : cat.color,
-                  border: activeCategory === cat.name ? '1.5px solid #1D9E75' : 'none',
-                }}
-              >
-                <span className="mr-1.5">{cat.icon}</span>
-                {cat.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid-3">
-            {filteredOpportunities.map((opp, i) => (
-              <Link to="/opportunities" key={i} className="card block cursor-pointer hover:-translate-y-1 transition-transform duration-200">
-                <div className="text-xs font-medium text-brand-green uppercase tracking-wider mb-2">
-                  {opp.category}
-                </div>
-                <h3 className="text-[17px] font-medium mb-2">{opp.title}</h3>
-                <div className="text-[13px] text-gray-500 mb-1">{opp.org}</div>
-                <div className="flex gap-4 mt-3 text-xs text-gray-400">
-                  <span>📍 {opp.location}</span>
-                  <span>📅 {opp.date}</span>
-                </div>
-                <div className="mt-3 text-xs text-brand-purple font-medium">
-                  {opp.spots} spots open
-                </div>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-10 text-gray-500">Loading opportunities...</div>
+          ) : (
+            <div className="grid-3">
+              {opportunities.map((opp) => (
+                <Link to={`/opportunities/${opp.opp_id}`} key={opp.opp_id} className="bg-white rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col cursor-pointer hover:-translate-y-1 transition-transform duration-200 relative overflow-hidden">
+                  {opp.image ? (
+                    <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
+                      <img src={opp.image} alt={opp.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/90 text-brand-green">
+                        {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-28 bg-gradient-to-br from-brand-green-light to-brand-green/20">
+                      <span className="text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/80 text-brand-green">
+                        {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-[16px] font-medium mb-1 leading-snug">{opp.title}</h3>
+                    <div className="text-[12px] text-gray-400 mb-2.5">{opp.organization?.name}</div>
+                    <div className="flex gap-3 text-xs text-gray-400 mb-3 flex-wrap">
+                      <span>📍 {opp.location}</span>
+                      {opp.work_time && <span>🕐 {opp.work_time}</span>}
+                    </div>
+                    <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-auto">
+                      <span className="text-xs text-gray-400">
+                        {opp.format === 'online' ? '🖥️ Remote' : opp.format === 'hybrid' ? '🔄 Hybrid' : '📍 In-person'}
+                      </span>
+                      <span className="text-xs text-brand-green font-medium">{opp.max_volunteers || 'Unlimited'} spots</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
