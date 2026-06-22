@@ -1,4 +1,5 @@
 const applicationService = require('../services/application.service');
+const emailService = require('../services/email.service');
 const prisma = require('../lib/prisma');
 
 const submit = async (req, res) => {
@@ -17,6 +18,7 @@ const submit = async (req, res) => {
       profile_id: volunteer.profile_id,
       opp_id: parseInt(opp_id),
     });
+
     res.status(201).json(app);
   } catch (error) {
     if (error.code === 'P2002') {
@@ -56,6 +58,24 @@ const review = async (req, res) => {
     }
     const app = await applicationService.updateStatus(parseInt(req.params.id), status);
     if (!app) return res.status(404).json({ message: 'Application not found' });
+
+    const fullApp = await prisma.application.findUnique({
+      where: { application_id: parseInt(req.params.id) },
+      include: {
+        opportunity: { select: { title: true } },
+        volunteer: { include: { user: { select: { full_name: true, email: true } } } },
+      },
+    });
+
+    if (fullApp?.volunteer?.user?.email) {
+      await emailService.sendApplicationStatus(
+        fullApp.volunteer.user.email,
+        fullApp.volunteer.user.full_name,
+        fullApp.opportunity.title,
+        status
+      );
+    }
+
     res.json(app);
   } catch (error) {
     res.status(500).json({ message: error.message });

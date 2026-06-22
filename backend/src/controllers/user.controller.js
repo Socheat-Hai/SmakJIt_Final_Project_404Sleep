@@ -32,10 +32,17 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
+    if (req.body.email) {
+      const existing = await userService.findByEmail(req.body.email);
+      if (existing && existing.user_id !== parseInt(req.params.id)) {
+        return res.status(409).json({ message: 'Email already in use' });
+      }
+    }
     const user = await userService.update(parseInt(req.params.id), req.body);
     res.status(200).json(userService.sanitizeUser(user));
   } catch (error) {
     if (error.code === 'P2025') return res.status(404).json({ message: 'User not found' });
+    if (error.code === 'P2002') return res.status(409).json({ message: 'Email already in use' });
     res.status(400).json({ message: error.message });
   }
 };

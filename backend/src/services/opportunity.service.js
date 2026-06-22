@@ -21,7 +21,7 @@ const findAll = async ({ search, skill, location, orgId, page = 1, limit = 20 })
     prisma.opportunity.findMany({
       where,
       include: {
-        organization: { select: { org_id: true, name: true, contact_email: true } },
+        organization: { select: { org_id: true, name: true, contact_email: true, logo: true } },
         opportunity_skills: { include: { skill: true } },
         _count: { select: { applications: true } },
       },
@@ -49,6 +49,24 @@ const findById = async (id) => {
 
 const create = async (data) => {
   return prisma.opportunity.create({ data });
+};
+
+const findRecommended = async (skillIds) => {
+  return prisma.opportunity.findMany({
+    where: {
+      status: 'open',
+      opportunity_skills: {
+        some: { skill_id: { in: skillIds } },
+      },
+    },
+    include: {
+      organization: { select: { org_id: true, name: true, logo: true } },
+      opportunity_skills: { include: { skill: true } },
+      _count: { select: { applications: true } },
+    },
+    orderBy: { created_at: 'desc' },
+    take: 10,
+  });
 };
 
 const update = async (id, data) => {

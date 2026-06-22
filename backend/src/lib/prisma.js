@@ -1,14 +1,19 @@
 require('dotenv').config();
 
 const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
+const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+const url = new URL(process.env.DATABASE_URL);
+
+const adapter = new PrismaMariaDb({
+  host: url.hostname,
+  port: parseInt(url.port) || 3306,
+  user: decodeURIComponent(url.username),
+  password: decodeURIComponent(url.password),
+  database: url.pathname.replace(/^\//, ''),
+  prepareCacheLength: 0,
 });
 
-const prisma = new PrismaClient({
-  adapter,
-});
+const prisma = new PrismaClient({ adapter });
 
 module.exports = prisma;

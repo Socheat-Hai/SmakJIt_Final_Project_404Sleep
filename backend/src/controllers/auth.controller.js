@@ -129,19 +129,46 @@ const updateProfile = async (req, res) => {
       }
     }
 
+    if (req.body.email) {
+      const existing = await userService.findByEmail(req.body.email);
+      if (existing && existing.user_id !== req.user.user_id) {
+        return res.status(409).json({ message: 'Email already in use' });
+      }
+    }
+
     const user = await userService.update(req.user.user_id, userUpdates);
 
     if (user.user_type === 'organization') {
-      const orgFields = ['org_name', 'social_link', 'org_website'];
       const orgUpdates = {};
       if (req.body.org_name !== undefined) orgUpdates.name = req.body.org_name;
       if (req.body.social_link !== undefined) orgUpdates.social_link = req.body.social_link;
       if (req.body.org_website !== undefined) orgUpdates.website = req.body.org_website;
+      if (req.body.description !== undefined) orgUpdates.description = req.body.description;
+      if (req.body.contact_email !== undefined) orgUpdates.contact_email = req.body.contact_email;
+      if (req.body.contact_phone !== undefined) orgUpdates.contact_phone = req.body.contact_phone;
+      if (req.body.location !== undefined) orgUpdates.location = req.body.location;
 
       if (Object.keys(orgUpdates).length > 0) {
         await prisma.organization.update({
           where: { user_id: req.user.user_id },
           data: orgUpdates,
+        });
+      }
+    }
+
+    if (user.user_type === 'volunteer') {
+      const volUpdates = {};
+      if (req.body.phone_num !== undefined) volUpdates.phone_num = req.body.phone_num;
+      if (req.body.location !== undefined) volUpdates.location = req.body.location;
+      if (req.body.bio !== undefined) volUpdates.bio = req.body.bio;
+      if (req.body.dob !== undefined) volUpdates.dob = new Date(req.body.dob);
+      if (req.body.gender !== undefined) volUpdates.gender = req.body.gender;
+      if (req.body.interests !== undefined) volUpdates.interests = JSON.stringify(req.body.interests);
+
+      if (Object.keys(volUpdates).length > 0) {
+        await prisma.volunteer.update({
+          where: { user_id: req.user.user_id },
+          data: volUpdates,
         });
       }
     }

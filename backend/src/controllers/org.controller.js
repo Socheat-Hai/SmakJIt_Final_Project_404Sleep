@@ -2,18 +2,18 @@ const orgService = require('../services/org.service');
 
 const register = async (req, res) => {
   try {
-    const { name, email, phone, address, bio, website } = req.body;
+    const { name, email, phone, address, bio, website, social_link, description, contact_email, contact_phone, location } = req.body;
     if (!name || !email) {
       return res.status(400).json({ message: 'Name and email are required' });
     }
     const existing = await orgService.findByUserId(req.user.user_id);
     let org;
     if (existing) {
-      org = await orgService.update(existing.org_id, { name, email, phone, address, bio, website });
+      org = await orgService.update(existing.org_id, { name, email, phone, address, bio, website, social_link, description, contact_email, contact_phone, location });
     } else {
       org = await orgService.create({
         user_id: req.user.user_id,
-        name, email, phone, address, bio, website,
+        name, email, phone, address, bio, website, social_link, description,
       });
     }
     res.status(201).json(org);

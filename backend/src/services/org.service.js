@@ -41,7 +41,11 @@ const update = async (id, data) => {
   if (data.bio !== undefined) updateData.description = data.bio;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.website !== undefined) updateData.website = data.website;
+  if (data.social_link !== undefined) updateData.social_link = data.social_link;
   if (data.status !== undefined) updateData.status = data.status;
+  if (data.contact_email !== undefined) updateData.contact_email = data.contact_email;
+  if (data.contact_phone !== undefined) updateData.contact_phone = data.contact_phone;
+  if (data.completion_checklist !== undefined) updateData.completion_checklist = data.completion_checklist;
   return prisma.organization.update({ where: { org_id: id }, data: updateData });
 };
 

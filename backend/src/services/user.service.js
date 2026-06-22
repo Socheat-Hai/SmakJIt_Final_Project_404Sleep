@@ -18,6 +18,22 @@ const findById = async (id) => {
           contact_phone: true,
           location: true,
           description: true,
+          logo: true,
+          status: true,
+          completion_checklist: true,
+        },
+      },
+      volunteer: {
+        select: {
+          profile_id: true,
+          phone_num: true,
+          profile_photo: true,
+          dob: true,
+          location: true,
+          gender: true,
+          bio: true,
+          interests: true,
+          volunteer_skills: { include: { skill: true } },
         },
       },
     },
@@ -65,7 +81,7 @@ const comparePassword = async (candidatePassword, hashedPassword) => {
 
 const sanitizeUser = (user) => {
   if (!user) return null;
-  const { password_hash, organization, ...safe } = user;
+  const { password_hash, organization, volunteer, ...safe } = user;
   return {
     ...safe,
     id: safe.user_id,
@@ -75,6 +91,21 @@ const sanitizeUser = (user) => {
     org_name: organization?.name || null,
     org_website: organization?.website || null,
     social_link: organization?.social_link || null,
+    org_logo: organization?.logo || null,
+    org_description: organization?.description || null,
+    org_contact_email: organization?.contact_email || null,
+    org_contact_phone: organization?.contact_phone || null,
+    org_location: organization?.location || null,
+    org_status: organization?.status || null,
+    org_completion_checklist: organization?.completion_checklist || null,
+    profile_photo: volunteer?.profile_photo || null,
+    phone_num: volunteer?.phone_num || null,
+    volunteer_bio: volunteer?.bio || null,
+    volunteer_location: volunteer?.location || null,
+    volunteer_dob: volunteer?.dob || null,
+    volunteer_gender: volunteer?.gender || null,
+    volunteer_interests: volunteer?.interests ? JSON.parse(volunteer.interests) : [],
+    volunteer_skills: volunteer?.volunteer_skills?.map((vs) => vs.skill) || [],
   };
 };
 

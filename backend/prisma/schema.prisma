@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model User {
@@ -50,6 +50,7 @@ model Organization {
   website       String?       @db.VarChar(500)
   social_link   String?       @db.VarChar(500)
   status        OrgStatus     @default(pending)
+  completion_checklist String?   @db.Text
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
   opportunities Opportunity[]
@@ -68,6 +69,7 @@ model Volunteer {
   location         String?          @db.VarChar(255)
   gender           String?          @db.VarChar(50)
   bio              String?
+  interests        String?          @db.Text
   created_at       DateTime         @default(now())
   updated_at       DateTime         @updatedAt
   applications     Application[]
@@ -99,6 +101,8 @@ model Opportunity {
   location           String?            @db.VarChar(255)
   format             OppFormat?
   max_volunteers     Int?
+  external_link      String?            @db.VarChar(1000)
+  image              String?            @db.VarChar(500)
   status             OppStatus          @default(draft)
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
