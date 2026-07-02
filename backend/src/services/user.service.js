@@ -13,27 +13,23 @@ const findById = async (id) => {
         select: {
           name: true,
           website: true,
-          social_link: true,
           contact_email: true,
           contact_phone: true,
           location: true,
           description: true,
           logo: true,
           status: true,
-          completion_checklist: true,
         },
       },
-      volunteer: {
+      profile: {
         select: {
           profile_id: true,
           phone_num: true,
-          profile_photo: true,
-          dob: true,
+          profile_picture: true,
+          date_of_birth: true,
           location: true,
           gender: true,
           bio: true,
-          interests: true,
-          volunteer_skills: { include: { skill: true } },
         },
       },
     },
@@ -52,7 +48,7 @@ const create = async (userData) => {
       full_name: userData.full_name || userData.name,
       email: userData.email,
       password_hash: hashedPassword,
-      user_type: userData.user_type || userData.role,
+      role: userData.role,
     },
   });
 };
@@ -81,31 +77,26 @@ const comparePassword = async (candidatePassword, hashedPassword) => {
 
 const sanitizeUser = (user) => {
   if (!user) return null;
-  const { password_hash, organization, volunteer, ...safe } = user;
+  const { password_hash, organization, profile, ...safe } = user;
   return {
     ...safe,
     id: safe.user_id,
     name: safe.full_name,
-    role: safe.user_type,
-    user_type: safe.user_type,
+    role: safe.role,
     org_name: organization?.name || null,
     org_website: organization?.website || null,
-    social_link: organization?.social_link || null,
     org_logo: organization?.logo || null,
     org_description: organization?.description || null,
     org_contact_email: organization?.contact_email || null,
     org_contact_phone: organization?.contact_phone || null,
     org_location: organization?.location || null,
     org_status: organization?.status || null,
-    org_completion_checklist: organization?.completion_checklist || null,
-    profile_photo: volunteer?.profile_photo || null,
-    phone_num: volunteer?.phone_num || null,
-    volunteer_bio: volunteer?.bio || null,
-    volunteer_location: volunteer?.location || null,
-    volunteer_dob: volunteer?.dob || null,
-    volunteer_gender: volunteer?.gender || null,
-    volunteer_interests: volunteer?.interests ? JSON.parse(volunteer.interests) : [],
-    volunteer_skills: volunteer?.volunteer_skills?.map((vs) => vs.skill) || [],
+    profile_photo: profile?.profile_picture || null,
+    phone_num: profile?.phone_num || null,
+    volunteer_bio: profile?.bio || null,
+    volunteer_location: profile?.location || null,
+    volunteer_dob: profile?.date_of_birth || null,
+    volunteer_gender: profile?.gender || null,
   };
 };
 

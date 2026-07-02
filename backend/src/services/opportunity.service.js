@@ -1,6 +1,6 @@
 const prisma = require('../lib/prisma');
 
-const findAll = async ({ search, skill, location, orgId, page = 1, limit = 20 }) => {
+const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, limit = 20 }) => {
   const where = {};
   if (search) {
     where.OR = [
@@ -9,12 +9,13 @@ const findAll = async ({ search, skill, location, orgId, page = 1, limit = 20 })
     ];
   }
   if (skill) {
-    where.opportunity_skills = {
+    where.skills = {
       some: { skill: { skill_name: { contains: skill } } },
     };
   }
   if (location) where.location = { contains: location };
   if (orgId) where.org_id = orgId;
+  if (categoryId) where.category_id = parseInt(categoryId);
 
   const skip = (page - 1) * limit;
   const [data, total] = await Promise.all([
@@ -22,7 +23,8 @@ const findAll = async ({ search, skill, location, orgId, page = 1, limit = 20 })
       where,
       include: {
         organization: { select: { org_id: true, name: true, contact_email: true, logo: true } },
-        opportunity_skills: { include: { skill: true } },
+        category: true,
+        skills: { include: { skill: true } },
         _count: { select: { applications: true } },
       },
       skip,
@@ -41,7 +43,8 @@ const findById = async (id) => {
       organization: {
         select: { org_id: true, name: true, description: true, website: true, location: true },
       },
-      opportunity_skills: { include: { skill: true } },
+      category: true,
+      skills: { include: { skill: true } },
       _count: { select: { applications: true } },
     },
   });
@@ -55,13 +58,14 @@ const findRecommended = async (skillIds) => {
   return prisma.opportunity.findMany({
     where: {
       status: 'open',
-      opportunity_skills: {
+      skills: {
         some: { skill_id: { in: skillIds } },
       },
     },
     include: {
       organization: { select: { org_id: true, name: true, logo: true } },
-      opportunity_skills: { include: { skill: true } },
+      category: true,
+      skills: { include: { skill: true } },
       _count: { select: { applications: true } },
     },
     orderBy: { created_at: 'desc' },

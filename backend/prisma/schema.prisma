@@ -3,159 +3,149 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 model User {
-  user_id       Int            @id @default(autoincrement())
-  full_name     String         @db.VarChar(255)
-  email         String         @unique @db.VarChar(255)
-  password_hash String         @db.VarChar(255)
-  user_type     UserType
-  status        UserStatus     @default(active)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  admin         Admin?
-  notifications Notification[]
-  organization  Organization?
-  volunteer     Volunteer?
+  user_id       Int        @id @default(autoincrement())
+  full_name     String
+  email         String     @unique
+  password_hash String
+  role          UserType   @default(volunteer)
+  status        UserStatus @default(active)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
 
-  @@map("users")
+  profile       VolunteerProfile?
+  applications  Application[]
+  opportunities Opportunity[]      @relation("PostedBy")
+  memberships   OrgMember[]
+  saved         SavedOpportunity[]
+
+  organization Organization?
 }
 
-model Admin {
-  admin_id      Int            @id @default(autoincrement())
-  user_id       Int            @unique
-  name          String         @db.VarChar(255)
-  email         String         @db.VarChar(255)
-  dob           DateTime?      @db.Date
-  phone         String?        @db.VarChar(20)
-  gender        String?        @db.VarChar(50)
-  user          User           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  reviewed_orgs Organization[] @relation("AdminReviews")
+model VolunteerProfile {
+  profile_id Int @id @default(autoincrement())
+  user_id    Int @unique
 
-  @@map("admins")
+  phone_num       String?
+  bio             String?
+  gender          String?
+  location        String?
+  date_of_birth   DateTime?
+  profile_picture String?
+
+  user User @relation(fields: [user_id], references: [user_id])
 }
 
 model Organization {
-  org_id        Int           @id @default(autoincrement())
-  user_id       Int           @unique
-  reviewed_by   Int?
-  name          String        @db.VarChar(255)
-  contact_email String?       @db.VarChar(255)
-  contact_phone String?       @db.VarChar(20)
-  location      String?       @db.VarChar(255)
-  logo          String?       @db.VarChar(500)
+  org_id Int @id @default(autoincrement())
+
+  name          String
   description   String?
-  website       String?       @db.VarChar(500)
-  social_link   String?       @db.VarChar(500)
-  status        OrgStatus     @default(pending)
-  completion_checklist String?   @db.Text
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
+  website       String?
+  logo          String?
+  location      String?
+  contact_email String?
+  contact_phone String?
+  status        OrgStatus @default(pending)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  owner_id Int  @unique
+  owner    User @relation(fields: [owner_id], references: [user_id])
+
   opportunities Opportunity[]
-  reviewer      Admin?        @relation("AdminReviews", fields: [reviewed_by], references: [admin_id])
-  user          User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-
-  @@map("organizations")
+  members       OrgMember[]
 }
 
-model Volunteer {
-  profile_id       Int              @id @default(autoincrement())
-  user_id          Int              @unique
-  phone_num        String?          @db.VarChar(20)
-  profile_photo    String?          @db.VarChar(500)
-  dob              DateTime?        @db.Date
-  location         String?          @db.VarChar(255)
-  gender           String?          @db.VarChar(50)
-  bio              String?
-  interests        String?          @db.Text
-  created_at       DateTime         @default(now())
-  updated_at       DateTime         @updatedAt
-  applications     Application[]
-  volunteer_skills VolunteerSkill[]
-  user             User             @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+model OrgMember {
+  user_id Int
+  org_id  Int
 
-  @@map("volunteers")
+  role_in_org String
+  joined_at   DateTime @default(now())
+
+  user         User         @relation(fields: [user_id], references: [user_id])
+  organization Organization @relation(fields: [org_id], references: [org_id])
+
+  @@id([user_id, org_id])
 }
 
-model Skill {
-  skill_id           Int                @id @default(autoincrement())
-  skill_name         String             @unique @db.VarChar(255)
-  opportunity_skills OpportunitySkill[]
-  volunteer_skills   VolunteerSkill[]
+model Category {
+  category_id   Int     @id @default(autoincrement())
+  category_name String  @unique
+  description   String?
 
-  @@map("skills")
+  opportunities Opportunity[]
 }
 
 model Opportunity {
-  opp_id             Int                @id @default(autoincrement())
-  org_id             Int
-  title              String             @db.VarChar(255)
-  description        String?
-  requirements       String?
-  benefits           String?
-  work_time          String?            @db.VarChar(255)
-  start_date         DateTime?          @db.Date
-  end_date           DateTime?          @db.Date
-  location           String?            @db.VarChar(255)
-  format             OppFormat?
-  max_volunteers     Int?
-  external_link      String?            @db.VarChar(1000)
-  image              String?            @db.VarChar(500)
-  status             OppStatus          @default(draft)
-  created_at         DateTime           @default(now())
-  updated_at         DateTime           @updatedAt
-  applications       Application[]
-  organization       Organization       @relation(fields: [org_id], references: [org_id], onDelete: Cascade)
-  opportunity_skills OpportunitySkill[]
+  opp_id      Int       @id @default(autoincrement())
+  org_id      Int
+  posted_by   Int
+  category_id Int
+  title       String
+  description String
+  requirement String
+  benefits    String?
+  location    String
+  format      OppFormat
+  work_time   String
+  start_date  DateTime
+  end_date    DateTime
+  image       String?
+  status      OppStatus @default(draft)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
-  @@map("opportunities")
+  organization Organization       @relation(fields: [org_id], references: [org_id])
+  poster       User               @relation("PostedBy", fields: [posted_by], references: [user_id])
+  category     Category           @relation(fields: [category_id], references: [category_id])
+  applications Application[]
+  skills       OpportunitySkill[]
+  saved        SavedOpportunity[]
+}
+
+model Application {
+  application_id Int               @id @default(autoincrement())
+  user_id        Int
+  opp_id         Int
+  status         ApplicationStatus @default(pending)
+  applied_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+  user           User              @relation(fields: [user_id], references: [user_id])
+  opportunity    Opportunity       @relation(fields: [opp_id], references: [opp_id])
+
+  @@unique([user_id, opp_id])
+}
+
+model Skill {
+  skill_id   Int    @id @default(autoincrement())
+  skill_name String @unique
+
+  opportunities OpportunitySkill[]
 }
 
 model OpportunitySkill {
   opp_id      Int
   skill_id    Int
-  opportunity Opportunity @relation(fields: [opp_id], references: [opp_id], onDelete: Cascade)
-  skill       Skill       @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opp_id], references: [opp_id])
+  skill       Skill       @relation(fields: [skill_id], references: [skill_id])
 
   @@id([opp_id, skill_id])
-  @@map("opportunity_skills")
 }
 
-model VolunteerSkill {
-  profile_id Int
-  skill_id   Int
-  volunteer  Volunteer @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade)
-  skill      Skill     @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
+model SavedOpportunity {
+  user_id     Int
+  opp_id      Int
+  saved_at    DateTime    @default(now())
+  user        User        @relation(fields: [user_id], references: [user_id])
+  opportunity Opportunity @relation(fields: [opp_id], references: [opp_id])
 
-  @@id([profile_id, skill_id])
-  @@map("volunteer_skills")
-}
-
-model Application {
-  application_id Int               @id @default(autoincrement())
-  profile_id     Int
-  opp_id         Int
-  status         ApplicationStatus @default(pending)
-  applied_at     DateTime          @default(now())
-  updated_at     DateTime          @updatedAt
-  opportunity    Opportunity       @relation(fields: [opp_id], references: [opp_id], onDelete: Cascade)
-  volunteer      Volunteer         @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade)
-
-  @@unique([profile_id, opp_id])
-  @@map("applications")
-}
-
-model Notification {
-  notification_id Int      @id @default(autoincrement())
-  user_id         Int
-  message         String
-  is_read         Boolean  @default(false)
-  created_at      DateTime @default(now())
-  user            User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-
-  @@map("notifications")
+  @@id([user_id, opp_id])
 }
 
 enum UserType {

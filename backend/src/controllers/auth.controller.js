@@ -4,7 +4,7 @@ const prisma = require('../lib/prisma');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { user_id: user.user_id, email: user.email, user_type: user.user_type },
+    { user_id: user.user_id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -33,27 +33,27 @@ const register = async (req, res) => {
     }
 
     const allowedRoles = ['volunteer', 'organization'];
-    const user_type = allowedRoles.includes(role) ? role : 'volunteer';
+    const resolvedRole = allowedRoles.includes(role) ? role : 'volunteer';
 
     const user = await userService.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
-      role: user_type,
+      role: resolvedRole,
     });
 
-    if (user_type === 'organization') {
+    if (resolvedRole === 'organization') {
       await prisma.organization.create({
         data: {
-          user_id: user.user_id,
+          owner_id: user.user_id,
           name: name.trim(),
           contact_email: email.toLowerCase().trim(),
         },
       });
     }
 
-    if (user_type === 'volunteer') {
-      await prisma.volunteer.create({
+    if (resolvedRole === 'volunteer') {
+      await prisma.volunteerProfile.create({
         data: {
           user_id: user.user_id,
         },
@@ -138,10 +138,9 @@ const updateProfile = async (req, res) => {
 
     const user = await userService.update(req.user.user_id, userUpdates);
 
-    if (user.user_type === 'organization') {
+    if (user.role === 'organization') {
       const orgUpdates = {};
       if (req.body.org_name !== undefined) orgUpdates.name = req.body.org_name;
-      if (req.body.social_link !== undefined) orgUpdates.social_link = req.body.social_link;
       if (req.body.org_website !== undefined) orgUpdates.website = req.body.org_website;
       if (req.body.description !== undefined) orgUpdates.description = req.body.description;
       if (req.body.contact_email !== undefined) orgUpdates.contact_email = req.body.contact_email;
@@ -150,23 +149,21 @@ const updateProfile = async (req, res) => {
 
       if (Object.keys(orgUpdates).length > 0) {
         await prisma.organization.update({
-          where: { user_id: req.user.user_id },
+          where: { owner_id: req.user.user_id },
           data: orgUpdates,
         });
       }
     }
 
-    if (user.user_type === 'volunteer') {
+    if (user.role === 'volunteer') {
       const volUpdates = {};
       if (req.body.phone_num !== undefined) volUpdates.phone_num = req.body.phone_num;
       if (req.body.location !== undefined) volUpdates.location = req.body.location;
       if (req.body.bio !== undefined) volUpdates.bio = req.body.bio;
-      if (req.body.dob !== undefined) volUpdates.dob = new Date(req.body.dob);
+      if (req.body.date_of_birth !== undefined) volUpdates.date_of_birth = new Date(req.body.date_of_birth);
       if (req.body.gender !== undefined) volUpdates.gender = req.body.gender;
-      if (req.body.interests !== undefined) volUpdates.interests = JSON.stringify(req.body.interests);
-
       if (Object.keys(volUpdates).length > 0) {
-        await prisma.volunteer.update({
+        await prisma.volunteerProfile.update({
           where: { user_id: req.user.user_id },
           data: volUpdates,
         });

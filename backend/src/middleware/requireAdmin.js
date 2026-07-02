@@ -8,7 +8,7 @@ const requireAdmin = (req, res, next) => {
     const token   = auth.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.user_type !== 'admin') {
+    if (decoded.role !== 'admin') {
       return res.status(403).json({ message: 'Admins only' });
     }
     req.user = decoded;

@@ -3,7 +3,7 @@ const prisma = require('../lib/prisma');
 const create = async (data) => {
   return prisma.organization.create({
     data: {
-      user_id: data.user_id,
+      owner_id: data.user_id,
       name: data.name,
       contact_email: data.email,
       contact_phone: data.phone || null,
@@ -18,12 +18,12 @@ const create = async (data) => {
 const findById = async (id) => {
   return prisma.organization.findUnique({
     where: { org_id: id },
-    include: { opportunities: true, user: { select: { user_id: true, full_name: true, email: true } } },
+    include: { opportunities: true, owner: { select: { user_id: true, full_name: true, email: true } } },
   });
 };
 
 const findByUserId = async (userId) => {
-  return prisma.organization.findUnique({ where: { user_id: userId } });
+  return prisma.organization.findUnique({ where: { owner_id: userId } });
 };
 
 const findAll = async (status) => {
@@ -41,11 +41,9 @@ const update = async (id, data) => {
   if (data.bio !== undefined) updateData.description = data.bio;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.website !== undefined) updateData.website = data.website;
-  if (data.social_link !== undefined) updateData.social_link = data.social_link;
   if (data.status !== undefined) updateData.status = data.status;
   if (data.contact_email !== undefined) updateData.contact_email = data.contact_email;
   if (data.contact_phone !== undefined) updateData.contact_phone = data.contact_phone;
-  if (data.completion_checklist !== undefined) updateData.completion_checklist = data.completion_checklist;
   return prisma.organization.update({ where: { org_id: id }, data: updateData });
 };
 

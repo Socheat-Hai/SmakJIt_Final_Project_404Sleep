@@ -3,9 +3,10 @@ const prisma = require('../lib/prisma');
 
 const list = async (req, res) => {
   try {
-    const { search, skill, location, orgId, page, limit } = req.query;
+    const { search, skill, location, orgId, categoryId, page, limit } = req.query;
     const result = await opportunityService.findAll({
-      search, skill, location, orgId: orgId ? parseInt(orgId) : undefined,
+      search, skill, location, categoryId,
+      orgId: orgId ? parseInt(orgId) : undefined,
       page: parseInt(page) || 1,
       limit: Math.min(parseInt(limit) || 20, 100),
     });
@@ -27,24 +28,23 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { title, description, requirements, benefits, location, org_id, work_time, start_date, end_date, format, max_volunteers, external_link, image } = req.body;
+    const { title, description, requirement, benefits, location, org_id, work_time, start_date, end_date, format, category_id } = req.body;
     if (!title || !org_id) {
       return res.status(400).json({ message: 'Title and org_id are required' });
     }
     const opp = await opportunityService.create({
       title,
-      description: description || null,
-      requirements: requirements || null,
+      description: description || '',
+      requirement: requirement || '',
       benefits: benefits || null,
-      location: location || null,
-      work_time: work_time || null,
-      start_date: start_date ? new Date(start_date) : null,
-      end_date: end_date ? new Date(end_date) : null,
-      format: format || null,
-      max_volunteers: max_volunteers ? parseInt(max_volunteers) : null,
-      external_link: external_link || null,
-      image: image || null,
+      location: location || '',
+      work_time: work_time || '',
+      start_date: start_date ? new Date(start_date) : new Date(),
+      end_date: end_date ? new Date(end_date) : new Date(),
+      format: format || 'online',
       org_id: parseInt(org_id),
+      posted_by: req.user.user_id,
+      category_id: category_id ? parseInt(category_id) : 1,
       status: 'open',
     });
     res.status(201).json(opp);
@@ -98,24 +98,11 @@ const interestSkillMap = {
 
 const getRecommended = async (req, res) => {
   try {
-    const volunteer = await prisma.volunteer.findUnique({
+    const volunteer = await prisma.volunteerProfile.findUnique({
       where: { user_id: req.user.user_id },
-      include: { volunteer_skills: true },
     });
 
     let skillIds = [];
-    if (volunteer?.volunteer_skills?.length) {
-      skillIds = volunteer.volunteer_skills.map((vs) => vs.skill_id);
-    } else if (volunteer?.interests) {
-      const interests = JSON.parse(volunteer.interests);
-      const skillNames = interests.flatMap((id) => interestSkillMap[id] || []);
-      if (skillNames.length) {
-        const matchedSkills = await prisma.skill.findMany({
-          where: { skill_name: { in: skillNames } },
-        });
-        skillIds = matchedSkills.map((s) => s.skill_id);
-      }
-    }
 
     if (!skillIds.length) {
       const all = await opportunityService.findAll({ page: 1, limit: 10 });

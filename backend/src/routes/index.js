@@ -8,6 +8,7 @@ const orgRoutes = require('./org.routes');
 const opportunityRoutes = require('./opportunity.routes');
 const applicationRoutes = require('./application.routes');
 const uploadRoutes = require('./upload.routes');
+const categoryRoutes = require('./category.routes');
 
 router.use('/admin', adminRoutes);
 router.use('/users', userRoutes);
@@ -16,5 +17,6 @@ router.use('/orgs', orgRoutes);
 router.use('/opportunities', opportunityRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/categories', categoryRoutes);
 
 module.exports = router;
