@@ -1,40 +1,48 @@
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { Application, Opportunity, Organization, User } = db;
 
 const create = async (data) => {
-  return prisma.application.create({ data });
+  return Application.create(data);
 };
 
 const findByUser = async (userId) => {
-  return prisma.application.findMany({
+  return Application.findAll({
     where: { user_id: userId },
-    include: {
-      opportunity: {
-        include: { organization: { select: { org_id: true, name: true } } },
+    include: [
+      {
+        model: Opportunity,
+        as: 'opportunity',
+        include: [
+          { model: Organization, as: 'organization', attributes: ['org_id', 'name'] },
+        ],
       },
-    },
-    orderBy: { applied_at: 'desc' },
+    ],
+    order: [['applied_at', 'DESC']],
   });
 };
 
 const findByOpportunity = async (oppId) => {
-  return prisma.application.findMany({
+  return Application.findAll({
     where: { opp_id: oppId },
-    include: {
-      user: { select: { user_id: true, full_name: true, email: true } },
-    },
-    orderBy: { applied_at: 'desc' },
+    include: [
+      { model: User, as: 'user', attributes: ['user_id', 'full_name', 'email'] },
+    ],
+    order: [['applied_at', 'DESC']],
   });
 };
 
 const findById = async (id) => {
-  return prisma.application.findUnique({
-    where: { application_id: id },
-    include: { opportunity: true, user: true },
+  return Application.findByPk(id, {
+    include: [
+      { model: Opportunity, as: 'opportunity' },
+      { model: User, as: 'user' },
+    ],
   });
 };
 
 const updateStatus = async (id, status) => {
-  return prisma.application.update({ where: { application_id: id }, data: { status } });
+  await Application.update({ status }, { where: { application_id: id } });
+  return Application.findByPk(id);
 };
 
 module.exports = { create, findByUser, findByOpportunity, findById, updateStatus };

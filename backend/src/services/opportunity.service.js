@@ -1,84 +1,101 @@
-const prisma = require('../lib/prisma');
+const { Op } = require('sequelize');
+const db = require('../models');
+const { Opportunity, Organization, Category, OpportunitySkill, Skill } = db;
 
 const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, limit = 20 }) => {
   const where = {};
   if (search) {
-    where.OR = [
-      { title: { contains: search } },
-      { description: { contains: search } },
+    where[Op.or] = [
+      { title: { [Op.iLike]: `%${search}%` } },
+      { description: { [Op.iLike]: `%${search}%` } },
     ];
   }
-  if (skill) {
-    where.skills = {
-      some: { skill: { skill_name: { contains: skill } } },
-    };
-  }
-  if (location) where.location = { contains: location };
+  if (location) where.location = { [Op.iLike]: `%${location}%` };
   if (orgId) where.org_id = orgId;
   if (categoryId) where.category_id = parseInt(categoryId);
 
-  const skip = (page - 1) * limit;
-  const [data, total] = await Promise.all([
-    prisma.opportunity.findMany({
-      where,
-      include: {
-        organization: { select: { org_id: true, name: true, contact_email: true, logo: true } },
-        category: true,
-        skills: { include: { skill: true } },
-        _count: { select: { applications: true } },
+  const skillWhere = skill ? { skill_name: { [Op.iLike]: `%${skill}%` } } : undefined;
+
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await Opportunity.findAndCountAll({
+    where,
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['org_id', 'name', 'contact_email', 'logo'],
       },
-      skip,
-      take: limit,
-      orderBy: { created_at: 'desc' },
-    }),
-    prisma.opportunity.count({ where }),
-  ]);
-  return { data, total, page, pages: Math.ceil(total / limit) };
+      { model: Category, as: 'category' },
+      {
+        model: OpportunitySkill,
+        as: 'skills',
+        required: !!skill,
+        include: skillWhere
+          ? [{ model: Skill, as: 'skill', where: skillWhere }]
+          : [{ model: Skill, as: 'skill' }],
+      },
+    ],
+    distinct: true,
+    offset,
+    limit,
+    order: [['created_at', 'DESC']],
+  });
+
+  return { data: rows, total: count, page, pages: Math.ceil(count / limit) };
 };
 
 const findById = async (id) => {
-  return prisma.opportunity.findUnique({
-    where: { opp_id: id },
-    include: {
-      organization: {
-        select: { org_id: true, name: true, description: true, website: true, location: true },
+  return Opportunity.findByPk(id, {
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['org_id', 'name', 'description', 'website', 'location'],
       },
-      category: true,
-      skills: { include: { skill: true } },
-      _count: { select: { applications: true } },
-    },
+      { model: Category, as: 'category' },
+      {
+        model: OpportunitySkill,
+        as: 'skills',
+        include: [{ model: Skill, as: 'skill' }],
+      },
+    ],
   });
 };
 
 const create = async (data) => {
-  return prisma.opportunity.create({ data });
+  return Opportunity.create(data);
 };
 
 const findRecommended = async (skillIds) => {
-  return prisma.opportunity.findMany({
-    where: {
-      status: 'open',
-      skills: {
-        some: { skill_id: { in: skillIds } },
+  return Opportunity.findAll({
+    where: { status: 'open' },
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['org_id', 'name', 'logo'],
       },
-    },
-    include: {
-      organization: { select: { org_id: true, name: true, logo: true } },
-      category: true,
-      skills: { include: { skill: true } },
-      _count: { select: { applications: true } },
-    },
-    orderBy: { created_at: 'desc' },
-    take: 10,
+      { model: Category, as: 'category' },
+      {
+        model: OpportunitySkill,
+        as: 'skills',
+        required: true,
+        include: [{ model: Skill, as: 'skill', where: { skill_id: { [Op.in]: skillIds } } }],
+      },
+    ],
+    order: [['created_at', 'DESC']],
+    limit: 10,
   });
 };
 
 const update = async (id, data) => {
-  return prisma.opportunity.update({ where: { opp_id: id }, data });
+  await Opportunity.update(data, { where: { opp_id: id } });
+  return Opportunity.findByPk(id);
 };
 
 const remove = async (id) => {
-  return prisma.opportunity.delete({ where: { opp_id: id } });
+  return Opportunity.destroy({ where: { opp_id: id } });
 };
 
-module.exports = { findAll, findById, create, update, remove };
+module.exports = { findAll, findById, create, update, remove, findRecommended };

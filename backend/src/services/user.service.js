@@ -1,55 +1,40 @@
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { User, Organization, VolunteerProfile } = db;
 const bcrypt = require('bcryptjs');
 
 const findAll = async () => {
-  return prisma.user.findMany({ orderBy: { created_at: 'desc' } });
+  return User.findAll({ order: [['created_at', 'DESC']] });
 };
 
 const findById = async (id) => {
-  return prisma.user.findUnique({
-    where: { user_id: id },
-    include: {
-      organization: {
-        select: {
-          name: true,
-          website: true,
-          contact_email: true,
-          contact_phone: true,
-          location: true,
-          description: true,
-          logo: true,
-          status: true,
-        },
+  return User.findByPk(id, {
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['name', 'website', 'contact_email', 'contact_phone', 'location', 'description', 'logo', 'status'],
       },
-      profile: {
-        select: {
-          profile_id: true,
-          phone_num: true,
-          profile_picture: true,
-          date_of_birth: true,
-          location: true,
-          gender: true,
-          bio: true,
-        },
+      {
+        model: VolunteerProfile,
+        as: 'profile',
+        attributes: ['profile_id', 'phone_num', 'profile_picture', 'date_of_birth', 'location', 'gender', 'bio'],
       },
-    },
+    ],
   });
 };
 
 const findByEmail = async (email) => {
-  return prisma.user.findUnique({ where: { email } });
+  return User.findOne({ where: { email } });
 };
 
 const create = async (userData) => {
   const salt = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(userData.password, salt);
-  return prisma.user.create({
-    data: {
-      full_name: userData.full_name || userData.name,
-      email: userData.email,
-      password_hash: hashedPassword,
-      role: userData.role,
-    },
+  return User.create({
+    full_name: userData.full_name || userData.name,
+    email: userData.email,
+    password_hash: hashedPassword,
+    role: userData.role,
   });
 };
 
@@ -64,11 +49,12 @@ const update = async (id, data) => {
     const salt = await bcrypt.genSalt(12);
     updateData.password_hash = await bcrypt.hash(data.password, salt);
   }
-  return prisma.user.update({ where: { user_id: id }, data: updateData });
+  await User.update(updateData, { where: { user_id: id } });
+  return User.findByPk(id);
 };
 
 const remove = async (id) => {
-  return prisma.user.delete({ where: { user_id: id } });
+  return User.destroy({ where: { user_id: id } });
 };
 
 const comparePassword = async (candidatePassword, hashedPassword) => {
@@ -77,7 +63,8 @@ const comparePassword = async (candidatePassword, hashedPassword) => {
 
 const sanitizeUser = (user) => {
   if (!user) return null;
-  const { password_hash, organization, profile, ...safe } = user;
+  const userJson = user.get({ plain: true });
+  const { password_hash, organization, profile, ...safe } = userJson;
   return {
     ...safe,
     id: safe.user_id,

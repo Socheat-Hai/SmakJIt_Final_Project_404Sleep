@@ -3,10 +3,11 @@ const router = express.Router();
 const orgController = require('../controllers/org.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { Organization } = db;
 
 router.get('/test-db', async (req, res) => {
-  const orgs = await prisma.organization.findMany();
+  const orgs = await Organization.findAll();
   res.json(orgs);
 });
 

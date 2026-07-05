@@ -1,5 +1,6 @@
 const opportunityService = require('../services/opportunity.service');
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { VolunteerProfile } = db;
 
 const list = async (req, res) => {
   try {
@@ -98,7 +99,7 @@ const interestSkillMap = {
 
 const getRecommended = async (req, res) => {
   try {
-    const volunteer = await prisma.volunteerProfile.findUnique({
+    const volunteer = await VolunteerProfile.findOne({
       where: { user_id: req.user.user_id },
     });
 

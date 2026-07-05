@@ -1,34 +1,34 @@
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { Organization, User } = db;
 
 const create = async (data) => {
-  return prisma.organization.create({
-    data: {
-      owner_id: data.user_id,
-      name: data.name,
-      contact_email: data.email,
-      contact_phone: data.phone || null,
-      location: data.address || data.location || null,
-      description: data.bio || data.description || null,
-      website: data.website || null,
-      status: 'pending',
-    },
+  return Organization.create({
+    owner_id: data.user_id,
+    name: data.name,
+    contact_email: data.email,
+    contact_phone: data.phone || null,
+    location: data.address || data.location || null,
+    description: data.bio || data.description || null,
+    website: data.website || null,
+    status: 'pending',
   });
 };
 
 const findById = async (id) => {
-  return prisma.organization.findUnique({
-    where: { org_id: id },
-    include: { opportunities: true, owner: { select: { user_id: true, full_name: true, email: true } } },
+  return Organization.findByPk(id, {
+    include: [
+      { model: User, as: 'owner', attributes: ['user_id', 'full_name', 'email'] },
+    ],
   });
 };
 
 const findByUserId = async (userId) => {
-  return prisma.organization.findUnique({ where: { owner_id: userId } });
+  return Organization.findOne({ where: { owner_id: userId } });
 };
 
 const findAll = async (status) => {
   const where = status ? { status } : {};
-  return prisma.organization.findMany({ where, orderBy: { created_at: 'desc' } });
+  return Organization.findAll({ where, order: [['created_at', 'DESC']] });
 };
 
 const update = async (id, data) => {
@@ -44,7 +44,8 @@ const update = async (id, data) => {
   if (data.status !== undefined) updateData.status = data.status;
   if (data.contact_email !== undefined) updateData.contact_email = data.contact_email;
   if (data.contact_phone !== undefined) updateData.contact_phone = data.contact_phone;
-  return prisma.organization.update({ where: { org_id: id }, data: updateData });
+  await Organization.update(updateData, { where: { org_id: id } });
+  return Organization.findByPk(id);
 };
 
 module.exports = { create, findById, findByUserId, findAll, update };

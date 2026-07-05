@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const userService = require('../services/user.service');
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { Organization, VolunteerProfile } = db;
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -43,20 +44,16 @@ const register = async (req, res) => {
     });
 
     if (resolvedRole === 'organization') {
-      await prisma.organization.create({
-        data: {
-          owner_id: user.user_id,
-          name: name.trim(),
-          contact_email: email.toLowerCase().trim(),
-        },
+      await Organization.create({
+        owner_id: user.user_id,
+        name: name.trim(),
+        contact_email: email.toLowerCase().trim(),
       });
     }
 
     if (resolvedRole === 'volunteer') {
-      await prisma.volunteerProfile.create({
-        data: {
-          user_id: user.user_id,
-        },
+      await VolunteerProfile.create({
+        user_id: user.user_id,
       });
     }
 
@@ -65,7 +62,7 @@ const register = async (req, res) => {
 
     res.status(201).json({ token, user: safe });
   } catch (error) {
-    if (error.code === 'P2002') {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'An account with this email already exists' });
     }
     res.status(500).json({ message: 'Server error. Please try again later.' });
@@ -148,10 +145,7 @@ const updateProfile = async (req, res) => {
       if (req.body.location !== undefined) orgUpdates.location = req.body.location;
 
       if (Object.keys(orgUpdates).length > 0) {
-        await prisma.organization.update({
-          where: { owner_id: req.user.user_id },
-          data: orgUpdates,
-        });
+        await Organization.update(orgUpdates, { where: { owner_id: req.user.user_id } });
       }
     }
 
@@ -163,10 +157,7 @@ const updateProfile = async (req, res) => {
       if (req.body.date_of_birth !== undefined) volUpdates.date_of_birth = new Date(req.body.date_of_birth);
       if (req.body.gender !== undefined) volUpdates.gender = req.body.gender;
       if (Object.keys(volUpdates).length > 0) {
-        await prisma.volunteerProfile.update({
-          where: { user_id: req.user.user_id },
-          data: volUpdates,
-        });
+        await VolunteerProfile.update(volUpdates, { where: { user_id: req.user.user_id } });
       }
     }
 

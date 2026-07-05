@@ -1,6 +1,7 @@
 const applicationService = require("../services/application.service");
 const emailService = require("../services/email.service");
-const prisma = require("../lib/prisma");
+const db = require("../models");
+const { VolunteerProfile, Application, User, Opportunity } = db;
 
 const submit = async (req, res) => {
   try {
@@ -9,7 +10,7 @@ const submit = async (req, res) => {
       return res.status(400).json({ message: "opp_id is required" });
     }
 
-    const volunteer = await prisma.volunteerProfile.findUnique({
+    const volunteer = await VolunteerProfile.findOne({
       where: { user_id: req.user.user_id },
     });
     if (!volunteer) {
@@ -23,7 +24,7 @@ const submit = async (req, res) => {
 
     res.status(201).json(app);
   } catch (error) {
-    if (error.code === "P2002") {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res
         .status(409)
         .json({ message: "You have already applied to this opportunity" });
@@ -34,7 +35,7 @@ const submit = async (req, res) => {
 
 const myApplications = async (req, res) => {
   try {
-    const volunteer = await prisma.volunteerProfile.findUnique({
+    const volunteer = await VolunteerProfile.findOne({
       where: { user_id: req.user.user_id },
     });
     if (!volunteer) {
@@ -72,12 +73,11 @@ const review = async (req, res) => {
     );
     if (!app) return res.status(404).json({ message: "Application not found" });
 
-    const fullApp = await prisma.application.findUnique({
-      where: { application_id: parseInt(req.params.id) },
-      include: {
-        opportunity: { select: { title: true } },
-        user: { select: { full_name: true, email: true } },
-      },
+    const fullApp = await Application.findByPk(parseInt(req.params.id), {
+      include: [
+        { model: Opportunity, as: 'opportunity', attributes: ['title'] },
+        { model: User, as: 'user', attributes: ['full_name', 'email'] },
+      ],
     });
 
     if (fullApp?.user?.email) {

@@ -1,4 +1,5 @@
-const prisma = require('../lib/prisma');
+const db = require('../models');
+const { VolunteerProfile, Organization } = db;
 
 const uploadProfilePhoto = async (req, res) => {
   try {
@@ -6,12 +7,12 @@ const uploadProfilePhoto = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     const photoUrl = '/uploads/' + req.file.filename;
-    const volunteer = await prisma.volunteerProfile.findUnique({ where: { user_id: req.user.user_id } });
+    const volunteer = await VolunteerProfile.findOne({ where: { user_id: req.user.user_id } });
     if (volunteer) {
-      await prisma.volunteerProfile.update({
-        where: { user_id: req.user.user_id },
-        data: { profile_picture: photoUrl },
-      });
+      await VolunteerProfile.update(
+        { profile_picture: photoUrl },
+        { where: { user_id: req.user.user_id } }
+      );
     }
     res.json({ photoUrl, message: 'Profile photo updated' });
   } catch (error) {
@@ -25,12 +26,12 @@ const uploadOrgLogo = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     const logoUrl = '/uploads/' + req.file.filename;
-    const org = await prisma.organization.findUnique({ where: { owner_id: req.user.user_id } });
+    const org = await Organization.findOne({ where: { owner_id: req.user.user_id } });
     if (org) {
-      await prisma.organization.update({
-        where: { owner_id: req.user.user_id },
-        data: { logo: logoUrl },
-      });
+      await Organization.update(
+        { logo: logoUrl },
+        { where: { owner_id: req.user.user_id } }
+      );
     }
     res.json({ logoUrl, message: 'Logo updated' });
   } catch (error) {
