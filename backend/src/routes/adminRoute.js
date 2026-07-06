@@ -1,20 +1,22 @@
 const express = require('express')
 const router = express.Router()
-const { Op, literal } = require('sequelize')
-const db = require('../models')
-const { User, Organization, Opportunity, Application } = db
 const requireAdmin = require('../middleware/requireAdmin');
+const userRepository = require('../repositories/user.repository');
+const orgRepository = require('../repositories/organization.repository');
+const oppRepository = require('../repositories/opportunity.repository');
+const appRepository = require('../repositories/application.repository');
+const db = require('../models');
 
 router.use(requireAdmin);
 
 router.get('/stats', async (req, res) => {
   const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs] =
     await Promise.all([
-      User.count(),
-      Organization.count(),
-      Opportunity.count(),
-      Application.count(),
-      Organization.count({ where: { status: 'pending' } }),
+      userRepository.count(),
+      orgRepository.count(),
+      oppRepository.count(),
+      appRepository.count(),
+      orgRepository.count({ status: 'pending' }),
     ])
   res.json({ totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs })
 })
@@ -22,45 +24,27 @@ router.get('/stats', async (req, res) => {
 router.get('/orgs', async (req, res) => {
   const { status } = req.query;
   const where = status && status !== 'all' ? { status } : {};
-  const orgs = await Organization.findAll({
-    where,
-    include: [
-      { model: User, as: 'owner', attributes: ['full_name', 'email', 'created_at'] },
-    ],
-    order: [['created_at', 'DESC']],
-  })
+  const orgs = await orgRepository.findAll(where)
   res.json(orgs)
 })
 
 router.get('/orgs/pending', async (req, res) => {
-  const orgs = await Organization.findAll({
-    where: { status: 'pending' },
-    include: [
-      { model: User, as: 'owner', attributes: ['full_name', 'email', 'created_at'] },
-    ],
-    order: [['created_at', 'ASC']],
-  })
+  const orgs = await orgRepository.findAll({ status: 'pending' })
   res.json(orgs)
 })
 
 router.patch('/orgs/:id/approve', async (req, res) => {
-  const [, [org]] = await Organization.update(
-    { status: 'approved' },
-    { where: { org_id: parseInt(req.params.id) }, returning: true },
-  )
+  const org = await orgRepository.updateById(parseInt(req.params.id), { status: 'approved' })
   res.json({ message: 'Approved', org })
 })
 
 router.patch('/orgs/:id/reject', async (req, res) => {
-  const [, [org]] = await Organization.update(
-    { status: 'rejected' },
-    { where: { org_id: parseInt(req.params.id) }, returning: true },
-  )
+  const org = await orgRepository.updateById(parseInt(req.params.id), { status: 'rejected' })
   res.json({ message: 'Rejected', org })
 })
 
 router.get('/orgs/:id/checklist', async (req, res) => {
-  const org = await Organization.findByPk(parseInt(req.params.id))
+  const org = await orgRepository.findById(parseInt(req.params.id))
   if (!org) return res.status(404).json({ message: 'Organization not found' })
 
   const checklist = {
@@ -79,20 +63,13 @@ router.get('/orgs/:id/checklist', async (req, res) => {
 
 router.get('/users', async (req, res) => {
   const { search, role, status } = req.query;
-  const where = {};
-  if (role && role !== 'all') where.role = role;
-  if (status && status !== 'all') where.status = status;
-  if (search) {
-    where[Op.or] = [
-      { full_name: { [Op.iLike]: `%${search}%` } },
-      { email: { [Op.iLike]: `%${search}%` } },
-    ];
-  }
-  const users = await User.findAll({
-    where,
+  const users = await userRepository.findAllWithFilters({
+    search,
+    role,
+    status,
     attributes: ['user_id', 'full_name', 'email', 'role', 'status', 'created_at'],
     include: [
-      { model: Organization, as: 'organization', attributes: ['status', 'org_id'] },
+      { association: 'organization', attributes: ['status', 'org_id'] },
     ],
     order: [['created_at', 'DESC']],
   })
@@ -107,43 +84,22 @@ router.get('/users', async (req, res) => {
 })
 
 router.patch('/users/:id/suspend', async (req, res) => {
-  const [, [user]] = await User.update(
-    { status: 'banned' },
-    { where: { user_id: parseInt(req.params.id) }, returning: true },
-  )
-  res.json({ message: 'User suspended', user })
+  await userRepository.update(parseInt(req.params.id), { status: 'banned' })
+  res.json({ message: 'User suspended' })
 })
 
 router.patch('/users/:id/activate', async (req, res) => {
-  const [, [user]] = await User.update(
-    { status: 'active' },
-    { where: { user_id: parseInt(req.params.id) }, returning: true },
-  )
-  res.json({ message: 'User activated', user })
+  await userRepository.update(parseInt(req.params.id), { status: 'active' })
+  res.json({ message: 'User activated' })
 })
 
 router.get('/opportunities', async (req, res) => {
   const { search, status } = req.query;
-  const where = {};
-  if (status && status !== 'all') where.status = status;
-  if (search) {
-    where[Op.or] = [
-      { title: { [Op.iLike]: `%${search}%` } },
-      { description: { [Op.iLike]: `%${search}%` } },
-    ];
-  }
-  const opps = await Opportunity.findAll({
-    where,
-    attributes: {
-      include: [
-        [
-          literal('(SELECT COUNT(*) FROM "Application" WHERE "Application"."opp_id" = "Opportunity"."opp_id")'),
-          'applicationCount',
-        ],
-      ],
-    },
+  const opps = await oppRepository.findAllWithCount({
+    search,
+    status,
     include: [
-      { model: Organization, as: 'organization', attributes: ['name'] },
+      { model: db.Organization, as: 'organization', attributes: ['name'] },
     ],
     order: [['created_at', 'DESC']],
   })
@@ -164,19 +120,17 @@ router.get('/opportunities', async (req, res) => {
 })
 
 router.delete('/opportunities/:id', async (req, res) => {
-  await Opportunity.destroy({ where: { opp_id: parseInt(req.params.id) } })
+  await oppRepository.remove(parseInt(req.params.id))
   res.json({ message: 'Opportunity deleted' })
 })
 
 router.get('/applications', async (req, res) => {
   const { status } = req.query;
-  const where = {};
-  if (status && status !== 'all') where.status = status;
-  const apps = await Application.findAll({
-    where,
+  const apps = await appRepository.findAllWithIncludes({
+    status,
     include: [
-      { model: Opportunity, as: 'opportunity', attributes: ['title', 'opp_id'] },
-      { model: User, as: 'user', attributes: ['full_name', 'email'] },
+      { model: db.Opportunity, as: 'opportunity', attributes: ['title', 'opp_id'] },
+      { model: db.User, as: 'user', attributes: ['full_name', 'email'] },
     ],
     order: [['applied_at', 'DESC']],
   })

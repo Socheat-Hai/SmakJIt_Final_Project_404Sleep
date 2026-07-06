@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const userService = require('../services/user.service');
-const db = require('../models');
-const { Organization, VolunteerProfile } = db;
+const orgService = require('../services/org.service');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -44,17 +43,16 @@ const register = async (req, res) => {
     });
 
     if (resolvedRole === 'organization') {
-      await Organization.create({
-        owner_id: user.user_id,
+      await orgService.create({
+        user_id: user.user_id,
         name: name.trim(),
-        contact_email: email.toLowerCase().trim(),
+        email: email.toLowerCase().trim(),
       });
     }
 
     if (resolvedRole === 'volunteer') {
-      await VolunteerProfile.create({
-        user_id: user.user_id,
-      });
+      const volunteerProfileRepository = require('../repositories/volunteerProfile.repository');
+      await volunteerProfileRepository.create({ user_id: user.user_id });
     }
 
     const token = generateToken(user);

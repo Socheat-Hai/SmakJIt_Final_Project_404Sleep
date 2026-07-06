@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
-const db = require('../models');
-const { Opportunity, Organization, Category, OpportunitySkill, Skill } = db;
+const oppRepository = require('../repositories/opportunity.repository');
+const oppSkillRepository = require('../repositories/opportunitySkill.repository');
 
 const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, limit = 20 }) => {
   const where = {};
@@ -14,15 +14,7 @@ const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, l
   if (orgId) where.org_id = orgId;
   if (categoryId) where.category_id = parseInt(categoryId);
   if (skill) {
-    const matchingOpps = await OpportunitySkill.findAll({
-      include: [{
-        model: Skill,
-        as: 'skill',
-        where: { skill_name: { [Op.iLike]: `%${skill}%` } },
-        attributes: [],
-      }],
-      attributes: ['opp_id'],
-    });
+    const matchingOpps = await oppSkillRepository.findBySkillName(skill);
     const oppIds = [...new Set(matchingOpps.map((o) => o.opp_id))];
     if (!oppIds.length) {
       return { data: [], total: 0, page, pages: 0 };
@@ -31,84 +23,29 @@ const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, l
   }
 
   const offset = (page - 1) * limit;
-
-  const { count, rows } = await Opportunity.findAndCountAll({
-    where,
-    include: [
-      {
-        model: Organization,
-        as: 'organization',
-        attributes: ['org_id', 'name', 'contact_email', 'logo'],
-      },
-      { model: Category, as: 'category' },
-      {
-        model: OpportunitySkill,
-        as: 'skills',
-        separate: true,
-        include: [{ model: Skill, as: 'skill' }],
-      },
-    ],
-    offset,
-    limit,
-    order: [['created_at', 'DESC']],
-  });
-
+  const { count, rows } = await oppRepository.findAll(where, { offset, limit });
   return { data: rows, total: count, page, pages: Math.ceil(count / limit) };
 };
 
 const findById = async (id) => {
-  return Opportunity.findByPk(id, {
-    include: [
-      {
-        model: Organization,
-        as: 'organization',
-        attributes: ['org_id', 'name', 'description', 'website', 'location'],
-      },
-      { model: Category, as: 'category' },
-      {
-        model: OpportunitySkill,
-        as: 'skills',
-        separate: true,
-        include: [{ model: Skill, as: 'skill' }],
-      },
-    ],
-  });
+  return oppRepository.findById(id);
 };
 
 const create = async (data) => {
-  return Opportunity.create(data);
+  return oppRepository.create(data);
 };
 
 const findRecommended = async (skillIds) => {
-  return Opportunity.findAll({
-    where: { status: 'open' },
-    include: [
-      {
-        model: Organization,
-        as: 'organization',
-        attributes: ['org_id', 'name', 'logo'],
-      },
-      { model: Category, as: 'category' },
-    ],
-    where: {
-      opp_id: {
-        [Op.in]: db.sequelize.literal(
-          `(SELECT opp_id FROM "OpportunitySkill" WHERE skill_id IN (${skillIds.map(Number).join(',')}))`
-        ),
-      },
-    },
-    order: [['created_at', 'DESC']],
-    limit: 10,
-  });
+  return oppRepository.findRecommended(skillIds);
 };
 
 const update = async (id, data) => {
-  await Opportunity.update(data, { where: { opp_id: id } });
-  return Opportunity.findByPk(id);
+  await oppRepository.update(id, data);
+  return oppRepository.findById(id);
 };
 
 const remove = async (id) => {
-  return Opportunity.destroy({ where: { opp_id: id } });
+  return oppRepository.remove(id);
 };
 
 module.exports = { findAll, findById, create, update, remove, findRecommended };

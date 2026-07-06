@@ -1,6 +1,4 @@
 const opportunityService = require('../services/opportunity.service');
-const db = require('../models');
-const { VolunteerProfile } = db;
 
 const list = async (req, res) => {
   try {

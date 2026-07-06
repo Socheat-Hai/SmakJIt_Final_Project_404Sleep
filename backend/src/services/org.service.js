@@ -1,8 +1,7 @@
-const db = require('../models');
-const { Organization, User } = db;
+const orgRepository = require('../repositories/organization.repository');
 
 const create = async (data) => {
-  return Organization.create({
+  return orgRepository.create({
     owner_id: data.user_id,
     name: data.name,
     contact_email: data.email,
@@ -15,20 +14,16 @@ const create = async (data) => {
 };
 
 const findById = async (id) => {
-  return Organization.findByPk(id, {
-    include: [
-      { model: User, as: 'owner', attributes: ['user_id', 'full_name', 'email'] },
-    ],
-  });
+  return orgRepository.findById(id);
 };
 
 const findByUserId = async (userId) => {
-  return Organization.findOne({ where: { owner_id: userId } });
+  return orgRepository.findByOwnerId(userId);
 };
 
 const findAll = async (status) => {
   const where = status ? { status } : {};
-  return Organization.findAll({ where, order: [['created_at', 'DESC']] });
+  return orgRepository.findAll(where);
 };
 
 const update = async (id, data) => {
@@ -44,8 +39,8 @@ const update = async (id, data) => {
   if (data.status !== undefined) updateData.status = data.status;
   if (data.contact_email !== undefined) updateData.contact_email = data.contact_email;
   if (data.contact_phone !== undefined) updateData.contact_phone = data.contact_phone;
-  await Organization.update(updateData, { where: { org_id: id } });
-  return Organization.findByPk(id);
+  await orgRepository.update(id, updateData);
+  return orgRepository.findById(id);
 };
 
 module.exports = { create, findById, findByUserId, findAll, update };

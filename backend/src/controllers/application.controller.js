@@ -1,7 +1,6 @@
 const applicationService = require("../services/application.service");
 const emailService = require("../services/email.service");
-const db = require("../models");
-const { VolunteerProfile, Application, User, Opportunity } = db;
+const userService = require("../services/user.service");
 
 const submit = async (req, res) => {
   try {
@@ -10,9 +9,7 @@ const submit = async (req, res) => {
       return res.status(400).json({ message: "opp_id is required" });
     }
 
-    const volunteer = await VolunteerProfile.findOne({
-      where: { user_id: req.user.user_id },
-    });
+    const volunteer = await userService.findVolunteerProfile(req.user.user_id);
     if (!volunteer) {
       return res.status(400).json({ message: "Only volunteers can apply" });
     }
@@ -35,9 +32,7 @@ const submit = async (req, res) => {
 
 const myApplications = async (req, res) => {
   try {
-    const volunteer = await VolunteerProfile.findOne({
-      where: { user_id: req.user.user_id },
-    });
+    const volunteer = await userService.findVolunteerProfile(req.user.user_id);
     if (!volunteer) {
       return res.json([]);
     }
@@ -73,12 +68,7 @@ const review = async (req, res) => {
     );
     if (!app) return res.status(404).json({ message: "Application not found" });
 
-    const fullApp = await Application.findByPk(parseInt(req.params.id), {
-      include: [
-        { model: Opportunity, as: 'opportunity', attributes: ['title'] },
-        { model: User, as: 'user', attributes: ['full_name', 'email'] },
-      ],
-    });
+    const fullApp = await applicationService.findById(parseInt(req.params.id));
 
     if (fullApp?.user?.email) {
       await emailService.sendApplicationStatus(

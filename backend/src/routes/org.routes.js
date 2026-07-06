@@ -2,12 +2,10 @@ const express = require('express');
 const router = express.Router();
 const orgController = require('../controllers/org.controller');
 const authMiddleware = require('../middleware/auth.middleware');
-
-const db = require('../models');
-const { Organization } = db;
+const orgRepository = require('../repositories/organization.repository');
 
 router.get('/test-db', async (req, res) => {
-  const orgs = await Organization.findAll();
+  const orgs = await orgRepository.findAll();
   res.json(orgs);
 });
 

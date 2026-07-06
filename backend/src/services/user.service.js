@@ -1,36 +1,23 @@
-const db = require('../models');
-const { User, Organization, VolunteerProfile } = db;
 const bcrypt = require('bcryptjs');
+const userRepository = require('../repositories/user.repository');
+const volunteerProfileRepository = require('../repositories/volunteerProfile.repository');
 
 const findAll = async () => {
-  return User.findAll({ order: [['created_at', 'DESC']] });
+  return userRepository.findAll();
 };
 
 const findById = async (id) => {
-  return User.findByPk(id, {
-    include: [
-      {
-        model: Organization,
-        as: 'organization',
-        attributes: ['name', 'website', 'contact_email', 'contact_phone', 'location', 'description', 'logo', 'status'],
-      },
-      {
-        model: VolunteerProfile,
-        as: 'profile',
-        attributes: ['profile_id', 'phone_num', 'profile_picture', 'date_of_birth', 'location', 'gender', 'bio'],
-      },
-    ],
-  });
+  return userRepository.findById(id);
 };
 
 const findByEmail = async (email) => {
-  return User.findOne({ where: { email } });
+  return userRepository.findByEmail(email);
 };
 
 const create = async (userData) => {
   const salt = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(userData.password, salt);
-  return User.create({
+  return userRepository.create({
     full_name: userData.full_name || userData.name,
     email: userData.email,
     password_hash: hashedPassword,
@@ -49,12 +36,16 @@ const update = async (id, data) => {
     const salt = await bcrypt.genSalt(12);
     updateData.password_hash = await bcrypt.hash(data.password, salt);
   }
-  await User.update(updateData, { where: { user_id: id } });
-  return User.findByPk(id);
+  await userRepository.update(id, updateData);
+  return userRepository.findById(id);
 };
 
 const remove = async (id) => {
-  return User.destroy({ where: { user_id: id } });
+  return userRepository.remove(id);
+};
+
+const findVolunteerProfile = async (userId) => {
+  return volunteerProfileRepository.findByUserId(userId);
 };
 
 const comparePassword = async (candidatePassword, hashedPassword) => {
@@ -87,4 +78,4 @@ const sanitizeUser = (user) => {
   };
 };
 
-module.exports = { findAll, findById, findByEmail, create, update, remove, comparePassword, sanitizeUser };
+module.exports = { findAll, findById, findByEmail, create, update, remove, comparePassword, sanitizeUser, findVolunteerProfile };
