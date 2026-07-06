@@ -13,8 +13,22 @@ const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, l
   if (location) where.location = { [Op.iLike]: `%${location}%` };
   if (orgId) where.org_id = orgId;
   if (categoryId) where.category_id = parseInt(categoryId);
-
-  const skillWhere = skill ? { skill_name: { [Op.iLike]: `%${skill}%` } } : undefined;
+  if (skill) {
+    const matchingOpps = await OpportunitySkill.findAll({
+      include: [{
+        model: Skill,
+        as: 'skill',
+        where: { skill_name: { [Op.iLike]: `%${skill}%` } },
+        attributes: [],
+      }],
+      attributes: ['opp_id'],
+    });
+    const oppIds = [...new Set(matchingOpps.map((o) => o.opp_id))];
+    if (!oppIds.length) {
+      return { data: [], total: 0, page, pages: 0 };
+    }
+    where.opp_id = { [Op.in]: oppIds };
+  }
 
   const offset = (page - 1) * limit;
 
@@ -30,13 +44,10 @@ const findAll = async ({ search, skill, location, orgId, categoryId, page = 1, l
       {
         model: OpportunitySkill,
         as: 'skills',
-        required: !!skill,
-        include: skillWhere
-          ? [{ model: Skill, as: 'skill', where: skillWhere }]
-          : [{ model: Skill, as: 'skill' }],
+        separate: true,
+        include: [{ model: Skill, as: 'skill' }],
       },
     ],
-    distinct: true,
     offset,
     limit,
     order: [['created_at', 'DESC']],
@@ -57,6 +68,7 @@ const findById = async (id) => {
       {
         model: OpportunitySkill,
         as: 'skills',
+        separate: true,
         include: [{ model: Skill, as: 'skill' }],
       },
     ],
@@ -77,13 +89,14 @@ const findRecommended = async (skillIds) => {
         attributes: ['org_id', 'name', 'logo'],
       },
       { model: Category, as: 'category' },
-      {
-        model: OpportunitySkill,
-        as: 'skills',
-        required: true,
-        include: [{ model: Skill, as: 'skill', where: { skill_id: { [Op.in]: skillIds } } }],
-      },
     ],
+    where: {
+      opp_id: {
+        [Op.in]: db.sequelize.literal(
+          `(SELECT opp_id FROM "OpportunitySkill" WHERE skill_id IN (${skillIds.map(Number).join(',')}))`
+        ),
+      },
+    },
     order: [['created_at', 'DESC']],
     limit: 10,
   });

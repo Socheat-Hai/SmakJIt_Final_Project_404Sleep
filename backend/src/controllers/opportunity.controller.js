@@ -29,14 +29,14 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { title, description, requirement, benefits, location, org_id, work_time, start_date, end_date, format, category_id } = req.body;
+    const { title, description, requirement, requirements, benefits, location, org_id, work_time, start_date, end_date, format, category_id, max_volunteers, external_link } = req.body;
     if (!title || !org_id) {
       return res.status(400).json({ message: 'Title and org_id are required' });
     }
     const opp = await opportunityService.create({
       title,
       description: description || '',
-      requirement: requirement || '',
+      requirement: requirement || requirements || '',
       benefits: benefits || null,
       location: location || '',
       work_time: work_time || '',
@@ -46,6 +46,8 @@ const create = async (req, res) => {
       org_id: parseInt(org_id),
       posted_by: req.user.user_id,
       category_id: category_id ? parseInt(category_id) : 1,
+      max_volunteers: max_volunteers ? parseInt(max_volunteers) : null,
+      external_link: external_link || null,
       status: 'open',
     });
     res.status(201).json(opp);
@@ -56,7 +58,13 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    const opp = await opportunityService.update(parseInt(req.params.id), req.body);
+    const data = { ...req.body };
+    if (data.requirements) {
+      data.requirement = data.requirements;
+      delete data.requirements;
+    }
+    if (data.max_volunteers) data.max_volunteers = parseInt(data.max_volunteers);
+    const opp = await opportunityService.update(parseInt(req.params.id), data);
     if (!opp) return res.status(404).json({ message: 'Opportunity not found' });
     res.json(opp);
   } catch (error) {
@@ -99,19 +107,8 @@ const interestSkillMap = {
 
 const getRecommended = async (req, res) => {
   try {
-    const volunteer = await VolunteerProfile.findOne({
-      where: { user_id: req.user.user_id },
-    });
-
-    let skillIds = [];
-
-    if (!skillIds.length) {
-      const all = await opportunityService.findAll({ page: 1, limit: 10 });
-      return res.json(all.data);
-    }
-
-    const recommended = await opportunityService.findRecommended(skillIds);
-    res.json(recommended);
+    const all = await opportunityService.findAll({ page: 1, limit: 10 });
+    return res.json(all.data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

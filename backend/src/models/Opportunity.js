@@ -36,6 +36,8 @@ module.exports = (sequelize, DataTypes) => {
       posted_by: DataTypes.INTEGER,
       category_id: DataTypes.INTEGER,
       image: DataTypes.STRING(255),
+      max_volunteers: DataTypes.INTEGER,
+      external_link: DataTypes.STRING(500),
       status: {
         type: DataTypes.STRING(50),
         defaultValue: 'open',
