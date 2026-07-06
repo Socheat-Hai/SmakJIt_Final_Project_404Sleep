@@ -5,7 +5,7 @@ import { useToast } from '../components/Toast';
 import { opportunityService } from '../services/opportunityService';
 import api from '../services/api';
 
-const categories = ['All', 'Teaching', 'Environment', 'Healthcare', 'Technology', 'Animal Care', 'Programming', 'First Aid', 'Cooking', 'Counseling', 'Sports'];
+const categories = ['All', 'Education', 'Healthcare', 'Environment', 'Community Development', 'Arts & Culture'];
 const locations = ['All', 'Online'];
 const formatFilters = ['All', 'Online', 'In-person', 'Hybrid'];
 
@@ -85,8 +85,7 @@ const Opportunities = () => {
   }, [user]);
 
   const filtered = opportunities.filter((opp) => {
-    const oppSkillNames = opp.opportunity_skills?.map((os) => os.skill?.skill_name) || [];
-    const matchCategory = activeCategory === 'All' || oppSkillNames.includes(activeCategory);
+    const matchCategory = activeCategory === 'All' || opp.category?.category_name === activeCategory;
     const matchLocation = activeLocation === 'All' || opp.location === activeLocation;
     const matchFormat = activeFormat === 'All' ||
       (activeFormat === 'Online' && opp.format === 'online') ||

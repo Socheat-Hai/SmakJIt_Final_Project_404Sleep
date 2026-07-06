@@ -6,7 +6,6 @@ import { useToast } from '../components/Toast';
 import ImageUpload from '../components/ImageUpload';
 import api from '../services/api';
 
-const categories = ['Education', 'Environment', 'Healthcare', 'Animal Welfare', 'Technology', 'Arts & Culture', 'Elderly Care', 'Sports', 'Food'];
 const formats = ['in-person', 'online', 'hybrid'];
 
 const CreateOpportunity = () => {
@@ -16,6 +15,7 @@ const CreateOpportunity = () => {
   const { showToast } = useToast();
   const isEditing = Boolean(id);
   const [orgId, setOrgId] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
   const [form, setForm] = useState({
@@ -43,19 +43,24 @@ const CreateOpportunity = () => {
   }, [user]);
 
   useEffect(() => {
+    api.get('/categories').then((res) => setCategories(res.data || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!isEditing) return;
     const fetchOpp = async () => {
       try {
         const res = await opportunityService.getById(id);
         const opp = res.data;
+        const catName = opp.category?.category_name || opp.opportunity_skills?.[0]?.skill?.skill_name || '';
         setForm({
           title: opp.title || '',
           description: opp.description || '',
-          category: opp.opportunity_skills?.[0]?.skill?.skill_name || '',
+          category: catName,
           location: opp.location || '',
           date: opp.start_date ? opp.start_date.split('T')[0] : '',
           spots: opp.max_volunteers || '',
-          requirements: opp.requirements || '',
+          requirements: opp.requirement || opp.requirements || '',
           commitment: opp.work_time || '',
           format: opp.format || '',
           external_link: opp.external_link || '',
@@ -95,6 +100,7 @@ const CreateOpportunity = () => {
         format: form.format || null,
         external_link: form.external_link || null,
         image: form.image || null,
+        category_id: categories.find((c) => c.category_name === form.category)?.category_id || null,
       };
 
       if (form.date) {
@@ -137,6 +143,7 @@ const CreateOpportunity = () => {
               onUpload={(url) => setForm({ ...form, image: url })}
               endpoint="opportunity-image"
               label="Upload Cover Image"
+              oppId={id}
             />
           </div>
 
@@ -150,7 +157,7 @@ const CreateOpportunity = () => {
               <label>Category <span className="text-red-400">*</span></label>
               <select value={form.category} onChange={update('category')}>
                 <option value="">Select a category</option>
-                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                {categories.map((c) => <option key={c.category_id} value={c.category_name}>{c.category_name}</option>)}
               </select>
             </div>
             <div className="input-group">

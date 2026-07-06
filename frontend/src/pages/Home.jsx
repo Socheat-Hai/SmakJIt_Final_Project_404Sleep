@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/opportunityService';
+import heroTeam from '../assets/images/hero-team.jpg';
 
 const stats = [
   { value: '12,000+', label: 'Volunteers' },
@@ -82,7 +83,7 @@ const Home = () => {
         </div>
         <div className="absolute top-0 right-0 w-1/2 h-full max-lg:hidden">
           <img
-            src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1000&q=80"
+            src={heroTeam}
             alt="Team working together"
             className="w-full h-full object-cover"
           />
@@ -145,7 +146,7 @@ const Home = () => {
                       <span className="text-xs text-gray-400">
                         {opp.format === 'online' ? '🖥️ Remote' : opp.format === 'hybrid' ? '🔄 Hybrid' : '📍 In-person'}
                       </span>
-                      <span className="text-xs text-brand-green font-medium">{opp.max_volunteers || 'Unlimited'} spots</span>
+                      <span className="text-xs text-brand-green font-medium">{opp.max_volunteers ? `${opp.max_volunteers} spots` : 'Unlimited'}</span>
                     </div>
                   </div>
                 </Link>

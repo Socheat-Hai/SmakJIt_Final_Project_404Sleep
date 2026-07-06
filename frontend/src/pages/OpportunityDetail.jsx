@@ -156,10 +156,10 @@ const OpportunityDetail = () => {
               <p className="text-gray-600 text-[15px] leading-relaxed">{opp.description}</p>
             </section>
 
-            {opp.requirements && (
+            {(opp.requirement || opp.requirements) && (
               <section className="mb-8">
                 <h3 className="text-lg font-medium mb-3">Requirements</h3>
-                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.requirements}</p>
+                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.requirement || opp.requirements}</p>
               </section>
             )}
 

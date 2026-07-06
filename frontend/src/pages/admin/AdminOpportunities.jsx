@@ -71,8 +71,8 @@ const AdminOpportunities = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {opportunities.map((opp) => (
-            <div key={opp._id} className="card py-3 px-4">
-              <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === opp._id ? null : opp._id)}>
+            <div key={opp.id} className="card py-3 px-4">
+              <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === opp.id ? null : opp.id)}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                     <h3 className="text-sm font-medium truncate max-w-[240px]">{opp.title}</h3>
@@ -82,19 +82,19 @@ const AdminOpportunities = () => {
                   <div className="text-[12px] text-gray-500 truncate">{opp.orgName} · {opp.location} · {opp.spots} spots</div>
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                  {confirmRemove === opp._id ? (
+                  {confirmRemove === opp.id ? (
                     <>
-                      <button onClick={(e) => { e.stopPropagation(); handleRemove(opp._id); }} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleRemove(opp.id); }} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
                       <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }} className="text-gray-500 text-[11px] hover:underline">Cancel</button>
                     </>
                   ) : (
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(opp._id); }}
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(opp.id); }}
                       className="text-gray-400 hover:text-red-500 text-[11px] font-medium">Remove</button>
                   )}
-                  <span className="text-gray-300 text-[10px]">{expandedId === opp._id ? '▲' : '▼'}</span>
+                  <span className="text-gray-300 text-[10px]">{expandedId === opp.id ? '▲' : '▼'}</span>
                 </div>
               </div>
-              {expandedId === opp._id && (
+              {expandedId === opp.id && (
                 <div className="mt-2.5 pt-2.5 border-t border-gray-100">
                   <p className="text-sm text-gray-600 mb-2.5 leading-relaxed">{opp.description}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[12px] text-gray-500">

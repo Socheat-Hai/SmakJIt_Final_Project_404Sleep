@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useToast } from './Toast';
 import api from '../services/api';
 
-const ImageUpload = ({ currentImage, onUpload, endpoint, label }) => {
+const ImageUpload = ({ currentImage, onUpload, endpoint, label, oppId }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentImage);
   const { showToast } = useToast();
@@ -25,6 +25,9 @@ const ImageUpload = ({ currentImage, onUpload, endpoint, label }) => {
 
     const formData = new FormData();
     formData.append(endpoint === 'org-logo' ? 'logo' : endpoint === 'profile-photo' ? 'photo' : 'image', file);
+    if (endpoint === 'opportunity-image' && oppId) {
+      formData.append('opp_id', oppId);
+    }
 
     setUploading(true);
     try {
