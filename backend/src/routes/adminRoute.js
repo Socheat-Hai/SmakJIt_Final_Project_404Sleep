@@ -9,6 +9,23 @@ const db = require('../models');
 
 router.use(requireAdmin);
 
+/**
+ * @openapi
+ * /api/admin/stats:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get admin dashboard stats
+ *     description: Returns aggregate statistics for the admin dashboard.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminStats'
+ */
 router.get('/stats', async (req, res) => {
   const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs] =
     await Promise.all([
@@ -21,6 +38,32 @@ router.get('/stats', async (req, res) => {
   res.json({ totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs })
 })
 
+/**
+ * @openapi
+ * /api/admin/orgs:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List organizations (admin)
+ *     description: Returns organizations filtered by status.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, pending, approved, rejected]
+ *         description: Filter by organization status
+ *     responses:
+ *       200:
+ *         description: List of organizations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Organization'
+ */
 router.get('/orgs', async (req, res) => {
   const { status } = req.query;
   const where = status && status !== 'all' ? { status } : {};
@@ -28,21 +71,154 @@ router.get('/orgs', async (req, res) => {
   res.json(orgs)
 })
 
+/**
+ * @openapi
+ * /api/admin/orgs/pending:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List pending organizations
+ *     description: Returns organizations with pending status.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Pending organizations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Organization'
+ */
 router.get('/orgs/pending', async (req, res) => {
   const orgs = await orgRepository.findAll({ status: 'pending' })
   res.json(orgs)
 })
 
+/**
+ * @openapi
+ * /api/admin/orgs/{id}/approve:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Approve an organization
+ *     description: Approves a pending organization.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID
+ *     responses:
+ *       200:
+ *         description: Organization approved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Approved
+ *                 org:
+ *                   $ref: '#/components/schemas/Organization'
+ *       404:
+ *         description: Organization not found
+ */
 router.patch('/orgs/:id/approve', async (req, res) => {
   const org = await orgRepository.updateById(parseInt(req.params.id), { status: 'approved' })
   res.json({ message: 'Approved', org })
 })
 
+/**
+ * @openapi
+ * /api/admin/orgs/{id}/reject:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Reject an organization
+ *     description: Rejects a pending organization.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID
+ *     responses:
+ *       200:
+ *         description: Organization rejected
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Rejected
+ *                 org:
+ *                   $ref: '#/components/schemas/Organization'
+ *       404:
+ *         description: Organization not found
+ */
 router.patch('/orgs/:id/reject', async (req, res) => {
   const org = await orgRepository.updateById(parseInt(req.params.id), { status: 'rejected' })
   res.json({ message: 'Rejected', org })
 })
 
+/**
+ * @openapi
+ * /api/admin/orgs/{id}/checklist:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get organization readiness checklist
+ *     description: Returns a checklist showing which fields the organization has completed.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID
+ *     responses:
+ *       200:
+ *         description: Readiness checklist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 checklist:
+ *                   type: object
+ *                   properties:
+ *                     has_name:
+ *                       type: boolean
+ *                     has_description:
+ *                       type: boolean
+ *                     has_contact_email:
+ *                       type: boolean
+ *                     has_contact_phone:
+ *                       type: boolean
+ *                     has_location:
+ *                       type: boolean
+ *                     has_website:
+ *                       type: boolean
+ *                     has_logo:
+ *                       type: boolean
+ *                     has_social_link:
+ *                       type: boolean
+ *                 allComplete:
+ *                   type: boolean
+ *                 org_status:
+ *                   type: string
+ *       404:
+ *         description: Organization not found
+ */
 router.get('/orgs/:id/checklist', async (req, res) => {
   const org = await orgRepository.findById(parseInt(req.params.id))
   if (!org) return res.status(404).json({ message: 'Organization not found' })
@@ -61,6 +237,64 @@ router.get('/orgs/:id/checklist', async (req, res) => {
   res.json({ checklist, allComplete, org_status: org.status })
 })
 
+/**
+ * @openapi
+ * /api/admin/users:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List users (admin)
+ *     description: Returns users with optional search, role, and status filters.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by name or email
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [volunteer, organization, admin]
+ *         description: Filter by role
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, banned, inactive]
+ *         description: Filter by status
+ *     responses:
+ *       200:
+ *         description: Filtered list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   user_id:
+ *                     type: integer
+ *                   full_name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   verificationStatus:
+ *                     type: string
+ *                     nullable: true
+ */
 router.get('/users', async (req, res) => {
   const { search, role, status } = req.query;
   const users = await userRepository.findAllWithFilters({
@@ -83,16 +317,123 @@ router.get('/users', async (req, res) => {
   res.json(mapped)
 })
 
+/**
+ * @openapi
+ * /api/admin/users/{id}/suspend:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Suspend a user
+ *     description: Bans a user account.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User suspended
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User suspended
+ *       404:
+ *         description: User not found
+ */
 router.patch('/users/:id/suspend', async (req, res) => {
   await userRepository.update(parseInt(req.params.id), { status: 'banned' })
   res.json({ message: 'User suspended' })
 })
 
+/**
+ * @openapi
+ * /api/admin/users/{id}/activate:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Activate a user
+ *     description: Activates a previously suspended user account.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User activated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User activated
+ *       404:
+ *         description: User not found
+ */
 router.patch('/users/:id/activate', async (req, res) => {
   await userRepository.update(parseInt(req.params.id), { status: 'active' })
   res.json({ message: 'User activated' })
 })
 
+/**
+ * @openapi
+ * /api/admin/opportunities:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List opportunities (admin)
+ *     description: Returns all opportunities with optional search and status filters.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by title
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [open, closed, cancelled]
+ *         description: Filter by opportunity status
+ *     responses:
+ *       200:
+ *         description: Filtered list of opportunities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   opp_id:
+ *                     type: integer
+ *                   title:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   id:
+ *                     type: integer
+ *                   orgName:
+ *                     type: string
+ *                   applicants:
+ *                     type: integer
+ */
 router.get('/opportunities', async (req, res) => {
   const { search, status } = req.query;
   const opps = await oppRepository.findAllWithCount({
@@ -119,11 +460,92 @@ router.get('/opportunities', async (req, res) => {
   res.json(mapped)
 })
 
+/**
+ * @openapi
+ * /api/admin/opportunities/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Delete an opportunity (admin)
+ *     description: Deletes an opportunity by ID.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Opportunity ID
+ *     responses:
+ *       200:
+ *         description: Opportunity deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Opportunity deleted
+ *       404:
+ *         description: Opportunity not found
+ */
 router.delete('/opportunities/:id', async (req, res) => {
   await oppRepository.remove(parseInt(req.params.id))
   res.json({ message: 'Opportunity deleted' })
 })
 
+/**
+ * @openapi
+ * /api/admin/applications:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List applications (admin)
+ *     description: Returns all applications with optional status filter.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, accepted, rejected]
+ *         description: Filter by application status
+ *     responses:
+ *       200:
+ *         description: Filtered list of applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   application_id:
+ *                     type: integer
+ *                   user_id:
+ *                     type: integer
+ *                   opp_id:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                   applied_at:
+ *                     type: string
+ *                     format: date-time
+ *                   id:
+ *                     type: integer
+ *                   _id:
+ *                     type: integer
+ *                   opportunityTitle:
+ *                     type: string
+ *                   volunteerName:
+ *                     type: string
+ *                   volunteerEmail:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ */
 router.get('/applications', async (req, res) => {
   const { status } = req.query;
   const apps = await appRepository.findAllWithIncludes({
