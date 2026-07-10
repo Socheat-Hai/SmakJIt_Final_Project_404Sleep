@@ -7,19 +7,24 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, unique + ext);
+    // FIX: Sanitize extension — only allow known safe extensions
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeExts = ['.jpeg', '.jpg', '.png', '.gif', '.webp'];
+    const finalExt = safeExts.includes(ext) ? ext : '.png';
+    cb(null, unique + finalExt);
   },
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|gif|webp|svg/;
-  const extOk = allowed.test(path.extname(file.originalname).toLowerCase());
-  const mimeOk = allowed.test(file.mimetype.split('/')[1]);
+  // FIX: Removed SVG (XSS risk via embedded JavaScript) and tightened MIME validation
+  const allowedExts = /jpeg|jpg|png|gif|webp/;
+  const allowedMimes = /^image\/(jpeg|jpg|png|gif|webp)$/;
+  const extOk = allowedExts.test(path.extname(file.originalname).toLowerCase().replace('.', ''));
+  const mimeOk = allowedMimes.test(file.mimetype);
   if (extOk && mimeOk) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files (jpg, png, gif, webp, svg) are allowed'), false);
+    cb(new Error('Only image files (jpg, png, gif, webp) are allowed'), false);
   }
 };
 

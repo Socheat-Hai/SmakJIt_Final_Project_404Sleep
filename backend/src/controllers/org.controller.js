@@ -13,7 +13,7 @@ const register = async (req, res) => {
     } else {
       org = await orgService.create({
         user_id: req.user.user_id,
-        name, email, phone, address, bio, website, social_link, description,
+        name, email: email || contact_email, phone: phone || contact_phone, address, bio, website, social_link, description,
       });
     }
     res.status(201).json(org);

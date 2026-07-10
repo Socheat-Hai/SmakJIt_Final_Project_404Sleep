@@ -4,11 +4,12 @@ const create = async (data) => {
   return orgRepository.create({
     owner_id: data.user_id,
     name: data.name,
-    contact_email: data.email,
-    contact_phone: data.phone || null,
+    contact_email: data.email || data.contact_email,
+    contact_phone: data.phone || data.contact_phone || null,
     location: data.address || data.location || null,
     description: data.bio || data.description || null,
     website: data.website || null,
+    social_link: data.social_link || null,
     status: 'pending',
   });
 };

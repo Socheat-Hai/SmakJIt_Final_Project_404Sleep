@@ -44,7 +44,7 @@ const create = async (req, res) => {
       org_id: parseInt(org_id),
       posted_by: req.user.user_id,
       category_id: category_id ? parseInt(category_id) : 1,
-      max_volunteers: max_volunteers ? parseInt(max_volunteers) : null,
+      max_volunteers: max_volunteers !== undefined ? parseInt(max_volunteers) : null,
       external_link: external_link || null,
       status: 'open',
     });
@@ -61,7 +61,8 @@ const update = async (req, res) => {
       data.requirement = data.requirements;
       delete data.requirements;
     }
-    if (data.max_volunteers) data.max_volunteers = parseInt(data.max_volunteers);
+    // FIX: Use explicit undefined check so max_volunteers=0 is handled correctly
+    if (data.max_volunteers !== undefined) data.max_volunteers = parseInt(data.max_volunteers);
     const opp = await opportunityService.update(parseInt(req.params.id), data);
     if (!opp) return res.status(404).json({ message: 'Opportunity not found' });
     res.json(opp);
@@ -103,8 +104,36 @@ const interestSkillMap = {
   photography: ['Photography', 'Attention to Detail', 'Technology'],
 };
 
+// FIX: Actually use interestSkillMap for personalized recommendations
 const getRecommended = async (req, res) => {
   try {
+    const { interests } = req.query;
+
+    // If user passes interests, try to match skills
+    if (interests) {
+      const interestList = interests.split(',').map(i => i.trim().toLowerCase());
+      const skillNames = new Set();
+      for (const interest of interestList) {
+        const skills = interestSkillMap[interest];
+        if (skills) skills.forEach(s => skillNames.add(s));
+      }
+
+      if (skillNames.size > 0) {
+        const db = require('../models');
+        const { Skill } = db;
+        const skillRecords = await Skill.findAll({
+          where: { name: { [require('sequelize').Op.in]: [...skillNames] } },
+        });
+        const skillIds = skillRecords.map(s => s.skill_id);
+
+        if (skillIds.length > 0) {
+          const recommended = await opportunityService.findRecommended(skillIds);
+          return res.json(recommended);
+        }
+      }
+    }
+
+    // Fallback: return latest 10 open opportunities
     const all = await opportunityService.findAll({ page: 1, limit: 10 });
     return res.json(all.data);
   } catch (error) {

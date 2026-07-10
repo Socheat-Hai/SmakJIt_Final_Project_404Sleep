@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const userService = require('../services/user.service');
 const orgService = require('../services/org.service');
+const db = require('../models');
+const { Organization, VolunteerProfile } = db;
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -116,7 +118,8 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const userFields = ['name', 'email'];
+    // FIX: Accept both 'name' and 'full_name' from frontend
+    const userFields = ['name', 'full_name', 'email'];
     const userUpdates = {};
     for (const field of userFields) {
       if (req.body[field] !== undefined) {
@@ -143,6 +146,7 @@ const updateProfile = async (req, res) => {
       if (req.body.location !== undefined) orgUpdates.location = req.body.location;
 
       if (Object.keys(orgUpdates).length > 0) {
+        // FIX: Use imported Organization model instead of undefined variable
         await Organization.update(orgUpdates, { where: { owner_id: req.user.user_id } });
       }
     }
@@ -155,6 +159,7 @@ const updateProfile = async (req, res) => {
       if (req.body.date_of_birth !== undefined) volUpdates.date_of_birth = new Date(req.body.date_of_birth);
       if (req.body.gender !== undefined) volUpdates.gender = req.body.gender;
       if (Object.keys(volUpdates).length > 0) {
+        // FIX: Use imported VolunteerProfile model instead of undefined variable
         await VolunteerProfile.update(volUpdates, { where: { user_id: req.user.user_id } });
       }
     }

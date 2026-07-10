@@ -31,6 +31,8 @@ module.exports = (sequelize, DataTypes) => {
       website: DataTypes.STRING(255),
       logo: DataTypes.STRING(255),
       social_link: DataTypes.STRING(255),
+      reviewed_by: DataTypes.INTEGER,
+      reviewed_at: DataTypes.DATE,
       status: {
         type: DataTypes.STRING(50),
         defaultValue: 'pending',

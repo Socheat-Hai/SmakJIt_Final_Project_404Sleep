@@ -55,6 +55,7 @@ const SKILL_NAMES = [
   'IT Support',
   'Event Planning',
   'Fundraising',
+  'Technology',
 ];
 
 const ORG_NAMES = [

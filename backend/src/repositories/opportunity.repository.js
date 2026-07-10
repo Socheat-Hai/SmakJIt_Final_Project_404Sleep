@@ -43,12 +43,17 @@ const count = async (where = {}) => {
 };
 
 const findRecommended = async (skillIds, limit = 10) => {
+  // FIX: Guard against empty or invalid skillIds to prevent SQL crash
+  if (!skillIds || skillIds.length === 0) return [];
+  const safeIds = skillIds.map(Number).filter(n => !isNaN(n) && Number.isFinite(n));
+  if (safeIds.length === 0) return [];
+
   return Opportunity.findAll({
     where: {
       status: 'open',
       opp_id: {
         [db.Sequelize.Op.in]: db.sequelize.literal(
-          `(SELECT opp_id FROM "OpportunitySkill" WHERE skill_id IN (${skillIds.map(Number).join(',')}))`
+          `(SELECT opp_id FROM "OpportunitySkill" WHERE skill_id IN (${safeIds.join(',')}))`
         ),
       },
     },
