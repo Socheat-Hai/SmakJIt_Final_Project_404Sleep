@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 
 @layer base {
   html {
@@ -19,6 +17,10 @@
   input, textarea, select { @apply font-sans font-normal; }
   h1, h2, h3, h4, h5, h6 { @apply font-medium leading-tight; }
   img { @apply max-w-full block; }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-green;
+  }
 }
 
 @layer components {
@@ -27,35 +29,32 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-7 py-3 rounded-sm text-[15px] font-medium transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3 rounded-sm text-[15px] font-medium transition-all duration-200 select-none;
+  }
+  .btn:active {
+    @apply scale-[0.97];
   }
 
   .btn-primary {
-    @apply bg-brand-green text-white;
+    @apply bg-brand-green text-white shadow-sm hover:shadow-md hover:brightness-110;
   }
-  .btn-primary:hover {
-    @apply bg-brand-green-dark;
+  .btn-primary:active {
+    @apply brightness-90;
   }
 
   .btn-secondary {
-    @apply bg-brand-purple text-white;
+    @apply bg-brand-purple text-white shadow-sm hover:shadow-md hover:brightness-110;
   }
-  .btn-secondary:hover {
-    @apply bg-brand-purple-dark;
+  .btn-secondary:active {
+    @apply brightness-90;
   }
 
   .btn-outline {
-    @apply border-2 border-brand-green text-brand-green bg-transparent;
-  }
-  .btn-outline:hover {
-    @apply bg-brand-green-light;
+    @apply border-2 border-brand-green text-brand-green bg-transparent hover:bg-brand-green-light;
   }
 
   .btn-ghost {
-    @apply text-gray-600;
-  }
-  .btn-ghost:hover {
-    @apply text-gray-900 bg-gray-100;
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100;
   }
 
   .btn-lg { @apply px-9 py-3.5 text-base; }
@@ -63,7 +62,7 @@
   .btn-block { @apply w-full; }
 
   .card {
-    @apply bg-white rounded shadow-[0_2px_12px_rgba(0,0,0,0.06)] p-6;
+    @apply bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-6;
   }
 
   .input-group {
@@ -75,26 +74,29 @@
   .input-group input,
   .input-group select,
   .input-group textarea {
-    @apply px-4 py-3 border-2 border-gray-200 rounded-sm text-[15px] bg-white transition-colors duration-200 outline-none;
+    @apply px-4 py-3 border-2 border-gray-200 rounded-lg text-[15px] bg-white transition-all duration-200 outline-none;
   }
   .input-group input:focus,
   .input-group select:focus,
   .input-group textarea:focus {
-    @apply border-brand-green;
+    @apply border-brand-green ring-1 ring-brand-green/20;
   }
 
   .form-error { @apply text-red-500 text-[13px]; }
 
   .chip {
-    @apply inline-flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium cursor-pointer transition-all duration-200 border border-gray-300 text-gray-600 bg-white;
+    @apply inline-flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium cursor-pointer transition-all duration-200 border border-gray-300 text-gray-600 bg-white hover:border-brand-green hover:text-brand-green;
   }
-  .chip:hover { @apply border-brand-green text-brand-green; }
   .chip.active { @apply bg-brand-green text-white border-brand-green; }
 
   .section { @apply py-20; }
   .section-label { @apply text-[13px] font-medium text-brand-green uppercase tracking-wider mb-3; }
   .section-title { @apply text-4xl font-medium mb-4 text-gray-900; }
   .section-subtitle { @apply text-[17px] text-gray-500 max-w-[600px] leading-relaxed; }
+
+  .skeleton {
+    @apply bg-gray-200 rounded animate-pulse;
+  }
 }
 
 @layer utilities {
