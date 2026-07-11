@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -15,10 +15,8 @@ export default {
         },
       },
       fontFamily: {
-        'irish': ['"Irish Grover"', 'cursive'],
+        'irish': ['Playfair Display', 'serif'],
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-
-  
       },
       borderRadius: {
         DEFAULT: '12px',

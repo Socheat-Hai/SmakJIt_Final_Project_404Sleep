@@ -7,6 +7,15 @@ import ImageUpload from '../components/ImageUpload';
 import api from '../services/api';
 
 const formats = ['in-person', 'online', 'hybrid'];
+const questionTypes = [
+  { value: 'text', label: 'Short Answer', icon: 'T' },
+  { value: 'yes_no', label: 'Yes / No', icon: 'YN' },
+  { value: 'checkbox', label: 'Checkboxes', icon: '☑' },
+  { value: 'file', label: 'File Upload', icon: '⬆' },
+];
+
+let nextQid = 1;
+const makeQid = () => nextQid++;
 
 const CreateOpportunity = () => {
   const { id } = useParams();
@@ -31,6 +40,8 @@ const CreateOpportunity = () => {
     external_link: '',
     image: '',
   });
+
+  const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
     const fetchOrg = async () => {
@@ -66,6 +77,15 @@ const CreateOpportunity = () => {
           external_link: opp.external_link || '',
           image: opp.image || '',
         });
+        if (opp.questions && Array.isArray(opp.questions)) {
+          const loaded = opp.questions.map((q) => ({
+            ...q,
+            question_id: q.question_id || makeQid(),
+            options: q.options || [],
+          }));
+          setQuestions(loaded);
+          nextQid = loaded.length + 1;
+        }
       } catch {
         showToast('Failed to load opportunity', 'error');
         navigate('/my-opportunities');
@@ -78,6 +98,73 @@ const CreateOpportunity = () => {
 
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
+  const addQuestion = (type) => {
+    setQuestions((prev) => [
+      ...prev,
+      {
+        question_id: makeQid(),
+        text: '',
+        type,
+        required: false,
+        options: type === 'checkbox' ? [{ label: 'Option 1', value: 'option_1' }] : [],
+        placeholder: '',
+      },
+    ]);
+  };
+
+  const updateQuestion = (qid, field, value) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.question_id === qid ? { ...q, [field]: value } : q))
+    );
+  };
+
+  const removeQuestion = (qid) => {
+    setQuestions((prev) => prev.filter((q) => q.question_id !== qid));
+  };
+
+  const addOption = (qid) => {
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.question_id !== qid) return q;
+        const num = (q.options?.length || 0) + 1;
+        return { ...q, options: [...(q.options || []), { label: `Option ${num}`, value: `option_${num}` }] };
+      })
+    );
+  };
+
+  const updateOption = (qid, idx, field, value) => {
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.question_id !== qid) return q;
+        const opts = [...(q.options || [])];
+        opts[idx] = { ...opts[idx], [field]: value };
+        return { ...q, options: opts };
+      })
+    );
+  };
+
+  const removeOption = (qid, idx) => {
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.question_id !== qid) return q;
+        const opts = (q.options || []).filter((_, i) => i !== idx);
+        return { ...q, options: opts };
+      })
+    );
+  };
+
+  const moveQuestion = (qid, dir) => {
+    setQuestions((prev) => {
+      const idx = prev.findIndex((q) => q.question_id === qid);
+      if (idx < 0) return prev;
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
+      return copy;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.description || !form.category || !form.location || !form.spots) {
@@ -88,6 +175,13 @@ const CreateOpportunity = () => {
       showToast('Organization profile not found', 'error');
       return;
     }
+
+    const emptyQ = questions.find((q) => !q.text.trim());
+    if (emptyQ) {
+      showToast('Please fill in all question texts or remove empty questions', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -105,6 +199,19 @@ const CreateOpportunity = () => {
 
       if (form.date) {
         payload.start_date = form.date;
+      }
+
+      if (questions.length > 0) {
+        payload.questions = questions.map((q, idx) => ({
+          question_id: idx + 1,
+          text: q.text.trim(),
+          type: q.type,
+          required: q.required,
+          options: q.type === 'checkbox' ? (q.options || []).map((o) => ({ label: o.label, value: o.value })) : undefined,
+          placeholder: q.type === 'text' ? (q.placeholder || '') : undefined,
+        }));
+      } else {
+        payload.questions = null;
       }
 
       if (isEditing) {
@@ -205,6 +312,156 @@ const CreateOpportunity = () => {
             <label>External Application Link (Optional)</label>
             <input type="url" value={form.external_link} onChange={update('external_link')} placeholder="https://example.com/apply" />
             <p className="text-[11px] text-gray-400 mt-1">If provided, volunteers will be redirected to this link to apply externally.</p>
+          </div>
+
+          {/* Application Questions Builder */}
+          <div className="border-t border-gray-100 pt-6">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-9 h-9 bg-brand-purple-light rounded-full flex items-center justify-center">
+                <svg className="w-4.5 h-4.5 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Application Questions</h3>
+                <p className="text-[13px] text-gray-500">Add custom questions for volunteers when they apply.</p>
+              </div>
+            </div>
+
+            {questions.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {questions.map((q, idx) => (
+                  <div key={q.question_id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex flex-col gap-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => moveQuestion(q.question_id, -1)}
+                          disabled={idx === 0}
+                          className="text-gray-400 hover:text-gray-600 disabled:opacity-30 p-0.5"
+                          title="Move up"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveQuestion(q.question_id, 1)}
+                          disabled={idx === questions.length - 1}
+                          className="text-gray-400 hover:text-gray-600 disabled:opacity-30 p-0.5"
+                          title="Move down"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                      </div>
+
+                      <div className="flex-1 space-y-3">
+                        <input
+                          type="text"
+                          value={q.text}
+                          onChange={(e) => updateQuestion(q.question_id, 'text', e.target.value)}
+                          placeholder="Type your question here..."
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green/20 transition-all"
+                        />
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            value={q.type}
+                            onChange={(e) => {
+                              const newType = e.target.value;
+                              updateQuestion(q.question_id, 'type', newType);
+                              if (newType === 'checkbox' && (!q.options || q.options.length === 0)) {
+                                updateQuestion(q.question_id, 'options', [{ label: 'Option 1', value: 'option_1' }]);
+                              }
+                            }}
+                            className="px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
+                          >
+                            {questionTypes.map((t) => (
+                              <option key={t.value} value={t.value}>{t.label}</option>
+                            ))}
+                          </select>
+
+                          {q.type === 'text' && (
+                            <input
+                              type="text"
+                              value={q.placeholder || ''}
+                              onChange={(e) => updateQuestion(q.question_id, 'placeholder', e.target.value)}
+                              placeholder="Placeholder text..."
+                              className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
+                            />
+                          )}
+
+                          <label className="flex items-center gap-1.5 text-[13px] text-gray-600 cursor-pointer select-none ml-auto">
+                            <input
+                              type="checkbox"
+                              checked={q.required}
+                              onChange={(e) => updateQuestion(q.question_id, 'required', e.target.checked)}
+                              className="w-3.5 h-3.5 rounded border-gray-300 text-brand-green focus:ring-brand-green/20"
+                            />
+                            Required
+                          </label>
+                        </div>
+
+                        {q.type === 'checkbox' && (
+                          <div className="space-y-2 pl-1">
+                            {(q.options || []).map((opt, optIdx) => (
+                              <div key={optIdx} className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded border-2 border-gray-300 shrink-0" />
+                                <input
+                                  type="text"
+                                  value={opt.label}
+                                  onChange={(e) => updateOption(q.question_id, optIdx, 'label', e.target.value)}
+                                  className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeOption(q.question_id, optIdx)}
+                                  className="text-gray-400 hover:text-red-500 p-0.5"
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addOption(q.question_id)}
+                              className="text-[13px] text-brand-purple font-medium hover:underline"
+                            >
+                              + Add option
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeQuestion(q.question_id)}
+                        className="text-gray-400 hover:text-red-500 p-1 shrink-0"
+                        title="Remove question"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-3">
+              <p className="text-[13px] text-gray-500 mb-2">Add a question:</p>
+              <div className="flex flex-wrap gap-2">
+                {questionTypes.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => addQuestion(t.value)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-[13px] text-gray-600 hover:border-brand-purple hover:text-brand-purple hover:bg-brand-purple-light/30 transition-all duration-200"
+                  >
+                    <span className="text-sm">{t.icon}</span>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">

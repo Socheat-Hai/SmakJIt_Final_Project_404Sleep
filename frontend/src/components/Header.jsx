@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoIcon from '../assets/images/Logo.png';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -28,8 +29,12 @@ const Header = () => {
   return (
     <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-[100] shadow-sm">
       <div className="container-custom flex items-center justify-between h-16">
-        <Link to="/" className="text-[22px] font-irish font-bold text-brand-green tracking-tight hover:opacity-80 transition-opacity">
-          SmakJit
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <img src={logoIcon} alt="" className="h-9 w-9 object-contain" />
+          <div className="flex flex-col">
+            <span className="font-irish text-xl font-bold text-brand-green">SmakJit</span>
+            <span className="text-[10px] text-gray-500 tracking-wide font-sans mt-0.5">NGO & Volunteer Hub</span>
+          </div>
         </Link>
 
         <div className="flex items-center gap-2" ref={menuRef}>

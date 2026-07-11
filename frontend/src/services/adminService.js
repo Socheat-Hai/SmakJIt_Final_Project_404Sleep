@@ -13,7 +13,7 @@ export const adminService = {
   getVerifications: () => api.get('/admin/orgs/pending'),
   getAllOrgs: (params) => api.get('/admin/orgs', { params }),
   approveOrg: (id) => api.patch(`/admin/orgs/${id}/approve`),
-  rejectOrg: (id) => api.patch(`/admin/orgs/${id}/reject`),
+  rejectOrg: (id, reason) => api.patch(`/admin/orgs/${id}/reject`, { reason }),
   getOrgChecklist: (id) => api.get(`/admin/orgs/${id}/checklist`),
 
   getOpportunities: (params) => api.get('/admin/opportunities', { params }),

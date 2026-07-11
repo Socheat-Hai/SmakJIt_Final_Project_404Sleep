@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { opportunityService } from '../services/opportunityService';
 import api from '../services/api';
+import ApplicationForm from '../components/ApplicationForm';
 
 const OpportunityDetail = () => {
   const { id } = useParams();
@@ -13,10 +13,10 @@ const OpportunityDetail = () => {
   const { showToast } = useToast();
   const [opp, setOpp] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [recommended, setRecommended] = useState([]);
   const [isOrgOwner, setIsOrgOwner] = useState(false);
+  const [showApplyForm, setShowApplyForm] = useState(false);
 
   useEffect(() => {
     const fetchOpp = async () => {
@@ -62,7 +62,7 @@ const OpportunityDetail = () => {
     if (opp) fetchRecommended();
   }, [opp]);
 
-  const handleApply = async () => {
+  const handleApply = () => {
     if (!user) {
       navigate('/login', { state: { from: { pathname: `/opportunities/${id}` } } });
       return;
@@ -76,16 +76,7 @@ const OpportunityDetail = () => {
       showToast('Only volunteers can apply', 'error');
       return;
     }
-    setApplying(true);
-    try {
-      await api.post('/applications', { opp_id: Number(id) });
-      setHasApplied(true);
-      showToast('Application submitted successfully!');
-    } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to apply', 'error');
-    } finally {
-      setApplying(false);
-    }
+    setShowApplyForm(true);
   };
 
   const getSkillMatchCount = () => {
@@ -112,6 +103,24 @@ const OpportunityDetail = () => {
 
   const skillMatchCount = getSkillMatchCount();
   const totalOppSkills = opp.opportunity_skills?.length || 0;
+
+  if (showApplyForm && user) {
+    return (
+      <div className="py-12">
+        <div className="container-custom">
+          <Link to={`/opportunities/${id}`} className="text-gray-500 text-sm inline-flex items-center gap-1.5 mb-6 hover:text-gray-700">
+            ← Back to opportunity
+          </Link>
+          <ApplicationForm
+            opportunity={opp}
+            user={user}
+            onSuccess={() => { setHasApplied(true); setShowApplyForm(false); showToast('Application submitted successfully!'); }}
+            onCancel={() => setShowApplyForm(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12">
@@ -262,10 +271,10 @@ const OpportunityDetail = () => {
             ) : (
               <button
                 onClick={handleApply}
-                disabled={applying || hasApplied}
+                disabled={hasApplied}
                 className={`btn btn-block btn-lg mb-3 ${hasApplied ? 'btn-outline !text-brand-green !border-brand-green cursor-default' : 'btn-primary'}`}
               >
-                {applying ? 'Applying...' : hasApplied ? 'Applied ✓' : 'Apply Now'}
+                {hasApplied ? 'Applied ✓' : 'Apply Now'}
               </button>
             )}
             {isOrgOwner ? (

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import logoIcon from '../assets/images/Logo.png';
 
 const Footer = () => {
   return (
@@ -6,7 +7,13 @@ const Footer = () => {
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-10">
           <div>
-            <div className="text-xl font-bold text-brand-green mb-3">SmakJit</div>
+            <div className="flex items-center gap-2 mb-3">
+              <img src={logoIcon} alt="" className="h-8 w-8 object-contain" />
+              <div className="flex flex-col">
+                <span className="font-irish text-xl font-bold text-brand-green">SmakJit</span>
+                <span className="text-[10px] text-gray-300 tracking-wide font-sans mt-0.5">NGO & Volunteer Hub</span>
+              </div>
+            </div>
             <p className="text-gray-200 text-sm leading-relaxed max-w-[300px]">
               Connecting passionate volunteers with meaningful opportunities to make a difference in communities worldwide.
             </p>

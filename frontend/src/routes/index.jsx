@@ -19,6 +19,7 @@ import ApplySuccess from '../pages/ApplySuccess';
 import Profile from '../pages/Profile';
 import CreateOpportunity from '../pages/CreateOpportunity';
 import MyOpportunities from '../pages/MyOpportunities';
+import OrgApplications from '../pages/OrgApplications';
 
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminUsers from '../pages/admin/AdminUsers';
@@ -66,6 +67,9 @@ const AppContent = () => {
           } />
           <Route path="/my-opportunities" element={
             <ProtectedRoute><MyOpportunities /></ProtectedRoute>
+          } />
+          <Route path="/my-opportunities/:oppId/applications" element={
+            <ProtectedRoute><OrgApplications /></ProtectedRoute>
           } />
           <Route path="/opportunities/:id" element={<OpportunityDetail />} />
           <Route path="/opportunities/:id/apply-success" element={

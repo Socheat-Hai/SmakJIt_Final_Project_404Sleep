@@ -21,6 +21,9 @@ const AdminOrganizationVerification = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [checklistData, setChecklistData] = useState(null);
   const [checklistLoading, setChecklistLoading] = useState(false);
+  const [rejectModal, setRejectModal] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejecting, setRejecting] = useState(false);
 
   const fetchOrgs = () => {
     setLoading(true);
@@ -62,19 +65,31 @@ const AdminOrganizationVerification = () => {
   const handleApprove = async (id) => {
     try {
       await adminService.approveOrg(id);
-      showToast('Organization approved');
+      showToast('Organization approved - notification email sent');
       setChecklistData(null);
       fetchOrgs();
     } catch { showToast('Failed to approve', 'error'); }
   };
 
-  const handleReject = async (id) => {
+  const handleRejectClick = (id) => {
+    setRejectModal(id);
+    setRejectReason('');
+  };
+
+  const handleRejectConfirm = async () => {
+    setRejecting(true);
     try {
-      await adminService.rejectOrg(id);
-      showToast('Organization rejected');
+      await adminService.rejectOrg(rejectModal, rejectReason);
+      showToast('Organization rejected - notification email sent');
+      setRejectModal(null);
+      setRejectReason('');
       setChecklistData(null);
       fetchOrgs();
-    } catch { showToast('Failed to reject', 'error'); }
+    } catch {
+      showToast('Failed to reject', 'error');
+    } finally {
+      setRejecting(false);
+    }
   };
 
   const filters = [
@@ -132,12 +147,12 @@ const AdminOrganizationVerification = () => {
                       <>
                         <button onClick={(e) => { e.stopPropagation(); handleApprove(orgId); }}
                           className="text-brand-green text-[11px] font-medium hover:underline">Approve</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleReject(orgId); }}
+                        <button onClick={(e) => { e.stopPropagation(); handleRejectClick(orgId); }}
                           className="text-red-500 text-[11px] font-medium hover:underline">Reject</button>
                       </>
                     )}
                     {orgStatus === 'approved' && (
-                      <button onClick={(e) => { e.stopPropagation(); handleReject(orgId); }}
+                      <button onClick={(e) => { e.stopPropagation(); handleRejectClick(orgId); }}
                         className="text-red-500 text-[11px] font-medium hover:underline">Revoke</button>
                     )}
                     {orgStatus === 'rejected' && (
@@ -154,6 +169,12 @@ const AdminOrganizationVerification = () => {
                       <div><span className="font-medium text-gray-700">Email:</span> {orgEmail}</div>
                       <div><span className="font-medium text-gray-700">Status:</span> {orgStatus}</div>
                       <div><span className="font-medium text-gray-700">Joined:</span> {new Date(org.created_at || org.createdAt).toLocaleDateString()}</div>
+                      {org.reviewed_at && (
+                        <div><span className="font-medium text-gray-700">Reviewed:</span> {new Date(org.reviewed_at).toLocaleDateString()}</div>
+                      )}
+                      {org.description && (
+                        <div className="col-span-2"><span className="font-medium text-gray-700">Description:</span> {org.description}</div>
+                      )}
                     </div>
 
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Requirements Checklist</h4>
@@ -190,6 +211,44 @@ const AdminOrganizationVerification = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !rejecting && setRejectModal(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Reject Organization</h3>
+              <p className="text-sm text-gray-500 mt-0.5">The organization owner will receive an email notification.</p>
+            </div>
+            <div className="p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason (optional)</label>
+              <textarea
+                rows={4}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Explain why this organization was rejected..."
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-[14px] focus:ring-2 focus:ring-red-200 focus:border-red-400 outline-none transition-all resize-none"
+              />
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setRejectModal(null)}
+                disabled={rejecting}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectConfirm}
+                disabled={rejecting}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {rejecting ? 'Rejecting...' : 'Reject & Notify'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
