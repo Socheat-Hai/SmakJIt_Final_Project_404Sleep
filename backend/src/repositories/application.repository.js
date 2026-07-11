@@ -1,8 +1,18 @@
 const db = require('../models');
-const { Application, Opportunity, Organization, User } = db;
+const { Application, ApplicationAnswer, Opportunity, Organization, User } = db;
 
-const create = async (data) => {
-  return Application.create(data);
+const create = async (data, answers = [], transaction) => {
+  const app = await Application.create(data, { transaction });
+  if (answers.length > 0) {
+    const answerRows = answers.map((a) => ({
+      application_id: app.application_id,
+      question_id: a.question_id,
+      question_text: a.question_text,
+      answer: a.answer,
+    }));
+    await ApplicationAnswer.bulkCreate(answerRows, { transaction });
+  }
+  return app;
 };
 
 const findById = async (id) => {
@@ -10,6 +20,7 @@ const findById = async (id) => {
     include: [
       { model: Opportunity, as: 'opportunity' },
       { model: User, as: 'user' },
+      { model: ApplicationAnswer, as: 'answers' },
     ],
   });
 };
@@ -23,6 +34,7 @@ const findByUser = async (userId) => {
         as: 'opportunity',
         include: [{ model: Organization, as: 'organization', attributes: ['org_id', 'name'] }],
       },
+      { model: ApplicationAnswer, as: 'answers' },
     ],
     order: [['applied_at', 'DESC']],
   });
@@ -31,7 +43,10 @@ const findByUser = async (userId) => {
 const findByOpportunity = async (oppId) => {
   return Application.findAll({
     where: { opp_id: oppId },
-    include: [{ model: User, as: 'user', attributes: ['user_id', 'full_name', 'email'] }],
+    include: [
+      { model: User, as: 'user', attributes: ['user_id', 'full_name', 'email'] },
+      { model: ApplicationAnswer, as: 'answers' },
+    ],
     order: [['applied_at', 'DESC']],
   });
 };

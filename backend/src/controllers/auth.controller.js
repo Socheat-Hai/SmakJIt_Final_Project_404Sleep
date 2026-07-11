@@ -14,7 +14,7 @@ const generateToken = (user) => {
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone, location, date_of_birth, gender, description } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Name is required' });
@@ -49,12 +49,20 @@ const register = async (req, res) => {
         user_id: user.user_id,
         name: name.trim(),
         email: email.toLowerCase().trim(),
+        contact_phone: phone || null,
+        location: location || null,
+        description: description || null,
       });
     }
 
     if (resolvedRole === 'volunteer') {
       const volunteerProfileRepository = require('../repositories/volunteerProfile.repository');
-      await volunteerProfileRepository.create({ user_id: user.user_id });
+      const profileData = { user_id: user.user_id };
+      if (phone) profileData.phone_num = phone;
+      if (location) profileData.location = location;
+      if (date_of_birth) profileData.date_of_birth = new Date(date_of_birth);
+      if (gender) profileData.gender = gender;
+      await volunteerProfileRepository.create(profileData);
     }
 
     const token = generateToken(user);
@@ -62,6 +70,7 @@ const register = async (req, res) => {
 
     res.status(201).json({ token, user: safe });
   } catch (error) {
+    console.error('REGISTER ERROR:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'An account with this email already exists' });
     }

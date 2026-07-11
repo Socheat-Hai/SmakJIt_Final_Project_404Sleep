@@ -141,11 +141,23 @@ router.get('/orgs/pending', async (req, res) => {
  */
 router.patch('/orgs/:id/approve', async (req, res) => {
   try {
-    const org = await orgRepository.updateById(parseInt(req.params.id), { status: 'approved' })
-    if (!org) return res.status(404).json({ message: 'Organization not found' })
-    res.json({ message: 'Approved', org })
+    const orgId = parseInt(req.params.id);
+    const org = await orgRepository.updateById(orgId, {
+      status: 'approved',
+      reviewed_by: req.user.user_id,
+      reviewed_at: new Date(),
+    });
+    if (!org) return res.status(404).json({ message: 'Organization not found' });
+
+    const emailService = require('../services/email.service');
+    const owner = await orgRepository.findById(orgId);
+    if (owner?.owner?.email) {
+      await emailService.sendOrgApproved(owner.owner.email, org.name);
+    }
+
+    res.json({ message: 'Approved', org });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
 })
 
@@ -183,11 +195,24 @@ router.patch('/orgs/:id/approve', async (req, res) => {
  */
 router.patch('/orgs/:id/reject', async (req, res) => {
   try {
-    const org = await orgRepository.updateById(parseInt(req.params.id), { status: 'rejected' })
-    if (!org) return res.status(404).json({ message: 'Organization not found' })
-    res.json({ message: 'Rejected', org })
+    const orgId = parseInt(req.params.id);
+    const { reason } = req.body;
+    const org = await orgRepository.updateById(orgId, {
+      status: 'rejected',
+      reviewed_by: req.user.user_id,
+      reviewed_at: new Date(),
+    });
+    if (!org) return res.status(404).json({ message: 'Organization not found' });
+
+    const emailService = require('../services/email.service');
+    const owner = await orgRepository.findById(orgId);
+    if (owner?.owner?.email) {
+      await emailService.sendOrgRejected(owner.owner.email, org.name, reason || '');
+    }
+
+    res.json({ message: 'Rejected', org });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
 })
 
