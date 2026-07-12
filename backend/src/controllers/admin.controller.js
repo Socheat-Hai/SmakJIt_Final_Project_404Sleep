@@ -11,6 +11,10 @@ const orgRepository = require('../repositories/organization.repository');
 const getUsers = async (req, res) => {
   try {
     const { search, role, status } = req.query;
+    const allowedRoles = ['volunteer', 'organization', 'admin'];
+    if (role && role !== 'all' && !allowedRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role filter' });
+    }
     const users = await userRepository.findAllWithFilters({
       search,
       role,
@@ -37,7 +41,7 @@ const updateUserStatus = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { status } = req.body;
-    const allowed = ['active', 'suspended', 'banned'];
+    const allowed = ['active', 'inactive', 'banned'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }

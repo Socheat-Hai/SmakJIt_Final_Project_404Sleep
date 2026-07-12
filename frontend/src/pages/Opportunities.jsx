@@ -59,6 +59,7 @@ const Opportunities = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [appliedIds, setAppliedIds] = useState([]);
+  const [savedIds, setSavedIds] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -260,6 +261,21 @@ const Opportunities = () => {
                                 </svg>
                                 {opp.location || 'Various'}
                               </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const saved = savedIds.includes(opp.opp_id);
+                                  setSavedIds((prev) => saved ? prev.filter((id) => id !== opp.opp_id) : [...prev, opp.opp_id]);
+                                }}
+                                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                                  savedIds.includes(opp.opp_id)
+                                    ? 'bg-red-100 text-red-600'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                title={savedIds.includes(opp.opp_id) ? 'Unsave' : 'Save'}
+                              >
+                                {savedIds.includes(opp.opp_id) ? '💖' : '🤍'}
+                              </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();

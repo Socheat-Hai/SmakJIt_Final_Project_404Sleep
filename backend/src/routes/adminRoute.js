@@ -31,7 +31,7 @@ router.get('/stats', async (req, res) => {
   try {
     const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs, pendingApplications] =
       await Promise.all([
-        userRepository.count(),
+        userRepository.count({ role: 'volunteer' }),
         orgRepository.count(),
         oppRepository.count(),
         appRepository.count(),
@@ -40,7 +40,7 @@ router.get('/stats', async (req, res) => {
       ])
     // Align response keys with the frontend dashboard expectations
     res.json({
-      totalUsers,
+      totalVolunteers: totalUsers,
       totalOrgs,
       totalOpportunities,
       totalApplications,

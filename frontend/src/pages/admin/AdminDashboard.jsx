@@ -21,8 +21,7 @@ const AdminDashboard = () => {
     setUserLoading(true);
     const params = {};
     if (userRoleFilter !== 'all') {
-        const apiRole = userRoleFilter === 'volunteer' ? 'user' : userRoleFilter;
-        params.role = apiRole;
+        params.role = userRoleFilter;
       }
     adminService.getUsers(params)
       .then((res) => setUsers(res.data))

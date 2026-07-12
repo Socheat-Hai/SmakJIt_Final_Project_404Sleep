@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
 
-const roleOptions = ['all', 'user', 'organization', 'admin'];
-const statusOptions = ['all', 'active', 'suspended', 'banned'];
+const roleOptions = ['all', 'volunteer', 'organization', 'admin'];
+const statusOptions = ['all', 'active', 'inactive', 'banned'];
 
 const AdminUsers = () => {
   const [searchParams] = useSearchParams();
@@ -21,8 +21,7 @@ const AdminUsers = () => {
     const params = {};
     if (search) params.search = search;
     if (roleFilter !== 'all') {
-      const apiRole = roleFilter === 'volunteer' ? 'user' : roleFilter;
-      params.role = apiRole;
+      params.role = roleFilter;
     }
     if (statusFilter !== 'all') params.status = statusFilter;
     adminService.getUsers(params)
@@ -61,7 +60,7 @@ const updateField = async (id, field, value) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-brand-green-light text-brand-green';
-      case 'suspended': return 'bg-amber-50 text-amber-600';
+      case 'inactive': return 'bg-amber-50 text-amber-600';
       case 'banned': return 'bg-red-50 text-red-600';
       default: return 'bg-gray-100 text-gray-500';
     }
@@ -157,7 +156,7 @@ const updateField = async (id, field, value) => {
                     <select value={u.status || 'active'} onChange={(e) => updateField(u.id, 'status', e.target.value)}
                       className={`px-2 py-0.5 rounded text-[10px] font-medium border-0 outline-none cursor-pointer ${getStatusColor(u.status || 'active')}`}>
                       <option value="active">Active</option>
-                      <option value="suspended">Suspended</option>
+                      <option value="inactive">Inactive</option>
                       <option value="banned">Banned</option>
                     </select>
                   </td>
