@@ -359,7 +359,7 @@ function buildOpportunities() {
         org_id: orgId,
         posted_by: ownerId,
         category_id: categoryId,
-        image: OPPORTUNITY_IMAGES[oppId % OPPORTUNITY_IMAGES.length],
+        image: `https://picsum.photos/seed/${oppId}/800/450`,
         max_volunteers: (orgIdx + 1) * 5,
         external_link: orgIdx % 4 === 0 ? `https://${ORG_NAMES[orgIdx].toLowerCase().replace(/\s+/g, '')}.org/apply` : null,
         status: 'open',
