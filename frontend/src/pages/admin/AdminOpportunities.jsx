@@ -71,8 +71,8 @@ const AdminOpportunities = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {opportunities.map((opp) => (
-            <div key={opp.id} className="card py-3 px-4">
-              <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === opp.id ? null : opp.id)}>
+            <div key={opp.opp_id || opp.opp_id || opp.id} className="card py-3 px-4">
+              <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === opp.opp_id || opp.id ? null : opp.opp_id || opp.id)}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                     <h3 className="text-sm font-medium truncate max-w-[240px]">{opp.title}</h3>
@@ -82,26 +82,26 @@ const AdminOpportunities = () => {
                   <div className="text-[12px] text-gray-500 truncate">{opp.orgName} · {opp.location} · {opp.spots} spots</div>
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                  {confirmRemove === opp.id ? (
+                  {confirmRemove === opp.opp_id || opp.id ? (
                     <>
-                      <button onClick={(e) => { e.stopPropagation(); handleRemove(opp.id); }} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleRemove(opp.opp_id || opp.id); }} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
                       <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }} className="text-gray-500 text-[11px] hover:underline">Cancel</button>
                     </>
                   ) : (
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(opp.id); }}
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(opp.opp_id || opp.id); }}
                       className="text-gray-400 hover:text-red-500 text-[11px] font-medium">Remove</button>
                   )}
-                  <span className="text-gray-300 text-[10px]">{expandedId === opp.id ? '▲' : '▼'}</span>
+                  <span className="text-gray-300 text-[10px]">{expandedId === opp.opp_id || opp.id ? '▲' : '▼'}</span>
                 </div>
               </div>
-              {expandedId === opp.id && (
+              {expandedId === opp.opp_id || opp.id && (
                 <div className="mt-2.5 pt-2.5 border-t border-gray-100">
                   <p className="text-sm text-gray-600 mb-2.5 leading-relaxed">{opp.description}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[12px] text-gray-500">
                     <div><span className="font-medium text-gray-700">Date:</span> {opp.date}</div>
                     <div><span className="font-medium text-gray-700">Location:</span> {opp.location}</div>
                     <div><span className="font-medium text-gray-700">Spots:</span> {opp.spots}</div>
-                    <div><span className="font-medium text-gray-700">Created:</span> {new Date(opp.createdAt).toLocaleDateString()}</div>
+                    <div><span className="font-medium text-gray-700">Created:</span> {new Date(opp.created_at).toLocaleDateString()}</div>
                   </div>
                   {opp.requirements && <div className="mt-1.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Requirements:</span> {opp.requirements}</div>}
                   {opp.commitment && <div className="mt-0.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Commitment:</span> {opp.commitment}</div>}

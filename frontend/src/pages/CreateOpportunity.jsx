@@ -32,9 +32,11 @@ const CreateOpportunity = () => {
     description: '',
     category: '',
     location: '',
-    date: '',
+    date: '', // start date
+    end_date: '', // end date
     spots: '',
     requirements: '',
+    benefits: '',
     commitment: '',
     format: '',
     external_link: '',

@@ -32,13 +32,19 @@ const AdminUsers = () => {
 
   const handleSearch = (e) => { e.preventDefault(); fetchUsers(); };
 
-  const updateField = async (id, field, value) => {
-    try {
-      await adminService.updateUser(id, { [field]: value });
-      showToast('User updated');
-      fetchUsers();
-    } catch { showToast('Failed to update user', 'error'); }
-  };
+const updateField = async (id, field, value) => {
+  try {
+    if (field === 'status') {
+      await adminService.updateUserStatus(id, value);
+    } else if (field === 'org_status') {
+      await adminService.updateOrgVerification(id, value);
+    }
+    showToast('User updated');
+    fetchUsers();
+  } catch {
+    showToast('Failed to update user', 'error');
+  }
+};
 
   const handleDelete = async (id) => {
     try {
@@ -60,7 +66,7 @@ const AdminUsers = () => {
 
   const getVerificationBadge = (user) => {
     if (user.role !== 'organization') return null;
-    const v = user.verificationStatus;
+    const v = user.org_status;
     if (v === 'approved') return <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-brand-green-light text-brand-green">✓</span>;
     if (v === 'rejected') return <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-600">✗</span>;
     return <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600">?</span>;
@@ -120,7 +126,7 @@ const AdminUsers = () => {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u._id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-brand-purple text-white flex items-center justify-center text-[10px] font-medium shrink-0">
@@ -143,31 +149,31 @@ const AdminUsers = () => {
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <select value={u.status || 'active'} onChange={(e) => updateField(u._id, 'status', e.target.value)}
+                    <select value={u.status || 'active'} onChange={(e) => updateField(u.id, 'status', e.target.value)}
                       className={`px-2 py-0.5 rounded text-[10px] font-medium border-0 outline-none cursor-pointer ${getStatusColor(u.status || 'active')}`}>
                       <option value="active">Active</option>
                       <option value="suspended">Suspended</option>
                       <option value="banned">Banned</option>
                     </select>
                   </td>
-                  <td className="px-4 py-2.5 text-gray-400 text-[12px] whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-2.5 text-gray-400 text-[12px] whitespace-nowrap">{new Date(u.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      {u.role === 'organization' && u.verificationStatus === 'pending' && (
+                      {u.role === 'organization' && u.org_status === 'pending' && (
                         <>
-                          <button onClick={() => updateField(u._id, 'verificationStatus', 'approved')}
+                          <button onClick={() => updateField(u.id, 'org_status', 'approved')}
                             className="text-brand-green text-[11px] font-medium hover:underline">Approve</button>
-                          <button onClick={() => updateField(u._id, 'verificationStatus', 'rejected')}
+                          <button onClick={() => updateField(u.id, 'org_status', 'rejected')}
                             className="text-red-500 text-[11px] font-medium hover:underline">Reject</button>
                         </>
                       )}
-                      {confirmDelete === u._id ? (
+                      {confirmDelete === u.id ? (
                         <>
-                          <button onClick={() => handleDelete(u._id)} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
+                          <button onClick={() => handleDelete(u.id)} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
                           <button onClick={() => setConfirmDelete(null)} className="text-gray-500 text-[11px] hover:underline">Cancel</button>
                         </>
                       ) : (
-                        <button onClick={() => setConfirmDelete(u._id)} className="text-gray-400 hover:text-red-500 text-[11px] font-medium">Delete</button>
+                        <button onClick={() => setConfirmDelete(u.id)} className="text-gray-400 hover:text-red-500 text-[11px] font-medium">Delete</button>
                       )}
                     </div>
                   </td>

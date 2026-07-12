@@ -4,6 +4,9 @@ import { adminService } from '../../services/adminService';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [userLoading, setUserLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,6 +15,17 @@ const AdminDashboard = () => {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Load users for the dashboard list
+  useEffect(() => {
+    setUserLoading(true);
+    const params = {};
+    if (userRoleFilter !== 'all') params.role = userRoleFilter;
+    adminService.getUsers(params)
+      .then((res) => setUsers(res.data))
+      .catch(() => {})
+      .finally(() => setUserLoading(false));
+  }, [userRoleFilter]);
 
   if (loading) {
     return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;

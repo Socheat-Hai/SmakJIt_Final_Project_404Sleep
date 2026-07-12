@@ -1,24 +1,38 @@
 import api from './api';
 
 export const adminService = {
+  // Users
+  getUsers: (params) =>
+    api
+      .get('/admin/users', { params })
+      .then((res) => {
+        const data = (res.data || []).map((u) => ({
+          ...u,
+          org_status: u.verificationStatus,
+        }));
+        return { ...res, data };
+      }),
+
+  updateUserStatus: (id, status) => api.patch(`/admin/users/${id}/status`, { status }),
+  updateOrgVerification: (id, status) => api.patch(`/admin/users/${id}/verification`, { status }),
+  deleteUser: (id) => api.delete(`/users/${id}`),
+
+  // Dashboard
   getStats: () => api.get('/admin/stats'),
 
-  getUsers: (params) => api.get('/admin/users', { params }),
-  getUserById: (id) => api.get(`/admin/users/${id}`),
-  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
-  deleteUser: (id) => api.delete(`/admin/users/${id}`),
-  suspendUser: (id) => api.patch(`/admin/users/${id}/suspend`),
-  activateUser: (id) => api.patch(`/admin/users/${id}/activate`),
-
+  // Organization verification
   getVerifications: () => api.get('/admin/orgs/pending'),
   getAllOrgs: (params) => api.get('/admin/orgs', { params }),
+  getOrgChecklist: (orgId) => api.get(`/admin/orgs/${orgId}/checklist`),
   approveOrg: (id) => api.patch(`/admin/orgs/${id}/approve`),
   rejectOrg: (id, reason) => api.patch(`/admin/orgs/${id}/reject`, { reason }),
-  getOrgChecklist: (id) => api.get(`/admin/orgs/${id}/checklist`),
 
+  // Opportunities
   getOpportunities: (params) => api.get('/admin/opportunities', { params }),
   deleteOpportunity: (id) => api.delete(`/admin/opportunities/${id}`),
 
+  // Applications
   getApplications: (params) => api.get('/admin/applications', { params }),
-  updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/review`, { status }),
+  updateApplicationStatus: (id, status) => api.patch(`/admin/applications/${id}`, { status }),
 };
+

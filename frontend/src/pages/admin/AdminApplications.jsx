@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
+import { useAuth } from '../../context/AuthContext';
 
 const statuses = ['all', 'pending', 'accepted', 'rejected'];
 
