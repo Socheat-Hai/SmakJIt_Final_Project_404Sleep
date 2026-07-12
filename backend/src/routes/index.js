@@ -9,6 +9,7 @@ const opportunityRoutes = require('./opportunity.routes');
 const applicationRoutes = require('./application.routes');
 const uploadRoutes = require('./upload.routes');
 const categoryRoutes = require('./category.routes');
+const savedRoutes = require('./savedOpportunity.routes');
 
 router.use('/admin', adminRoutes);
 router.use('/users', userRoutes);
@@ -18,5 +19,6 @@ router.use('/opportunities', opportunityRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/categories', categoryRoutes);
+router.use('/saved', savedRoutes);
 
 module.exports = router;

@@ -9,6 +9,7 @@ const allTabs = [
   { id: 'account', label: 'Account Info' },
   { id: 'interests', label: 'Interests' },
   { id: 'applications', label: 'Applications' },
+  { id: 'saved', label: 'Saved Opportunities' },
   { id: 'experience', label: 'Volunteer Experience' },
   { id: 'security', label: 'Security' },
 ];
@@ -24,6 +25,8 @@ const Profile = () => {
   const [newSkill, setNewSkill] = useState('');
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(false);
+  const [savedOpps, setSavedOpps] = useState([]);
+  const [savedLoading, setSavedLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -48,6 +51,23 @@ const Profile = () => {
       fetchApplications();
     }
   }, [user]);
+
+  // Load saved opportunities when Saved tab is active
+  useEffect(() => {
+    if (activeTab !== 'saved' || user?.role !== 'volunteer') return;
+    const fetchSaved = async () => {
+      setSavedLoading(true);
+      try {
+        const res = await api.get('/saved');
+        setSavedOpps(res.data);
+      } catch {
+        setSavedOpps([]);
+      } finally {
+        setSavedLoading(false);
+      }
+    };
+    fetchSaved();
+  }, [activeTab, user]);
 
   const tabs = user?.role === 'admin'
     ? allTabs.filter((t) => t.id === 'account' || t.id === 'security')
@@ -176,6 +196,25 @@ const Profile = () => {
           </div>
         )}
 
+        {activeTab === 'saved' && (
+          <div className="flex flex-col gap-3">
+            {savedLoading ? (
+              <div className="text-center py-10 text-gray-500">Loading saved opportunities...</div>
+            ) : savedOpps.length === 0 ? (
+              <div className="card text-center py-10 text-gray-500">
+                <div className="text-4xl mb-3">💾</div>
+                <p>No saved opportunities yet.</p>
+              </div>
+            ) : (
+              savedOpps.map((opp) => (
+                <div key={opp.opp_id} className="card flex flex-col gap-2 p-4">
+                  <h4 className="text-[15px] font-medium">{opp.title}</h4>
+                  <div className="text-[13px] text-gray-500">{opp.location || 'Various'}</div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
         {activeTab === 'experience' && (
           <div className="card p-8">
             <h3 className="text-lg font-medium mb-6">Volunteer Experience</h3>

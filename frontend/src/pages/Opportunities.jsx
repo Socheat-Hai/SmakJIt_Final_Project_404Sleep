@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/opportunityService';
 import api from '../services/api';
+import { savedOpportunityService } from '../services/savedOpportunityService';
 
 const categoryMeta = {
   Education: {
@@ -89,6 +90,14 @@ const Opportunities = () => {
     api.get('/applications/mine')
       .then((res) => setAppliedIds((res.data || []).map((a) => a.opp_id || a.opportunity?.opp_id)))
       .catch(() => {});
+  }, [user]);
+
+  // Load saved opportunities for volunteer
+  useEffect(() => {
+    if (!user || user.role !== 'volunteer') return;
+    savedOpportunityService.getAll()
+      .then((res) => setSavedIds((res.data || []).map((o) => o.opp_id || o.opp_id)))
+      .catch(() => setSavedIds([]));
   }, [user]);
 
   const categories = useMemo(() => {
@@ -232,21 +241,39 @@ const Opportunities = () => {
                           onClick={() => navigate(`/opportunities/${opp.opp_id}`)}
                           className="group bg-white rounded-xl border border-gray-200 hover:border-brand-green/40 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col overflow-hidden"
                         >
-                          <div className="aspect-[16/9] bg-gray-100 overflow-hidden">
-                            {opp.image ? (
-                              <img
-                                src={opp.image}
-                                alt={opp.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
+<div className="relative aspect-[16/9] bg-gray-100 overflow-hidden">
+  {opp.image ? (
+    <img
+      src={opp.image}
+      alt={opp.title}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-gray-300">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+      </svg>
+    </div>
+  )}
+  <button
+    onClick={async (e) => {
+      e.stopPropagation();
+      const isSaved = savedIds.includes(opp.opp_id);
+      try {
+        if (isSaved) {
+          await savedOpportunityService.unsave(opp.opp_id);
+        } else {
+          await savedOpportunityService.save(opp.opp_id);
+        }
+        setSavedIds((prev) => isSaved ? prev.filter((id) => id !== opp.opp_id) : [...prev, opp.opp_id]);
+      } catch {}
+    }}
+    className={`absolute top-2 right-2 p-1 rounded-full ${savedIds.includes(opp.opp_id) ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} transition-colors`}
+    title={savedIds.includes(opp.opp_id) ? 'Unsave' : 'Save'}
+  >
+    {savedIds.includes(opp.opp_id) ? '💖' : '🤍'}
+  </button>
+</div>
                           <div className="p-4 flex flex-col flex-1">
                             <h3 className="text-[15px] font-medium mb-1.5 leading-snug group-hover:text-brand-green transition-colors line-clamp-2">
                               {opp.title}
@@ -261,21 +288,7 @@ const Opportunities = () => {
                                 </svg>
                                 {opp.location || 'Various'}
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const saved = savedIds.includes(opp.opp_id);
-                                  setSavedIds((prev) => saved ? prev.filter((id) => id !== opp.opp_id) : [...prev, opp.opp_id]);
-                                }}
-                                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                                  savedIds.includes(opp.opp_id)
-                                    ? 'bg-red-100 text-red-600'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                                title={savedIds.includes(opp.opp_id) ? 'Unsave' : 'Save'}
-                              >
-                                {savedIds.includes(opp.opp_id) ? '💖' : '🤍'}
-                              </button>
+
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
