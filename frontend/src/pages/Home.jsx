@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/opportunityService';
+import { savedOpportunityService } from '../services/savedOpportunityService';
 import heroTeam from '../assets/images/hero-team.jpg';
 
 const stats = [
@@ -54,6 +55,7 @@ const Home = () => {
   const { user } = useAuth();
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [savedIds, setSavedIds] = useState([]);
 
   useEffect(() => {
     const fetchOpps = async () => {
@@ -68,6 +70,19 @@ const Home = () => {
     };
     fetchOpps();
   }, []);
+  // Load saved opportunities for volunteer
+  useEffect(() => {
+    if (!user || user.role !== 'volunteer') return;
+    const fetchSaved = async () => {
+      try {
+        const res = await savedOpportunityService.getAll();
+        setSavedIds((res.data || []).map((o) => o.opp_id));
+      } catch {
+        setSavedIds([]);
+      }
+    };
+    fetchSaved();
+  }, [user]);
 
   return (
     <div>
@@ -165,6 +180,32 @@ const Home = () => {
                       <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/90 text-brand-green">
                         {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
                       </span>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const isSaved = savedIds.includes(opp.opp_id);
+                          try {
+                            if (isSaved) {
+                              await savedOpportunityService.unsave(opp.opp_id);
+                            } else {
+                              await savedOpportunityService.save(opp.opp_id);
+                            }
+                            setSavedIds((prev) => isSaved ? prev.filter((id) => id !== opp.opp_id) : [...prev, opp.opp_id]);
+                          } catch {}
+                        }}
+                        className={`absolute top-2 right-2 p-1 rounded-full ${savedIds.includes(opp.opp_id) ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} transition-colors`}
+                        title={savedIds.includes(opp.opp_id) ? 'Unsave' : 'Save'}
+                      >
+                        {savedIds.includes(opp.opp_id) ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-label="saved">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="unsaved">
+                            <path d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+                          </svg>
+                        )}
+                      </button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-28 bg-gradient-to-br from-brand-green-light to-brand-green/20">
