@@ -202,7 +202,9 @@ const Profile = () => {
               <div className="text-center py-10 text-gray-500">Loading saved opportunities...</div>
             ) : savedOpps.length === 0 ? (
               <div className="card text-center py-10 text-gray-500">
-                <div className="text-4xl mb-3">💾</div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-3 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="saved icon">
+  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+</svg>
                 <p>No saved opportunities yet.</p>
               </div>
             ) : (
