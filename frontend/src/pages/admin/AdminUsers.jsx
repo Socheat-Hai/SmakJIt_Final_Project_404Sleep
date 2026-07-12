@@ -20,7 +20,10 @@ const AdminUsers = () => {
     setLoading(true);
     const params = {};
     if (search) params.search = search;
-    if (roleFilter !== 'all') params.role = roleFilter;
+    if (roleFilter !== 'all') {
+      const apiRole = roleFilter === 'volunteer' ? 'user' : roleFilter;
+      params.role = apiRole;
+    }
     if (statusFilter !== 'all') params.status = statusFilter;
     adminService.getUsers(params)
       .then((res) => setUsers(res.data))
@@ -86,10 +89,12 @@ const updateField = async (id, field, value) => {
           <div>
             <label className="text-[11px] text-gray-500 mb-0.5 block">Role</label>
             <div className="flex gap-1">
-              {roleOptions.map((r) => (
-                <button key={r} type="button" onClick={() => setRoleFilter(r)}
-                  className={`px-2.5 py-1.5 rounded text-[11px] font-medium capitalize transition-colors ${roleFilter === r ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{r}</button>
-              ))}
+{roleOptions.map((r) => (
+                  <button key={r} type="button" onClick={() => setRoleFilter(r)}
+                    className={`px-2.5 py-1.5 rounded text-[11px] font-medium capitalize transition-colors ${roleFilter === r ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {r === 'user' ? 'Volunteer' : r}
+                  </button>
+                ))}
             </div>
           </div>
           <div>
