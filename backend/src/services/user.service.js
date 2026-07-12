@@ -55,11 +55,11 @@ const comparePassword = async (candidatePassword, hashedPassword) => {
 const sanitizeUser = (user) => {
   if (!user) return null;
   const userJson = user.get({ plain: true });
-  const { password_hash, organization, profile, ...safe } = userJson;
+  const { password_hash, organization, profile, user_id, full_name, ...safe } = userJson;
   return {
     ...safe,
-    id: safe.user_id,
-    name: safe.full_name,
+    id: user_id,
+    name: full_name,
     role: safe.role,
     org_name: organization?.name || null,
     org_website: organization?.website || null,

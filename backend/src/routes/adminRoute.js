@@ -3,6 +3,7 @@ const router = express.Router()
 const requireAdmin = require('../middleware/requireAdmin');
 const userRepository = require('../repositories/user.repository');
 const orgRepository = require('../repositories/organization.repository');
+const adminController = require('../controllers/admin.controller');
 const oppRepository = require('../repositories/opportunity.repository');
 const appRepository = require('../repositories/application.repository');
 const db = require('../models');
@@ -28,15 +29,24 @@ router.use(requireAdmin);
  */
 router.get('/stats', async (req, res) => {
   try {
-    const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs] =
+    const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs, pendingApplications] =
       await Promise.all([
         userRepository.count(),
         orgRepository.count(),
         oppRepository.count(),
         appRepository.count(),
         orgRepository.count({ status: 'pending' }),
+        appRepository.count({ status: 'pending' }),
       ])
-    res.json({ totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs })
+    // Align response keys with the frontend dashboard expectations
+    res.json({
+      totalUsers,
+      totalOrgs,
+      totalOpportunities,
+      totalApplications,
+      pendingVerifications: pendingOrgs,
+      pendingApplications,
+    })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
@@ -568,7 +578,7 @@ router.delete('/opportunities/:id', async (req, res) => {
     if (!opp) return res.status(404).json({ message: 'Opportunity not found' })
 
     // FIX: Clean up related records before deleting to prevent orphans
-    await db.OpportunitySkill.destroy({ where: { opportunity_id: oppId } });
+    await db.OpportunitySkill.destroy({ where: { opp_id: oppId } });
     await db.SavedOpportunity.destroy({ where: { opp_id: oppId } });
     await db.Application.destroy({ where: { opp_id: oppId } });
     await oppRepository.remove(oppId)

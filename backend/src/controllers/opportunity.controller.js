@@ -123,7 +123,7 @@ const getRecommended = async (req, res) => {
         const db = require('../models');
         const { Skill } = db;
         const skillRecords = await Skill.findAll({
-          where: { name: { [require('sequelize').Op.in]: [...skillNames] } },
+          where: { skill_name: { [require('sequelize').Op.in]: [...skillNames] } },
         });
         const skillIds = skillRecords.map(s => s.skill_id);
 
