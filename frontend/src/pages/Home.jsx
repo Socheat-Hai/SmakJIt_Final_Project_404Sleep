@@ -208,11 +208,14 @@ const Home = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-28 bg-gradient-to-br from-brand-green-light to-brand-green/20">
-                      <span className="text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/80 text-brand-green">
-                        {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
-                      </span>
-                    </div>
+<div className="relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="placeholder image">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" />
+                        </svg>
+                        <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/80 text-brand-green">
+                          {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                        </span>
+                      </div>
                   )}
                   <div className="p-4 flex flex-col flex-1">
                     <h3 className="text-[16px] font-medium mb-1 leading-snug group-hover:text-brand-green transition-colors">{opp.title}</h3>
