@@ -20,7 +20,10 @@ const AdminDashboard = () => {
   useEffect(() => {
     setUserLoading(true);
     const params = {};
-    if (userRoleFilter !== 'all') params.role = userRoleFilter;
+    if (userRoleFilter !== 'all') {
+        const apiRole = userRoleFilter === 'volunteer' ? 'user' : userRoleFilter;
+        params.role = apiRole;
+      }
     adminService.getUsers(params)
       .then((res) => setUsers(res.data))
       .catch(() => {})
