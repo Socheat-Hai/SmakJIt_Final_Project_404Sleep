@@ -133,7 +133,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="py-12 bg-white">
+      {/* <section className="py-12 bg-white">
         <div className="container-custom">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {stats.map((s) => (
@@ -144,7 +144,7 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="section">
         <div className="container-custom">
@@ -175,7 +175,7 @@ const Home = () => {
                 <Link to={`/opportunities/${opp.opp_id}`} key={opp.opp_id} className="group bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex flex-col cursor-pointer hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
                   {opp.image ? (
                     <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
-                      <img src={opp.image} alt={opp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={opp.image} alt={opp.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                       <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/90 text-brand-green">
                         {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}

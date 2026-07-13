@@ -133,7 +133,7 @@ const OpportunityDetail = () => {
           <div>
             {opp.image && (
               <div className="relative rounded-xl overflow-hidden mb-8 bg-gray-100 group">
-                <img src={opp.image} alt={opp.title} className="w-full aspect-[21/9] object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={opp.image} alt={opp.title} className="w-full aspect-[21/9] object-contain group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 <div className="absolute bottom-5 left-6 right-6">
                   <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-white/90 text-brand-green text-xs font-medium uppercase tracking-wider mb-3">
