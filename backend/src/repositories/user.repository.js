@@ -14,8 +14,11 @@ const findById = async (id) => {
   });
 };
 
+const { Op } = require('sequelize');
+
 const findByEmail = async (email) => {
-  return User.findOne({ where: { email } });
+  // Use case‑insensitive search to match stored emails regardless of case
+  return User.findOne({ where: { email: { [Op.iLike]: email } } });
 };
 
 const create = async (data) => {

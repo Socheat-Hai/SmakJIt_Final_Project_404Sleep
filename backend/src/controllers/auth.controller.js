@@ -77,7 +77,6 @@ const register = async (req, res) => {
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 };
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -105,11 +104,39 @@ const login = async (req, res) => {
 
     const token = generateToken(user);
     const safe = userService.sanitizeUser(user);
-
     res.status(200).json({ token, user: safe });
   } catch (error) {
     console.error('LOGIN ERROR:', error);
     res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
+};
+
+// Google OAuth login/signup
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleLogin = async (req, res) => {
+  const { tokenId } = req.body;
+  if (!tokenId) return res.status(400).json({ message: 'Google tokenId required' });
+  try {
+    const ticket = await googleClient.verifyIdToken({ idToken: tokenId, audience: process.env.GOOGLE_CLIENT_ID });
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const name = payload.name || email;
+    let user = await userService.findByEmail(email);
+    if (!user) {
+      // create a random password for the account
+      const randomPass = require('crypto').randomBytes(12).toString('hex');
+      user = await userService.create({ name, email, password: randomPass, role: 'volunteer' });
+      const volunteerProfileRepository = require('../repositories/volunteerProfile.repository');
+      await volunteerProfileRepository.create({ user_id: user.user_id });
+    }
+    const token = generateToken(user);
+    const safe = userService.sanitizeUser(user);
+    return res.status(200).json({ token, user: safe });
+  } catch (error) {
+    console.error('GOOGLE LOGIN ERROR:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -218,4 +245,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getProfile, updateProfile, changePassword };
+module.exports = { register, login, googleLogin, getProfile, updateProfile, changePassword };

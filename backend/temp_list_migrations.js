@@ -1,10 +1,4 @@
-const { Client } = require('pg');
-const conn = process.env.DATABASE_URL || 'postgres://localhost/postgres';
-const client = new Client({ connectionString: conn });
-client.connect()
-  .then(async () => {
-    const res = await client.query('SELECT name FROM "SequelizeMeta"');
-    console.log(res.rows);
-    await client.end();
-  })
-  .catch(err => { console.error('Error', err); });
+const {sequelize}=require('./src/models');
+sequelize.query('SELECT name FROM "SequelizeMeta" ORDER BY name', {type: sequelize.QueryTypes.SELECT})
+  .then(r=>{console.log('Migrations:', r);})
+  .catch(e=>{console.error('Error', e);});
