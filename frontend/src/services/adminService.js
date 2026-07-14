@@ -15,7 +15,7 @@ export const adminService = {
 
   updateUserStatus: (id, status) => api.patch(`/admin/users/${id}/status`, { status }),
   updateOrgVerification: (id, status) => api.patch(`/admin/users/${id}/verification`, { status }),
-  deleteUser: (id) => api.delete(`/users/${id}`),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`), // FIX: was /users/:id — now routes through admin middleware with cascade cleanup
 
   // Dashboard
   getStats: () => api.get('/admin/stats'),
@@ -33,6 +33,6 @@ export const adminService = {
 
   // Applications
   getApplications: (params) => api.get('/admin/applications', { params }),
-  updateApplicationStatus: (id, status) => api.patch(`/admin/applications/${id}`, { status }),
+  updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/stage`, { status }), // FIX: was /admin/applications/:id (404) — now uses existing stage endpoint
 };
 

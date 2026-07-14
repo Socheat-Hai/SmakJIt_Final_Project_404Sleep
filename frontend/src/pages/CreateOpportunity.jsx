@@ -257,21 +257,21 @@ const CreateOpportunity = () => {
           </div>
 
           <div className="input-group">
-            <label>Title <span className="text-red-400">*</span></label>
-            <input type="text" value={form.title} onChange={update('title')} placeholder="e.g. Community Garden Volunteer" />
+            <label htmlFor="title">Title <span className="text-red-400">*</span></label>
+            <input id="title" name="title" type="text" value={form.title} onChange={update('title')} placeholder="e.g. Community Garden Volunteer" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="input-group">
-              <label>Category <span className="text-red-400">*</span></label>
-              <select value={form.category} onChange={update('category')}>
+              <label htmlFor="category">Category <span className="text-red-400">*</span></label>
+              <select id="category" name="category" value={form.category} onChange={update('category')}>
                 <option value="">Select a category</option>
                 {categories.map((c) => <option key={c.category_id} value={c.category_name}>{c.category_name}</option>)}
               </select>
             </div>
             <div className="input-group">
-              <label>Format</label>
-              <select value={form.format} onChange={update('format')}>
+              <label htmlFor="format">Format</label>
+              <select id="format" name="format" value={form.format} onChange={update('format')}>
                 <option value="">Select format</option>
                 {formats.map((f) => <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>)}
               </select>
@@ -279,40 +279,40 @@ const CreateOpportunity = () => {
           </div>
 
           <div className="input-group">
-            <label>Description <span className="text-red-400">*</span></label>
-            <textarea value={form.description} onChange={update('description')} rows={4} placeholder="Describe what volunteers will do..." />
+            <label htmlFor="description">Description <span className="text-red-400">*</span></label>
+            <textarea id="description" name="description" value={form.description} onChange={update('description')} rows={4} placeholder="Describe what volunteers will do..." />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="input-group">
-              <label>Location <span className="text-red-400">*</span></label>
-              <input type="text" value={form.location} onChange={update('location')} placeholder="e.g. Downtown Area" />
+              <label htmlFor="location">Location <span className="text-red-400">*</span></label>
+              <input id="location" name="location" type="text" value={form.location} onChange={update('location')} placeholder="e.g. Downtown Area" />
             </div>
             <div className="input-group">
-              <label>Date</label>
-              <input type="date" value={form.date} onChange={update('date')} />
+              <label htmlFor="date">Date</label>
+              <input id="date" name="date" type="date" value={form.date} onChange={update('date')} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="input-group">
-              <label>Available Spots <span className="text-red-400">*</span></label>
-              <input type="number" min="1" value={form.spots} onChange={update('spots')} placeholder="e.g. 10" />
+              <label htmlFor="spots">Available Spots <span className="text-red-400">*</span></label>
+              <input id="spots" name="spots" type="number" min="1" value={form.spots} onChange={update('spots')} placeholder="e.g. 10" />
             </div>
             <div className="input-group">
-              <label>Commitment</label>
-              <input type="text" value={form.commitment} onChange={update('commitment')} placeholder="e.g. 2-4 hrs/week" />
+              <label htmlFor="commitment">Commitment</label>
+              <input id="commitment" name="commitment" type="text" value={form.commitment} onChange={update('commitment')} placeholder="e.g. 2-4 hrs/week" />
             </div>
           </div>
 
           <div className="input-group">
-            <label>Requirements</label>
-            <textarea value={form.requirements} onChange={update('requirements')} rows={3} placeholder="Any skills or requirements volunteers should know..." />
+            <label htmlFor="requirements">Requirements</label>
+            <textarea id="requirements" name="requirements" value={form.requirements} onChange={update('requirements')} rows={3} placeholder="Any skills or requirements volunteers should know..." />
           </div>
 
           <div className="input-group">
-            <label>External Application Link (Optional)</label>
-            <input type="url" value={form.external_link} onChange={update('external_link')} placeholder="https://example.com/apply" />
+            <label htmlFor="external_link">External Application Link (Optional)</label>
+            <input id="external_link" name="external_link" type="url" value={form.external_link} onChange={update('external_link')} placeholder="https://example.com/apply" />
             <p className="text-[11px] text-gray-400 mt-1">If provided, volunteers will be redirected to this link to apply externally.</p>
           </div>
 
@@ -358,6 +358,8 @@ const CreateOpportunity = () => {
 
                       <div className="flex-1 space-y-3">
                         <input
+                          id={`question-${q.question_id}-text`}
+                          name={`question-${q.question_id}-text`}
                           type="text"
                           value={q.text}
                           onChange={(e) => updateQuestion(q.question_id, 'text', e.target.value)}
@@ -367,6 +369,8 @@ const CreateOpportunity = () => {
 
                         <div className="flex flex-wrap items-center gap-2">
                           <select
+                            id={`question-${q.question_id}-type`}
+                            name={`question-${q.question_id}-type`}
                             value={q.type}
                             onChange={(e) => {
                               const newType = e.target.value;
@@ -384,6 +388,8 @@ const CreateOpportunity = () => {
 
                           {q.type === 'text' && (
                             <input
+                              id={`question-${q.question_id}-placeholder`}
+                              name={`question-${q.question_id}-placeholder`}
                               type="text"
                               value={q.placeholder || ''}
                               onChange={(e) => updateQuestion(q.question_id, 'placeholder', e.target.value)}
@@ -394,6 +400,8 @@ const CreateOpportunity = () => {
 
                           <label className="flex items-center gap-1.5 text-[13px] text-gray-600 cursor-pointer select-none ml-auto">
                             <input
+                              id={`question-${q.question_id}-required`}
+                              name={`question-${q.question_id}-required`}
                               type="checkbox"
                               checked={q.required}
                               onChange={(e) => updateQuestion(q.question_id, 'required', e.target.checked)}
@@ -409,6 +417,8 @@ const CreateOpportunity = () => {
                               <div key={optIdx} className="flex items-center gap-2">
                                 <div className="w-4 h-4 rounded border-2 border-gray-300 shrink-0" />
                                 <input
+                                  id={`question-${q.question_id}-option-${optIdx}`}
+                                  name={`question-${q.question_id}-option-${optIdx}`}
                                   type="text"
                                   value={opt.label}
                                   onChange={(e) => updateOption(q.question_id, optIdx, 'label', e.target.value)}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/opportunityService';
 import { savedOpportunityService } from '../services/savedOpportunityService';
+import { getImageUrl } from '../utils/getImageUrl';
 import heroTeam from '../assets/images/hero-team.jpg';
 
 const stats = [
@@ -171,11 +172,11 @@ const Home = () => {
             </div>
           ) : (
             <div className="grid-3">
-              {opportunities.map((opp) => (
-                <Link to={`/opportunities/${opp.opp_id}`} key={opp.opp_id} className="group bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex flex-col cursor-pointer hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
+              {opportunities.map((opp, index) => (
+                <Link to={`/opportunities/${opp.opp_id}`} key={`${opp.opp_id || index}-${index}`} className="group bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex flex-col cursor-pointer hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
                   {opp.image ? (
                     <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
-                      <img src={opp.image} alt={opp.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                      <img src={getImageUrl(opp.image)} alt={opp.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                       <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/90 text-brand-green">
                         {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
@@ -208,7 +209,7 @@ const Home = () => {
                       </button>
                     </div>
                   ) : (
-<div className="relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
+                  <div className="relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="placeholder image">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" />
                         </svg>
@@ -265,8 +266,8 @@ const Home = () => {
             <h2 className="section-title">Trusted by these amazing orgs</h2>
           </div>
           <div className="grid-3">
-            {featuredOrgs.map((org) => (
-              <div className="card text-center py-10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-shadow duration-200" key={org.name}>
+            {featuredOrgs.map((org, index) => (
+              <div className="card text-center py-10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-shadow duration-200" key={`${org.name || index}-${index}`}>
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${org.color} flex items-center justify-center mx-auto mb-4`}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />

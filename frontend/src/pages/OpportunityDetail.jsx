@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { opportunityService } from '../services/opportunityService';
 import api from '../services/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import ApplicationForm from '../components/ApplicationForm';
 
 const OpportunityDetail = () => {
@@ -52,7 +53,7 @@ const OpportunityDetail = () => {
 
   useEffect(() => {
     const fetchRecommended = async () => {
-      if (!opp?.opportunity_skills?.length) return;
+      if (!opp?.skills?.length) return; // FIX: was opp.opportunity_skills — API returns 'skills' (Sequelize alias)
       try {
         const res = await api.get('/opportunities/recommended');
         const filtered = (res.data || []).filter((o) => o.opp_id !== opp.opp_id).slice(0, 3);
@@ -80,9 +81,9 @@ const OpportunityDetail = () => {
   };
 
   const getSkillMatchCount = () => {
-    if (!user?.volunteer_skills || !opp?.opportunity_skills) return 0;
+    if (!user?.volunteer_skills || !opp?.skills) return 0; // FIX: was opp.opportunity_skills
     const userSkillNames = user.volunteer_skills.map((s) => s.skill_name?.toLowerCase());
-    return opp.opportunity_skills.filter((os) =>
+    return opp.skills.filter((os) => // FIX: was opp.opportunity_skills
       userSkillNames.includes(os.skill?.skill_name?.toLowerCase())
     ).length;
   };
@@ -102,7 +103,7 @@ const OpportunityDetail = () => {
   }
 
   const skillMatchCount = getSkillMatchCount();
-  const totalOppSkills = opp.opportunity_skills?.length || 0;
+  const totalOppSkills = opp.skills?.length || 0; // FIX: was opp.opportunity_skills
 
   if (showApplyForm && user) {
     return (
@@ -133,11 +134,11 @@ const OpportunityDetail = () => {
           <div>
             {opp.image && (
               <div className="relative rounded-xl overflow-hidden mb-8 bg-gray-100 group">
-                <img src={opp.image} alt={opp.title} className="w-full aspect-[21/9] object-contain group-hover:scale-105 transition-transform duration-700" />
+                <img src={getImageUrl(opp.image)} alt={opp.title} className="w-full aspect-[21/9] object-contain group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 <div className="absolute bottom-5 left-6 right-6">
                   <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-white/90 text-brand-green text-xs font-medium uppercase tracking-wider mb-3">
-                    {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                    {opp.skills?.[0]?.skill?.skill_name || 'General'} // FIX: was opp.opportunity_skills
                   </span>
                   <h1 className="text-white text-[28px] font-medium leading-tight">{opp.title}</h1>
                 </div>
@@ -146,7 +147,7 @@ const OpportunityDetail = () => {
             {!opp.image && (
               <>
                 <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-brand-green-light text-brand-green text-xs font-medium uppercase tracking-wider mb-4">
-                  {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                  {opp.skills?.[0]?.skill?.skill_name || 'General'} // FIX: was opp.opportunity_skills
                 </span>
                 <h1 className="text-[32px] font-medium mb-2">{opp.title}</h1>
               </>
@@ -187,11 +188,11 @@ const OpportunityDetail = () => {
               </section>
             )}
 
-            {opp.opportunity_skills?.length > 0 && (
+            {opp.skills?.length > 0 && ( // FIX: was opp.opportunity_skills
               <section className="mb-8">
                 <h3 className="text-lg font-medium mb-3">Skills Needed</h3>
                 <div className="flex flex-wrap gap-2">
-                  {opp.opportunity_skills.map((os) => (
+                  {opp.skills.map((os) => ( // FIX: was opp.opportunity_skills
                     <span key={os.skill_id} className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-[13px] font-medium">
                       {os.skill?.skill_name}
                     </span>

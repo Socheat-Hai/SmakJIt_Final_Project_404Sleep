@@ -24,11 +24,14 @@ const skills = [
 ];
 
 const InterestSurvey = () => {
-  const [selected, setSelected] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const { updateUser } = useAuth();
+  const { updateUser, user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  // Pre-fill with any interests the volunteer already saved
+  const [selected, setSelected] = useState(
+    Array.isArray(user?.volunteer_interests) ? user.volunteer_interests : []
+  );
+  const [saving, setSaving] = useState(false);
 
   const toggle = (id) => {
     setSelected((prev) =>
@@ -39,8 +42,9 @@ const InterestSurvey = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.put('/auth/profile', { interests: selected });
-      updateUser({ interests: selected });
+      const res = await api.put('/auth/profile', { interests: selected });
+      // Update auth context with the confirmed data returned from backend
+      updateUser({ volunteer_interests: res.data?.volunteer_interests ?? selected });
       showToast('Your interests have been saved!');
       setTimeout(() => navigate('/opportunities'), 500);
     } catch {
