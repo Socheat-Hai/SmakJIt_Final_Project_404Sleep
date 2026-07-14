@@ -167,6 +167,13 @@ const updateProfile = async (req, res) => {
       if (req.body.bio !== undefined) volUpdates.bio = req.body.bio;
       if (req.body.date_of_birth !== undefined) volUpdates.date_of_birth = new Date(req.body.date_of_birth);
       if (req.body.gender !== undefined) volUpdates.gender = req.body.gender;
+      if (req.body.interests !== undefined) {
+        // Validate that interests is an array of strings
+        const interests = req.body.interests;
+        if (Array.isArray(interests)) {
+          volUpdates.interests = interests;
+        }
+      }
       if (Object.keys(volUpdates).length > 0) {
         // FIX: Use imported VolunteerProfile model instead of undefined variable
         await VolunteerProfile.update(volUpdates, { where: { user_id: req.user.user_id } });

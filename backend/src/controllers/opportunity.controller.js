@@ -27,7 +27,7 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { title, description, requirement, requirements, benefits, location, org_id, work_time, start_date, end_date, format, category_id, max_volunteers, external_link, questions } = req.body;
+    const { title, description, requirement, requirements, benefits, location, org_id, work_time, start_date, end_date, format, category_id, max_volunteers, external_link, image, questions } = req.body;
     if (!title || !org_id) {
       return res.status(400).json({ message: 'Title and org_id are required' });
     }
@@ -46,6 +46,7 @@ const create = async (req, res) => {
       category_id: category_id ? parseInt(category_id) : 1,
       max_volunteers: max_volunteers !== undefined ? parseInt(max_volunteers) : null,
       external_link: external_link || null,
+      image: image || null,
       questions: questions || null,
       status: 'open',
     });

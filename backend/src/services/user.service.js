@@ -75,6 +75,7 @@ const sanitizeUser = (user) => {
     volunteer_location: profile?.location || null,
     volunteer_dob: profile?.date_of_birth || null,
     volunteer_gender: profile?.gender || null,
+    volunteer_interests: profile?.interests || [],
   };
 };
 

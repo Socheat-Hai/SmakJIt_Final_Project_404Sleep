@@ -11,7 +11,7 @@ const defaultConfig = {
   define: {
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: false,
+    updatedAt: 'updated_at',
     freezeTableName: true,
   },
   benchmark: true,

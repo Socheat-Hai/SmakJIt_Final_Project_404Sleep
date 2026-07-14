@@ -9,7 +9,7 @@ const findById = async (id) => {
   return User.findByPk(id, {
     include: [
       { model: Organization, as: 'organization', attributes: ['name', 'website', 'contact_email', 'contact_phone', 'location', 'description', 'logo', 'status'] },
-      { model: VolunteerProfile, as: 'profile', attributes: ['profile_id', 'phone_num', 'profile_picture', 'date_of_birth', 'location', 'gender', 'bio'] },
+      { model: VolunteerProfile, as: 'profile', attributes: ['profile_id', 'phone_num', 'profile_picture', 'date_of_birth', 'location', 'gender', 'bio', 'interests'] },
     ],
   });
 };

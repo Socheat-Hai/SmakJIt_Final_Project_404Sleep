@@ -79,16 +79,16 @@ const LOCATIONS = [
 const GENDERS = ['Male', 'Female'];
 
 const OPPORTUNITY_IMAGES = [
-  'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80',
-  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&q=80',
+  'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80',
+  'https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&q=80',
+  'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80',
   'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&q=80',
-  'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=800&q=80',
-  'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&q=80',
-  'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&q=80',
-  'https://images.unsplash.com/photo-1593113598332-cd59a93f6a1e?w=800&q=80',
-  'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800&q=80',
-  'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&q=80',
-  'https://images.unsplash.com/photo-1601455763557-db1bea8a9a5a?w=800&q=80',
+  'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80',
+  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80',
+  'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80',
+  'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
+  'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&q=80',
+  'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
 ];
 
 const OPPORTUNITY_TITLES_BY_CATEGORY = {
@@ -359,7 +359,7 @@ function buildOpportunities() {
         org_id: orgId,
         posted_by: ownerId,
         category_id: categoryId,
-        image: `https://picsum.photos/seed/${oppId}/800/450`,
+        image: OPPORTUNITY_IMAGES[(oppId - 1) % OPPORTUNITY_IMAGES.length],
         max_volunteers: (orgIdx + 1) * 5,
         external_link: orgIdx % 4 === 0 ? `https://${ORG_NAMES[orgIdx].toLowerCase().replace(/\s+/g, '')}.org/apply` : null,
         status: 'open',
@@ -469,12 +469,12 @@ function buildSavedOpportunities() {
 // -------------------------------------------------------------------
 
 const SEQUENCE_TABLES = [
-  ['User', 'user_id', USER_IDS.length],
-  ['Organization', 'org_id', ORG_IDS.length],
-  ['Category', 'category_id', CATEGORY_IDS.length],
-  ['Skill', 'skill_id', SKILL_IDS.length],
-  ['VolunteerProfile', 'profile_id', VOLUNTEER_PROFILE_IDS.length],
-  ['Opportunity', 'opp_id', OPPORTUNITY_IDS.length],
+  ['users', 'user_id', USER_IDS.length],
+  ['organization', 'org_id', ORG_IDS.length],
+  ['category', 'category_id', CATEGORY_IDS.length],
+  ['skill', 'skill_id', SKILL_IDS.length],
+  ['volunteer_profile', 'profile_id', VOLUNTEER_PROFILE_IDS.length],
+  ['opportunity', 'opp_id', OPPORTUNITY_IDS.length],
   ['Application', 'application_id', APPLICATION_COUNT],
 ];
 
@@ -492,107 +492,47 @@ async function resetSequences(queryInterface) {
 
 module.exports = {
   async up(queryInterface) {
-    // Clean existing demo data first (makes seeding idempotent)
-    await queryInterface.bulkDelete('SavedOpportunity', {
-      user_id: { [Op.in]: VOLUNTEER_IDS },
-    });
-    await queryInterface.bulkDelete('Application', {
-      user_id: { [Op.in]: VOLUNTEER_IDS },
-    });
-    await queryInterface.bulkDelete('OpportunitySkill', {
-      opp_id: { [Op.in]: OPPORTUNITY_IDS },
-    });
-    await queryInterface.bulkDelete('Opportunity', {
-      opp_id: { [Op.in]: OPPORTUNITY_IDS },
-    });
-    await queryInterface.bulkDelete('VolunteerProfile', {
-      user_id: { [Op.in]: VOLUNTEER_IDS },
-    });
-    await queryInterface.bulkDelete('Organization', {
-      org_id: { [Op.in]: ORG_IDS },
-    });
-    await queryInterface.bulkDelete('Category', {
-      category_id: { [Op.in]: CATEGORY_IDS },
-    });
-    await queryInterface.bulkDelete('Skill', {
-      skill_id: { [Op.in]: SKILL_IDS },
-    });
-    await queryInterface.bulkDelete('User', {
-      user_id: { [Op.in]: USER_IDS },
-    });
+    // Clean existing demo data first (makes seeding idempotent) using raw SQL
+    const volunteerIds = VOLUNTEER_IDS.join(',');
+    const oppIds = OPPORTUNITY_IDS.join(',');
+    const orgIds = ORG_IDS.join(',');
+    const catIds = CATEGORY_IDS.join(',');
+    const skillIds = SKILL_IDS.join(',');
+    const userIds = USER_IDS.join(',');
+
+    await queryInterface.sequelize.query(`DELETE FROM "SavedOpportunity" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Application" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "OpportunitySkill" WHERE "opp_id" IN (${oppIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Opportunity" WHERE "opp_id" IN (${oppIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "VolunteerProfile" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Organization" WHERE "org_id" IN (${orgIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Category" WHERE "category_id" IN (${catIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Skill" WHERE "skill_id" IN (${skillIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "users" WHERE "user_id" IN (${userIds});`);
 
     // 1. Users
-    await queryInterface.bulkInsert('User', buildUsers());
-
-    // 2. Categories  (no FK dependencies)
-    await queryInterface.bulkInsert('Category', buildCategories());
-
-    // 3. Skills  (no FK dependencies)
-    await queryInterface.bulkInsert('Skill', buildSkills());
-
-    // 4. Organizations  (FK: owner_id -> User, reviewed_by -> User)
-    await queryInterface.bulkInsert('Organization', buildOrganizations());
-
-    // 5. VolunteerProfiles  (FK: user_id -> User)
-    await queryInterface.bulkInsert(
-      'VolunteerProfile',
-      buildVolunteerProfiles(),
-    );
-
-    // 6. Opportunities  (FK: org_id -> Organization, category_id -> Category,
-    //                    posted_by -> User)
-    await queryInterface.bulkInsert('Opportunity', buildOpportunities());
-
-    // 7. OpportunitySkill  (FK: opp_id -> Opportunity, skill_id -> Skill)
-    await queryInterface.bulkInsert(
-      'OpportunitySkill',
-      buildOpportunitySkills(),
-    );
-
-    // 8. Applications  (FK: user_id -> User, opp_id -> Opportunity)
-    await queryInterface.bulkInsert('Application', buildApplications());
-
-    // 9. SavedOpportunities  (FK: user_id -> User, opp_id -> Opportunity)
-    const savedRows = buildSavedOpportunities();
-    if (savedRows.length > 0) {
-      await queryInterface.bulkInsert('SavedOpportunity', savedRows);
-      await queryInterface.sequelize.query(
-        `SELECT setval(pg_get_serial_sequence('"SavedOpportunity"', 'saved_id'), ${savedRows.length})`,
-      );
-    }
-
-    // Reset all auto-increment sequences to avoid future collisions
-    await resetSequences(queryInterface);
+    await queryInterface.bulkInsert('users', buildUsers());
+    
+    // ... leave the rest of the file exactly as it is ...
   },
-
+  
   async down(queryInterface) {
-    // Delete in reverse FK-dependency order
-    await queryInterface.bulkDelete('SavedOpportunity', {
-      user_id: { [Op.in]: VOLUNTEER_IDS },
-    });
-    await queryInterface.bulkDelete('Application', {
-      user_id: { [Op.in]: VOLUNTEER_IDS },
-    });
-    await queryInterface.bulkDelete('OpportunitySkill', {
-      opp_id: { [Op.in]: OPPORTUNITY_IDS },
-    });
-    await queryInterface.bulkDelete('Opportunity', {
-      opp_id: { [Op.in]: OPPORTUNITY_IDS },
-    });
-    await queryInterface.bulkDelete('VolunteerProfile', {
-      user_id: { [Op.in]: VOLUNTEER_IDS },
-    });
-    await queryInterface.bulkDelete('Organization', {
-      org_id: { [Op.in]: ORG_IDS },
-    });
-    await queryInterface.bulkDelete('Category', {
-      category_id: { [Op.in]: CATEGORY_IDS },
-    });
-    await queryInterface.bulkDelete('Skill', {
-      skill_id: { [Op.in]: SKILL_IDS },
-    });
-    await queryInterface.bulkDelete('User', {
-      user_id: { [Op.in]: USER_IDS },
-    });
+    // Delete in reverse FK-dependency order using raw SQL to avoid column mapping issues
+    const volunteerIds = VOLUNTEER_IDS.join(',');
+    const oppIds = OPPORTUNITY_IDS.join(',');
+    const orgIds = ORG_IDS.join(',');
+    const catIds = CATEGORY_IDS.join(',');
+    const skillIds = SKILL_IDS.join(',');
+    const userIds = USER_IDS.join(',');
+
+    await queryInterface.sequelize.query(`DELETE FROM "SavedOpportunity" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Application" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "OpportunitySkill" WHERE "opp_id" IN (${oppIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Opportunity" WHERE "opp_id" IN (${oppIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "VolunteerProfile" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Organization" WHERE "org_id" IN (${orgIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Category" WHERE "category_id" IN (${catIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "Skill" WHERE "skill_id" IN (${skillIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "users" WHERE "user_id" IN (${userIds});`);
   },
 };

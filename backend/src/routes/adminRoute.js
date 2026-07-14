@@ -665,4 +665,99 @@ router.get('/applications', async (req, res) => {
   }
 })
 
+/**
+ * @openapi
+ * /api/admin/users/{id}/status:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Update user status (admin)
+ *     description: Updates a user's account status (active, inactive, banned).
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive, banned]
+ *     responses:
+ *       200:
+ *         description: User status updated
+ *       400:
+ *         description: Invalid status value
+ */
+router.patch('/users/:id/status', adminController.updateUserStatus)
+
+/**
+ * @openapi
+ * /api/admin/users/{id}/verification:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Update organization verification status (admin)
+ *     description: Updates the verification status of the organization linked to the given user ID.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [approved, rejected, pending]
+ *     responses:
+ *       200:
+ *         description: Organization verification updated
+ *       400:
+ *         description: Invalid verification status
+ *       404:
+ *         description: Organization not found
+ */
+router.patch('/users/:id/verification', adminController.updateOrgVerification)
+
+/**
+ * @openapi
+ * /api/admin/users/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Delete a user (admin)
+ *     description: Permanently deletes a user and cascades deletion of their organization, volunteer profile, and applications.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deleted
+ *       404:
+ *         description: User not found
+ *       409:
+ *         description: Cannot delete due to related records
+ */
+router.delete('/users/:id', adminController.deleteUser)
+
 module.exports = router;

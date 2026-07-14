@@ -3,7 +3,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     // 1. User
-    await queryInterface.createTable('User', {
+    await queryInterface.createTable('users', {
       user_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -47,7 +47,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         unique: true,
-        references: { model: 'User', key: 'user_id' },
+        references: { model: 'users', key: 'user_id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
@@ -82,7 +82,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         unique: true,
-        references: { model: 'User', key: 'user_id' },
+        references: { model: 'users', key: 'user_id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
@@ -177,7 +177,7 @@ module.exports = {
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'User', key: 'user_id' },
+        references: { model: 'users', key: 'user_id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
@@ -227,6 +227,6 @@ module.exports = {
     await queryInterface.dropTable('Category');
     await queryInterface.dropTable('VolunteerProfile');
     await queryInterface.dropTable('Organization');
-    await queryInterface.dropTable('User');
+    await queryInterface.dropTable('users');
   },
 };
