@@ -65,8 +65,9 @@ const register = async (req, res) => {
       await volunteerProfileRepository.create(profileData);
     }
 
-    const token = generateToken(user);
-    const safe = userService.sanitizeUser(user);
+    const fullUser = await userService.findById(user.user_id);
+    const token = generateToken(fullUser);
+    const safe = userService.sanitizeUser(fullUser);
 
     res.status(201).json({ token, user: safe });
   } catch (error) {
@@ -130,6 +131,7 @@ const googleLogin = async (req, res) => {
       user = await userService.create({ name, email, password: randomPass, role: 'volunteer' });
       const volunteerProfileRepository = require('../repositories/volunteerProfile.repository');
       await volunteerProfileRepository.create({ user_id: user.user_id });
+      user = await userService.findById(user.user_id);
     }
     const token = generateToken(user);
     const safe = userService.sanitizeUser(user);

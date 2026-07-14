@@ -1,24 +1,14 @@
-const jwt = require('jsonwebtoken');
+const authMiddleware = require('./auth.middleware');
 
 const requireAdmin = (req, res, next) => {
-  const auth = req.headers.authorization;
-  // FIX: Check for Bearer prefix like auth.middleware.js does
-  if (!auth || !auth.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
-
-  try {
-    const token   = auth.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (decoded.role !== 'admin') {
+  // Reuse existing auth middleware to verify JWT and attach user
+  authMiddleware(req, res, (err) => {
+    if (err) return; // authMiddleware already sent response
+    if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Admins only' });
     }
-    req.user = decoded;
-    next()
-  } catch {
-    res.status(401).json({ message: 'Invalid token' });
-  };
+    next();
+  });
 };
 
 module.exports = requireAdmin;

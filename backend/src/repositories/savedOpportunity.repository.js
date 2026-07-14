@@ -10,17 +10,16 @@ const remove = async (userId, oppId) => {
 };
 
 const findByUser = async (userId) => {
-  return SavedOpportunity.findAll({
-    where: { user_id: userId },
-    include: [
-      {
-        model: Opportunity,
-        as: 'opportunity',
-        include: [{ model: Organization, as: 'organization', attributes: ['name'] }],
-      },
-    ],
-    order: [['saved_at', 'DESC']],
-  });
+return SavedOpportunity.findAll({
+      where: { user_id: userId },
+      include: [
+        {
+          model: Opportunity,
+          as: 'opportunity',
+        },
+      ],
+      order: [['saved_at', 'DESC']],
+    });
 };
 
 module.exports = { create, remove, findByUser };

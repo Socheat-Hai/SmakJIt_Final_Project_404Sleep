@@ -5,11 +5,11 @@ const list = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const saved = await savedService.findByUser(userId);
-    // Return array of opportunity objects with necessary fields
-    const result = saved.map((s) => s.opportunity);
+    if (!saved) return res.json([]);
+    const result = saved.map((s) => s.opportunity).filter(Boolean);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json([]);
   }
 };
 

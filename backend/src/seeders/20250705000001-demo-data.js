@@ -42,6 +42,7 @@ const CATEGORY_NAMES = [
   'Environment',
   'Community Development',
   'Arts & Culture',
+  'Technology',
 ];
 
 const SKILL_NAMES = [
@@ -151,6 +152,18 @@ const OPPORTUNITY_TITLES_BY_CATEGORY = {
     'Film Screening Coordinator',
     'Craft Workshop Instructor',
     'Storytelling Event Organizer',
+  ],
+  Technology: [
+    'Web Development Mentor',
+    'IT Support Volunteer',
+    'Data Science Tutor',
+    'App Development Coach',
+    'Cybersecurity Workshop Leader',
+    'Tech Literacy Instructor',
+    'Open Source Contributor',
+    'Robotics Club Assistant',
+    'Cloud Computing Educator',
+    'AI Ethics Discussion Facilitator',
   ],
 };
 
@@ -470,11 +483,11 @@ function buildSavedOpportunities() {
 
 const SEQUENCE_TABLES = [
   ['users', 'user_id', USER_IDS.length],
-  ['organization', 'org_id', ORG_IDS.length],
-  ['category', 'category_id', CATEGORY_IDS.length],
-  ['skill', 'skill_id', SKILL_IDS.length],
-  ['volunteer_profile', 'profile_id', VOLUNTEER_PROFILE_IDS.length],
-  ['opportunity', 'opp_id', OPPORTUNITY_IDS.length],
+  ['Organization', 'org_id', ORG_IDS.length],
+  ['Category', 'category_id', CATEGORY_IDS.length],
+  ['Skill', 'skill_id', SKILL_IDS.length],
+  ['VolunteerProfile', 'profile_id', VOLUNTEER_PROFILE_IDS.length],
+  ['Opportunity', 'opp_id', OPPORTUNITY_IDS.length],
   ['Application', 'application_id', APPLICATION_COUNT],
 ];
 
@@ -500,7 +513,7 @@ module.exports = {
     const skillIds = SKILL_IDS.join(',');
     const userIds = USER_IDS.join(',');
 
-    await queryInterface.sequelize.query(`DELETE FROM "SavedOpportunity" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "saved_opportunity" WHERE "user_id" IN (${volunteerIds});`);
     await queryInterface.sequelize.query(`DELETE FROM "Application" WHERE "user_id" IN (${volunteerIds});`);
     await queryInterface.sequelize.query(`DELETE FROM "OpportunitySkill" WHERE "opp_id" IN (${oppIds});`);
     await queryInterface.sequelize.query(`DELETE FROM "Opportunity" WHERE "opp_id" IN (${oppIds});`);
@@ -512,7 +525,20 @@ module.exports = {
 
     // 1. Users
     await queryInterface.bulkInsert('users', buildUsers());
-    
+
+    // Insert categories, skills, organizations, volunteer profiles, opportunities and related data
+    await queryInterface.bulkInsert('Category', buildCategories());
+    await queryInterface.bulkInsert('Skill', buildSkills());
+    await queryInterface.bulkInsert('Organization', buildOrganizations());
+    await queryInterface.bulkInsert('VolunteerProfile', buildVolunteerProfiles());
+    await queryInterface.bulkInsert('Opportunity', buildOpportunities());
+    await queryInterface.bulkInsert('OpportunitySkill', buildOpportunitySkills());
+    await queryInterface.bulkInsert('Application', buildApplications());
+    await queryInterface.bulkInsert('saved_opportunity', buildSavedOpportunities());
+
+    // Reset sequences so future inserts continue correctly
+    await resetSequences(queryInterface);
+
     // ... leave the rest of the file exactly as it is ...
   },
   
@@ -525,7 +551,7 @@ module.exports = {
     const skillIds = SKILL_IDS.join(',');
     const userIds = USER_IDS.join(',');
 
-    await queryInterface.sequelize.query(`DELETE FROM "SavedOpportunity" WHERE "user_id" IN (${volunteerIds});`);
+    await queryInterface.sequelize.query(`DELETE FROM "saved_opportunity" WHERE "user_id" IN (${volunteerIds});`);
     await queryInterface.sequelize.query(`DELETE FROM "Application" WHERE "user_id" IN (${volunteerIds});`);
     await queryInterface.sequelize.query(`DELETE FROM "OpportunitySkill" WHERE "opp_id" IN (${oppIds});`);
     await queryInterface.sequelize.query(`DELETE FROM "Opportunity" WHERE "opp_id" IN (${oppIds});`);

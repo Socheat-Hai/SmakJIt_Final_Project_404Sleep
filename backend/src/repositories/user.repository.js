@@ -6,19 +6,19 @@ const findAll = async () => {
 };
 
 const findById = async (id) => {
-  return User.findByPk(id, {
-    include: [
-      { model: Organization, as: 'organization', attributes: ['name', 'website', 'contact_email', 'contact_phone', 'location', 'description', 'logo', 'status'] },
-      { model: VolunteerProfile, as: 'profile', attributes: ['profile_id', 'phone_num', 'profile_picture', 'date_of_birth', 'location', 'gender', 'bio', 'interests'] },
-    ],
-  });
+  return User.findByPk(id, { include: userInclude });
 };
 
 const { Op } = require('sequelize');
 
+const userInclude = [
+  { model: Organization, as: 'organization', attributes: ['name', 'website', 'contact_email', 'contact_phone', 'location', 'description', 'logo', 'status'] },
+  { model: VolunteerProfile, as: 'profile', attributes: ['profile_id', 'phone_num', 'profile_picture', 'date_of_birth', 'location', 'gender', 'bio', 'interests'] },
+];
+
 const findByEmail = async (email) => {
   // Use case‑insensitive search to match stored emails regardless of case
-  return User.findOne({ where: { email: { [Op.iLike]: email } } });
+  return User.findOne({ where: { email: { [Op.iLike]: email } }, include: userInclude });
 };
 
 const create = async (data) => {

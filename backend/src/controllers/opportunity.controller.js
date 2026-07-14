@@ -58,6 +58,13 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
   try {
+    // Verify ownership: only the organization owner or admin can modify
+    const existingOpp = await opportunityService.findById(parseInt(req.params.id));
+    if (!existingOpp) return res.status(404).json({ message: 'Opportunity not found' });
+    if (existingOpp.org_id !== req.user.user_id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: you do not own this opportunity' });
+    }
+
     const data = { ...req.body };
     if (data.requirements) {
       data.requirement = data.requirements;
@@ -66,7 +73,6 @@ const update = async (req, res) => {
     // FIX: Use explicit undefined check so max_volunteers=0 is handled correctly
     if (data.max_volunteers !== undefined) data.max_volunteers = parseInt(data.max_volunteers);
     const opp = await opportunityService.update(parseInt(req.params.id), data);
-    if (!opp) return res.status(404).json({ message: 'Opportunity not found' });
     res.json(opp);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,6 +81,12 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
   try {
+    // Verify ownership before deletion
+    const existingOpp = await opportunityService.findById(parseInt(req.params.id));
+    if (!existingOpp) return res.status(404).json({ message: 'Opportunity not found' });
+    if (existingOpp.org_id !== req.user.user_id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: you do not own this opportunity' });
+    }
     await opportunityService.remove(parseInt(req.params.id));
     res.json({ message: 'Opportunity deleted' });
   } catch (error) {

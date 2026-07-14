@@ -44,8 +44,13 @@ const getById = async (req, res) => {
 
 const update = async (req, res) => {
   try {
+    // Verify that the requester owns the organization (or is admin)
+    const orgRecord = await orgService.findById(parseInt(req.params.id));
+    if (!orgRecord) return res.status(404).json({ message: 'Organization not found' });
+    if (orgRecord.owner_id !== req.user.user_id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: you do not own this organization' });
+    }
     const org = await orgService.update(parseInt(req.params.id), req.body);
-    if (!org) return res.status(404).json({ message: 'Organization not found' });
     res.json(org);
   } catch (error) {
     res.status(500).json({ message: error.message });
