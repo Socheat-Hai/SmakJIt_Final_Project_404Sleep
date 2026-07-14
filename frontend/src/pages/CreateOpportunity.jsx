@@ -192,7 +192,7 @@ const CreateOpportunity = () => {
         location: form.location,
         max_volunteers: Number(form.spots),
         work_time: form.commitment,
-        requirements: form.requirements,
+        requirement: form.requirements,
         format: form.format || null,
         external_link: form.external_link || null,
         image: form.image || null,

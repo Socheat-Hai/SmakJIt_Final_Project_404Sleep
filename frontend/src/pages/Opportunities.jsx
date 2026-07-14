@@ -48,6 +48,14 @@ const categoryMeta = {
     ),
     description: 'Boost creativity and wellbeing for local children, teens and youth',
   },
+  Technology: {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+    ),
+    description: 'Empower communities with tech skills and digital access',
+  },
 };
 
 const sectionBg = [
@@ -235,12 +243,12 @@ const Opportunities = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {opps.map((opp, index) => {
-                      const oppId = opp.opp_id || opp._id;
+                      const oppId = opp.opp_id || opp._id || opp.id;
                       const isApplied = appliedIds.includes(oppId);
                       return (
                         <div
                           key={`${oppId || index}-${index}`}
-                          onClick={() => navigate(`/opportunities/${oppId}`)}
+                          onClick={() => oppId ? navigate(`/opportunities/${oppId}`) : console.error("Missing ID:", opp)}
                           className="group bg-white rounded-xl border border-gray-200 hover:border-brand-green/40 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col overflow-hidden"
                         >
 <div className="relative aspect-[16/9] bg-gray-100 overflow-hidden">

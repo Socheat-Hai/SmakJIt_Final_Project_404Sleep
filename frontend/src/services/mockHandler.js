@@ -14,25 +14,50 @@ let nextOppId = 10;
 let nextAppId = 10;
 
 let opportunities = [
-  { _id: '1', title: 'Community Garden Volunteer', orgName: 'Green Earth Org', organization: { _id: '2', name: 'Green Earth Org', email: 'org@test.com' }, category: 'Environment', image: 'https://picsum.photos/seed/opp1/800/450', description: 'Help maintain and grow our community garden. Tasks include planting, watering, weeding, and harvesting fresh produce for local food banks.', location: 'Downtown Area', date: 'Flexible', spots: 12, requirements: 'No experience needed', commitment: '2-4 hrs/week', status: 'open', createdAt: '2025-02-10T10:00:00Z' },
-  { _id: '2', title: 'Math Tutor for Teens', orgName: 'Teach For Tomorrow', organization: { _id: '4', name: 'Teach For Tomorrow', email: 'teach@test.com' }, category: 'Education', image: 'https://picsum.photos/seed/opp2/800/450', description: 'Tutor high school students in math.', location: 'Online', date: 'Weekdays', spots: 5, requirements: 'Strong math skills', commitment: '2 hrs/week', status: 'open', createdAt: '2025-03-05T10:00:00Z' },
-  { _id: '3', title: 'Health Screening Assistant', orgName: 'HealthBridge', organization: { _id: '4', name: 'HealthBridge', email: 'health@test.com' }, category: 'Healthcare', image: 'https://picsum.photos/seed/opp3/800/450', description: 'Assist with health screening events.', location: 'Community Center', date: 'Sat, Jun 20', spots: 8, requirements: 'Training provided', commitment: 'Full day', status: 'open', createdAt: '2025-03-10T10:00:00Z' },
-  { _id: '4', title: 'Animal Shelter Caretaker', orgName: 'Paws & Claws Rescue', organization: { _id: '4', name: 'Paws & Claws Rescue', email: 'paws@test.com' }, category: 'Animal Welfare', image: 'https://picsum.photos/seed/opp4/800/450', description: 'Care for rescued animals.', location: 'North Side Shelter', date: 'Flexible', spots: 3, requirements: 'Love for animals', commitment: '3-4 hr shifts', status: 'open', createdAt: '2025-03-15T10:00:00Z' },
-  { _id: '5', title: 'Community Clean-Up Lead', orgName: 'Green Earth Org', organization: { _id: '2', name: 'Green Earth Org', email: 'org@test.com' }, category: 'Environment', image: 'https://picsum.photos/seed/opp5/800/450', description: 'Lead community clean-up events.', location: 'Various Parks', date: 'Jun 25', spots: 20, requirements: 'Leadership skills', commitment: 'Event day', status: 'open', createdAt: '2025-04-01T10:00:00Z' },
-  { _id: '6', title: 'Coding Workshop Mentor', orgName: 'Tech for Good', organization: { _id: '4', name: 'Tech for Good', email: 'tech@test.com' }, category: 'Technology', image: 'https://picsum.photos/seed/opp6/800/450', description: 'Mentor beginners in coding.', location: 'Online', date: 'Weekends', spots: 8, requirements: 'Coding experience', commitment: '4 hrs/weekend', status: 'open', createdAt: '2025-04-05T10:00:00Z' },
-  { _id: '7', title: 'IT Support for Seniors', orgName: 'Silver Tech Bridge', organization: { _id: '4', name: 'Silver Tech Bridge', email: 'silver@test.com' }, category: 'Technology', image: 'https://picsum.photos/seed/opp7/800/450', description: 'Help seniors with technology.', location: 'Senior Center', date: 'Tue & Thu', spots: 5, requirements: 'Patient demeanor', commitment: '2 hrs/session', status: 'open', createdAt: '2025-04-10T10:00:00Z' },
-  { _id: '8', title: 'Food Bank Sorters', orgName: 'Community Food Network', organization: { _id: '4', name: 'Community Food Network', email: 'food@test.com' }, category: 'Food', image: 'https://picsum.photos/seed/opp8/800/450', description: 'Sort and pack donated food.', location: 'Food Bank Warehouse', date: 'Flexible', spots: 15, requirements: 'Able to lift 30lbs', commitment: '2-4 hr shifts', status: 'closed', createdAt: '2025-02-20T10:00:00Z' },
-  { _id: '9', title: 'Youth Soccer Coach', orgName: 'Active Kids Alliance', organization: { _id: '4', name: 'Active Kids Alliance', email: 'active@test.com' }, category: 'Sports', image: 'https://picsum.photos/seed/opp9/800/450', description: 'Coach youth soccer.', location: 'City Park Field', date: 'Sat & Sun', spots: 4, requirements: 'Soccer knowledge', commitment: 'Weekend mornings', status: 'open', createdAt: '2025-04-15T10:00:00Z' },
+  { _id: '1', title: 'Community Garden Volunteer', orgName: 'Green Earth Org', organization: { _id: '2', name: 'Green Earth Org', email: 'org@test.com' }, category: { category_name: 'Environment' }, category_name: 'Environment', image: 'https://picsum.photos/seed/opp1/800/450', description: 'Help maintain and grow our community garden. Tasks include planting, watering, weeding, and harvesting fresh produce for local food banks.', location: 'Downtown Area', date: 'Flexible', spots: 12, requirements: 'No experience needed', commitment: '2-4 hrs/week', status: 'open', createdAt: '2025-02-10T10:00:00Z' },
+  { _id: '2', title: 'Math Tutor for Teens', orgName: 'Teach For Tomorrow', organization: { _id: '4', name: 'Teach For Tomorrow', email: 'teach@test.com' }, category: { category_name: 'Education' }, category_name: 'Education', image: 'https://picsum.photos/seed/opp2/800/450', description: 'Tutor high school students in math.', location: 'Online', date: 'Weekdays', spots: 5, requirements: 'Strong math skills', commitment: '2 hrs/week', status: 'open', createdAt: '2025-03-05T10:00:00Z' },
+  { _id: '3', title: 'Health Screening Assistant', orgName: 'HealthBridge', organization: { _id: '4', name: 'HealthBridge', email: 'health@test.com' }, category: { category_name: 'Healthcare' }, category_name: 'Healthcare', image: 'https://picsum.photos/seed/opp3/800/450', description: 'Assist with health screening events.', location: 'Community Center', date: 'Sat, Jun 20', spots: 8, requirements: 'Training provided', commitment: 'Full day', status: 'open', createdAt: '2025-03-10T10:00:00Z' },
+  { _id: '4', title: 'Animal Shelter Caretaker', orgName: 'Paws & Claws Rescue', organization: { _id: '4', name: 'Paws & Claws Rescue', email: 'paws@test.com' }, category: { category_name: 'Animal Welfare' }, category_name: 'Animal Welfare', image: 'https://picsum.photos/seed/opp4/800/450', description: 'Care for rescued animals.', location: 'North Side Shelter', date: 'Flexible', spots: 3, requirements: 'Love for animals', commitment: '3-4 hr shifts', status: 'open', createdAt: '2025-03-15T10:00:00Z' },
+  { _id: '5', title: 'Community Clean-Up Lead', orgName: 'Green Earth Org', organization: { _id: '2', name: 'Green Earth Org', email: 'org@test.com' }, category: { category_name: 'Environment' }, category_name: 'Environment', image: 'https://picsum.photos/seed/opp5/800/450', description: 'Lead community clean-up events.', location: 'Various Parks', date: 'Jun 25', spots: 20, requirements: 'Leadership skills', commitment: 'Event day', status: 'open', createdAt: '2025-04-01T10:00:00Z' },
+  { _id: '6', title: 'Coding Workshop Mentor', orgName: 'Tech for Good', organization: { _id: '4', name: 'Tech for Good', email: 'tech@test.com' }, category: { category_name: 'Technology' }, category_name: 'Technology', image: 'https://picsum.photos/seed/opp6/800/450', description: 'Mentor beginners in coding.', location: 'Online', date: 'Weekends', spots: 8, requirements: 'Coding experience', commitment: '4 hrs/weekend', status: 'open', createdAt: '2025-04-05T10:00:00Z' },
+  { _id: '7', title: 'IT Support for Seniors', orgName: 'Silver Tech Bridge', organization: { _id: '4', name: 'Silver Tech Bridge', email: 'silver@test.com' }, category: { category_name: 'Technology' }, category_name: 'Technology', image: 'https://picsum.photos/seed/opp7/800/450', description: 'Help seniors with technology.', location: 'Senior Center', date: 'Tue & Thu', spots: 5, requirements: 'Patient demeanor', commitment: '2 hrs/session', status: 'open', createdAt: '2025-04-10T10:00:00Z' },
+  { _id: '8', title: 'Food Bank Sorters', orgName: 'Community Food Network', organization: { _id: '4', name: 'Community Food Network', email: 'food@test.com' }, category: { category_name: 'Food' }, category_name: 'Food', image: 'https://picsum.photos/seed/opp8/800/450', description: 'Sort and pack donated food.', location: 'Food Bank Warehouse', date: 'Flexible', spots: 15, requirements: 'Able to lift 30lbs', commitment: '2-4 hr shifts', status: 'closed', createdAt: '2025-02-20T10:00:00Z' },
+  { _id: '9', title: 'Youth Soccer Coach', orgName: 'Active Kids Alliance', organization: { _id: '4', name: 'Active Kids Alliance', email: 'active@test.com' }, category: { category_name: 'Sports' }, category_name: 'Sports', image: 'https://picsum.photos/seed/opp9/800/450', description: 'Coach youth soccer.', location: 'City Park Field', date: 'Sat & Sun', spots: 4, requirements: 'Soccer knowledge', commitment: 'Weekend mornings', status: 'open', createdAt: '2025-04-15T10:00:00Z' },
 ];
 
+// Expand mock opportunities to 50 entries for testing
+for (let i = 10; i <= 50; i++) {
+  opportunities.push({
+    _id: String(i),
+    title: `Sample Opportunity ${i}`,
+    orgName: `Org ${i}`,
+    organization: { _id: String(i), name: `Org ${i}`, email: `org${i}@test.com` },
+    category: { category_name: i % 2 === 0 ? 'Education' : 'Technology' },
+    category_name: i % 2 === 0 ? 'Education' : 'Technology',
+    image: `https://picsum.photos/seed/opp${i}/800/450`,
+    description: `Description for sample opportunity ${i}.`,
+    location: 'Remote',
+    date: 'Flexible',
+    spots: 5,
+    requirements: '',
+    commitment: '',
+    status: 'open',
+    createdAt: new Date().toISOString()
+  });
+}
+
+let saved = [];
+
+// Saved opportunities per user
+
 let applications = [
-  { _id: '1', opportunity: '1', opportunityTitle: 'Community Garden Volunteer', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I love gardening! I have been growing vegetables at home for 3 years.', createdAt: '2025-03-01T10:00:00Z' },
-  { _id: '2', opportunity: '2', opportunityTitle: 'Math Tutor for Teens', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'accepted', message: '', createdAt: '2025-03-10T10:00:00Z' },
-  { _id: '3', opportunity: '1', opportunityTitle: 'Community Garden Volunteer', volunteer: { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com' }, volunteerName: 'Sarah Helper', volunteerEmail: 'sarah@test.com', status: 'pending', message: 'I have volunteered at community gardens before and would love to help again!', createdAt: '2025-04-01T10:00:00Z' },
-  { _id: '4', opportunity: '3', opportunityTitle: 'Health Screening Assistant', volunteer: { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com' }, volunteerName: 'Sarah Helper', volunteerEmail: 'sarah@test.com', status: 'rejected', message: 'I have medical assistant training.', createdAt: '2025-04-05T10:00:00Z' },
-  { _id: '5', opportunity: '5', opportunityTitle: 'Community Clean-Up Lead', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I can lead a team!', createdAt: '2025-04-15T10:00:00Z' },
-  { _id: '6', opportunity: '6', opportunityTitle: 'Coding Workshop Mentor', volunteer: { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com' }, volunteerName: 'Sarah Helper', volunteerEmail: 'sarah@test.com', status: 'pending', message: '', createdAt: '2025-04-20T10:00:00Z' },
-  { _id: '7', opportunity: '4', opportunityTitle: 'Animal Shelter Caretaker', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I love animals and have experience with dogs and cats.', createdAt: '2025-05-01T10:00:00Z' },
+   { _id: '1', opportunity: '1', opportunityTitle: 'Community Garden Volunteer', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I love gardening! I have been growing vegetables at home for 3 years.', createdAt: '2025-03-01T10:00:00Z' },
+   { _id: '2', opportunity: '2', opportunityTitle: 'Math Tutor for Teens', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'accepted', message: '', createdAt: '2025-03-10T10:00:00Z' },
+   { _id: '3', opportunity: '1', opportunityTitle: 'Community Garden Volunteer', volunteer: { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com' }, volunteerName: 'Sarah Helper', volunteerEmail: 'sarah@test.com', status: 'pending', message: 'I have volunteered at community gardens before and would love to help again!', createdAt: '2025-04-01T10:00:00Z' },
+   { _id: '4', opportunity: '3', opportunityTitle: 'Health Screening Assistant', volunteer: { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com' }, volunteerName: 'Sarah Helper', volunteerEmail: 'sarah@test.com', status: 'rejected', message: 'I have medical assistant training.', createdAt: '2025-04-05T10:00:00Z' },
+   { _id: '5', opportunity: '5', opportunityTitle: 'Community Clean-Up Lead', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I can lead a team!', createdAt: '2025-04-15T10:00:00Z' },
+   { _id: '6', opportunity: '6', opportunityTitle: 'Coding Workshop Mentor', volunteer: { _id: '5', name: 'Sarah Helper', email: 'sarah@test.com' }, volunteerName: 'Sarah Helper', volunteerEmail: 'sarah@test.com', status: 'pending', message: '', createdAt: '2025-04-20T10:00:00Z' },
+   { _id: '7', opportunity: '4', opportunityTitle: 'Animal Shelter Caretaker', volunteer: { _id: '1', name: 'John Volunteer', email: 'john@test.com' }, volunteerName: 'John Volunteer', volunteerEmail: 'john@test.com', status: 'pending', message: 'I love animals and have experience with dogs and cats.', createdAt: '2025-05-01T10:00:00Z' },
 ];
 
 const delay = (ms = 50) => new Promise((r) => setTimeout(r, ms));
@@ -62,7 +87,7 @@ const findUserByEmail = (email) => users.find((u) => u.email === email);
 
 const getCategoryStats = () => {
   const counts = {};
-  opportunities.forEach((o) => { counts[o.category] = (counts[o.category] || 0) + 1; });
+  opportunities.forEach((o) => { const cat = o.category?.category_name || o.category; counts[cat] = (counts[cat] || 0) + 1; });
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([category, count]) => ({ category, count }));
 };
 
@@ -87,7 +112,25 @@ export const mockHandler = async (config) => {
     const body = typeof data === 'string' ? JSON.parse(data) : data;
     if (findUserByEmail(body.email)) { throw { response: { status: 400, data: { message: 'Email already in use' } } }; }
     const orgFields = body.role === 'organization' ? { org_name: body.org_name || body.name, social_link: '' } : {};
-    const newUser = { _id: String(nextUserId++), name: body.name, email: body.email, role: body.role === 'volunteer' ? 'user' : body.role || 'user', status: 'active', verificationStatus: body.role === 'organization' ? 'pending' : undefined, ...orgFields, createdAt: new Date().toISOString() };
+    const newUser = { _id: String(nextUserId++), name: body.name, email: body.email, role: body.role || 'volunteer', status: 'active', verificationStatus: body.role === 'organization' ? 'pending' : undefined, ...orgFields, createdAt: new Date().toISOString() };
+    // Map volunteer-specific fields to the keys expected by the frontend
+    if (newUser.role === 'volunteer') {
+      if (body.location) newUser.volunteer_location = body.location;
+      if (body.date_of_birth) newUser.volunteer_dob = body.date_of_birth;
+      if (body.gender) newUser.volunteer_gender = body.gender;
+    }
+    // Copy any remaining additional profile fields (e.g., interests, bio) directly onto the user object
+    const extraFields = { ...body };
+    delete extraFields.name;
+    delete extraFields.email;
+    delete extraFields.password;
+    delete extraFields.role;
+    delete extraFields.org_name;
+    delete extraFields.social_link;
+    delete extraFields.location;
+    delete extraFields.date_of_birth;
+    delete extraFields.gender;
+    Object.assign(newUser, extraFields);
     users.push(newUser);
     const token = btoa(JSON.stringify({ id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }));
     setMockToken(token);
@@ -132,8 +175,13 @@ export const mockHandler = async (config) => {
   if (method === 'get' && path === '/opportunities') {
     let result = [...opportunities];
     if (params?.status) result = result.filter((o) => o.status === params.status);
-    if (params?.category) result = result.filter((o) => o.category === params.category);
+    if (params?.category) result = result.filter((o) => (o.category?.category_name || o.category) === params.category);
     if (params?.search) { const s = params.search.toLowerCase(); result = result.filter((o) => o.title.toLowerCase().includes(s) || o.orgName.toLowerCase().includes(s)); }
+    // Pagination support
+    const page = Number(params?.page) || 1;
+    const limit = Number(params?.limit) || result.length;
+    const start = (page - 1) * limit;
+    result = result.slice(start, start + limit);
     return { data: result, status: 200 };
   }
 
@@ -197,6 +245,43 @@ export const mockHandler = async (config) => {
     if (!['pending', 'accepted', 'rejected'].includes(body.status)) { throw { response: { status: 400, data: { message: 'Status must be pending, accepted, or rejected' } } }; }
     applications[idx] = { ...applications[idx], status: body.status };
     return { data: applications[idx], status: 200 };
+  }
+
+  // Saved Opportunities: List
+  if (method === 'get' && path === '/saved') {
+    const current = getCurrentUser();
+    if (!current) throw { response: { status: 401, data: { message: 'Not authenticated' } } };
+    const userSaved = saved.filter(s => s.user_id === (current.id || current._id));
+    const result = userSaved.map(s => {
+      const opp = opportunities.find(o => o._id === s.opp_id);
+      if (!opp) return null;
+      // Ensure opp_id field exists for frontend consistency
+      return { ...opp, opp_id: opp._id };
+    }).filter(Boolean);
+    return { data: result, status: 200 };
+  }
+
+  // Saved Opportunities: Add
+  const savedMatch = path.match(/^\/saved\/([a-zA-Z0-9]+)$/);
+  if (method === 'post' && savedMatch) {
+    const current = getCurrentUser();
+    if (!current) throw { response: { status: 401, data: { message: 'Not authenticated' } } };
+    const oppId = savedMatch[1];
+    const opp = opportunities.find(o => o._id === oppId);
+    if (!opp) throw { response: { status: 404, data: { message: 'Opportunity not found' } } };
+    if (!saved.find(s => s.user_id === (current.id || current._id) && s.opp_id === oppId)) {
+      saved.push({ user_id: current.id || current._id, opp_id: oppId, saved_at: new Date().toISOString() });
+    }
+    return { data: { message: 'Saved' }, status: 201 };
+  }
+
+  // Saved Opportunities: Remove
+  if (method === 'delete' && savedMatch) {
+    const current = getCurrentUser();
+    if (!current) throw { response: { status: 401, data: { message: 'Not authenticated' } } };
+    const oppId = savedMatch[1];
+    saved = saved.filter(s => !(s.user_id === (current.id || current._id) && s.opp_id === oppId));
+    return { data: { message: 'Unsaved' }, status: 200 };
   }
 
   // -------------------------------------------------------

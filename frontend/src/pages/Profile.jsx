@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import OrgProfileSection from '../components/OrgProfileSection';
+import { interestSkills as skills } from '../constants/interestSkills';
 import VolunteerProfileSection from '../components/VolunteerProfileSection';
 import api from '../services/api';
 
@@ -72,7 +73,7 @@ const Profile = () => {
   const tabs = user?.role === 'admin'
     ? allTabs.filter((t) => t.id === 'account' || t.id === 'security')
     : user?.role === 'organization'
-    ? allTabs.filter((t) => t.id !== 'interests' && t.id !== 'experience')
+    ? allTabs.filter((t) => t.id !== 'interests' && t.id !== 'experience' && t.id !== 'saved')
     : allTabs;
 
   const addSkill = () => {
@@ -163,7 +164,18 @@ const Profile = () => {
           <div className="card p-8">
             <h3 className="text-lg font-medium mb-2">Your Interests</h3>
             <p className="text-sm text-gray-500 mb-6">These interests help us recommend relevant opportunities for you.</p>
-            <p className="text-gray-400 text-sm">Manage your interests through the Interest Survey.</p>
+            {user?.volunteer_interests?.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {skills.filter(skill => user.volunteer_interests.includes(skill.id)).map(skill => (
+                  <div key={skill.id} className="flex items-center gap-2 p-2 border rounded bg-gray-50">
+                    <span className="text-xl">{skill.icon}</span>
+                    <span className="text-sm">{skill.label}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400">You have not selected any interests yet. Take the Interest Survey to add some.</p>
+            )}
           </div>
         )}
 

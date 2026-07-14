@@ -1,0 +1,18 @@
+export const interestSkills = [
+  { id: 'teaching', label: 'Teaching & Tutoring', icon: '📚' },
+  { id: 'healthcare', label: 'Healthcare & Wellness', icon: '❤️' },
+  { id: 'environment', label: 'Environment & Sustainability', icon: '🌱' },
+  { id: 'animals', label: 'Animal Care', icon: '🐾' },
+  { id: 'arts', label: 'Arts & Culture', icon: '🎨' },
+  { id: 'technology', label: 'Technology & IT', icon: '💻' },
+  { id: 'construction', label: 'Construction & Repair', icon: '🔧' },
+  { id: 'food', label: 'Food & Hospitality', icon: '🍳' },
+  { id: 'sports', label: 'Sports & Recreation', icon: '⚽' },
+  { id: 'music', label: 'Music & Performance', icon: '🎵' },
+  { id: 'elderly', label: 'Elderly Care', icon: '👴' },
+  { id: 'youth', label: 'Youth Mentoring', icon: '👋' },
+  { id: 'fundraising', label: 'Fundraising', icon: '💰' },
+  { id: 'legal', label: 'Legal Support', icon: '⚖️' },
+  { id: 'marketing', label: 'Marketing & Communications', icon: '📢' },
+  { id: 'photography', label: 'Photography & Video', icon: '📷' },
+];

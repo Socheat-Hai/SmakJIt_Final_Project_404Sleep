@@ -188,11 +188,11 @@ const OpportunityDetail = () => {
               </section>
             )}
 
-            {opp.skills?.length > 0 && ( // FIX: was opp.opportunity_skills
+            {opp.skills?.length > 0 && ( 
               <section className="mb-8">
                 <h3 className="text-lg font-medium mb-3">Skills Needed</h3>
                 <div className="flex flex-wrap gap-2">
-                  {opp.skills.map((os) => ( // FIX: was opp.opportunity_skills
+                  {opp.skills.map((os) => ( 
                     <span key={os.skill_id} className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-[13px] font-medium">
                       {os.skill?.skill_name}
                     </span>

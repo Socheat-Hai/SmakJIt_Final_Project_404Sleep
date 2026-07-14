@@ -58,6 +58,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState([]);
 
+
   useEffect(() => {
     const fetchOpps = async () => {
       try {
@@ -149,13 +150,16 @@ const Home = () => {
 
       <section className="section">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <div className="section-label">Featured Opportunities</div>
-            <h2 className="section-title">Find your perfect opportunity</h2>
-            <p className="section-subtitle mx-auto">
-              Explore opportunities across various causes and find where your skills can make the biggest impact.
-            </p>
-          </div>
+<div className="text-center mb-12">
+              <div className="section-label">Featured Opportunities</div>
+              <h2 className="section-title">Find your perfect opportunity</h2>
+              <p className="section-subtitle mx-auto">
+                Explore opportunities across various causes and find where your skills can make the biggest impact.
+              </p>
+            </div>
+
+            {/* Category selector */}
+            
 
             {loading ? (
             <div className="grid-3">
