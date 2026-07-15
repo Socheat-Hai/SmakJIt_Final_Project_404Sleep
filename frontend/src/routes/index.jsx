@@ -20,6 +20,9 @@ import Profile from '../pages/Profile';
 import CreateOpportunity from '../pages/CreateOpportunity';
 import MyOpportunities from '../pages/MyOpportunities';
 import OrgApplications from '../pages/OrgApplications';
+import HelpCenter from '../pages/HelpCenter';
+import PrivacyPolicy from '../pages/PrivacyPolicy';
+import TermsOfUse from '../pages/TermsOfUse';
 
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminUsers from '../pages/admin/AdminUsers';
@@ -78,6 +81,9 @@ const AppContent = () => {
           <Route path="/profile" element={
             <ProtectedRoute><Profile /></ProtectedRoute>
           } />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfUse />} />
         </Routes>
       </main>
       <Footer />

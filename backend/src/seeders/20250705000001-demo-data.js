@@ -374,7 +374,6 @@ function buildOpportunities() {
         category_id: categoryId,
         image: OPPORTUNITY_IMAGES[(oppId - 1) % OPPORTUNITY_IMAGES.length],
         max_volunteers: (orgIdx + 1) * 5,
-        external_link: orgIdx % 4 === 0 ? `https://${ORG_NAMES[orgIdx].toLowerCase().replace(/\s+/g, '')}.org/apply` : null,
         status: 'open',
         created_at: new Date('2025-03-01'),
         updated_at: new Date('2025-03-01'),

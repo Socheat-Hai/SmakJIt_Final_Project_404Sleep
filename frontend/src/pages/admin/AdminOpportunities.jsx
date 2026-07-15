@@ -104,6 +104,7 @@ const AdminOpportunities = () => {
                     <div><span className="font-medium text-gray-700">Created:</span> {new Date(opp.created_at).toLocaleDateString()}</div>
                   </div>
                   {opp.requirements && <div className="mt-1.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Requirements:</span> {opp.requirements}</div>}
+                  {opp.benefits && <div className="mt-0.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Benefits:</span> {opp.benefits}</div>}
                   {opp.commitment && <div className="mt-0.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Commitment:</span> {opp.commitment}</div>}
                 </div>
               )}

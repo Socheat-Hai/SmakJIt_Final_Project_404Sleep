@@ -7,9 +7,20 @@ import ImageUpload from '../components/ImageUpload';
 import api from '../services/api';
 
 const formats = ['in-person', 'online', 'hybrid'];
+
+const provinces = [
+  'Banteay Meanchey', 'Battambang', 'Kampong Cham', 'Kampong Chhnang',
+  'Kampong Speu', 'Kampong Thom', 'Kampot', 'Kandal', 'Koh Kong',
+  'Kratié', 'Mondulkiri', 'Phnom Penh', 'Preah Vihear', 'Prey Veng',
+  'Pursat', 'Ratanakiri', 'Siem Reap', 'Sihanoukville', 'Stung Treng',
+  'Svay Rieng', 'Takéo', 'Tboung Khmum',
+];
+
 const questionTypes = [
   { value: 'text', label: 'Short Answer', icon: 'T' },
+  { value: 'long_text', label: 'Long Answer', icon: '¶' },
   { value: 'yes_no', label: 'Yes / No', icon: 'YN' },
+  { value: 'radio', label: 'Multiple Choice', icon: '◉' },
   { value: 'checkbox', label: 'Checkboxes', icon: '☑' },
   { value: 'file', label: 'File Upload', icon: '⬆' },
 ];
@@ -32,6 +43,7 @@ const CreateOpportunity = () => {
     description: '',
     category: '',
     location: '',
+    location_detail: '',
     date: '', // start date
     end_date: '', // end date
     spots: '',
@@ -39,7 +51,6 @@ const CreateOpportunity = () => {
     benefits: '',
     commitment: '',
     format: '',
-    external_link: '',
     image: '',
   });
 
@@ -66,17 +77,29 @@ const CreateOpportunity = () => {
         const res = await opportunityService.getById(id);
         const opp = res.data;
         const catName = opp.category?.category_name || opp.opportunity_skills?.[0]?.skill?.skill_name || '';
+        const fullLocation = opp.location || '';
+        let parsedProvince = '';
+        let parsedDetail = fullLocation;
+        for (const p of provinces) {
+          if (fullLocation === p || fullLocation.startsWith(p + ',') || fullLocation.startsWith(p + ' -')) {
+            parsedProvince = p;
+            parsedDetail = fullLocation.slice(p.length).replace(/^[\s,\-]+/, '');
+            break;
+          }
+        }
         setForm({
           title: opp.title || '',
           description: opp.description || '',
           category: catName,
-          location: opp.location || '',
+          location: parsedProvince,
+          location_detail: parsedDetail,
           date: opp.start_date ? opp.start_date.split('T')[0] : '',
+          end_date: opp.end_date ? opp.end_date.split('T')[0] : '',
           spots: opp.max_volunteers || '',
           requirements: opp.requirement || opp.requirements || '',
+          benefits: opp.benefits || '',
           commitment: opp.work_time || '',
           format: opp.format || '',
-          external_link: opp.external_link || '',
           image: opp.image || '',
         });
         if (opp.questions && Array.isArray(opp.questions)) {
@@ -108,8 +131,9 @@ const CreateOpportunity = () => {
         text: '',
         type,
         required: false,
-        options: type === 'checkbox' ? [{ label: 'Option 1', value: 'option_1' }] : [],
+        options: (type === 'checkbox' || type === 'radio') ? [{ label: 'Option 1', value: 'option_1' }] : [],
         placeholder: '',
+        max_words: type === 'long_text' ? 500 : undefined,
       },
     ]);
   };
@@ -189,12 +213,12 @@ const CreateOpportunity = () => {
       const payload = {
         title: form.title,
         description: form.description,
-        location: form.location,
+        location: form.location_detail ? `${form.location}, ${form.location_detail}` : form.location,
         max_volunteers: Number(form.spots),
         work_time: form.commitment,
         requirement: form.requirements,
+        benefits: form.benefits,
         format: form.format || null,
-        external_link: form.external_link || null,
         image: form.image || null,
         category_id: categories.find((c) => c.category_name === form.category)?.category_id || null,
       };
@@ -203,14 +227,19 @@ const CreateOpportunity = () => {
         payload.start_date = form.date;
       }
 
+      if (form.end_date) {
+        payload.end_date = form.end_date;
+      }
+
       if (questions.length > 0) {
         payload.questions = questions.map((q, idx) => ({
           question_id: idx + 1,
           text: q.text.trim(),
           type: q.type,
           required: q.required,
-          options: q.type === 'checkbox' ? (q.options || []).map((o) => ({ label: o.label, value: o.value })) : undefined,
-          placeholder: q.type === 'text' ? (q.placeholder || '') : undefined,
+          options: (q.type === 'checkbox' || q.type === 'radio') ? (q.options || []).map((o) => ({ label: o.label, value: o.value })) : undefined,
+          placeholder: (q.type === 'text' || q.type === 'long_text') ? (q.placeholder || '') : undefined,
+          max_words: q.type === 'long_text' ? (q.max_words || undefined) : undefined,
         }));
       } else {
         payload.questions = null;
@@ -285,11 +314,21 @@ const CreateOpportunity = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="input-group">
-              <label htmlFor="location">Location <span className="text-red-400">*</span></label>
-              <input id="location" name="location" type="text" value={form.location} onChange={update('location')} placeholder="e.g. Downtown Area" />
+              <label htmlFor="location">Province <span className="text-red-400">*</span></label>
+              <select id="location" name="location" value={form.location} onChange={update('location')}>
+                <option value="">Select a province</option>
+                {provinces.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
             </div>
             <div className="input-group">
-              <label htmlFor="date">Date</label>
+              <label htmlFor="location_detail">Specific Location <span className="text-gray-400 text-xs font-normal">(optional)</span></label>
+              <input id="location_detail" name="location_detail" type="text" value={form.location_detail} onChange={update('location_detail')} placeholder="e.g. Boeung Trabek, Street 123" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="input-group">
+              <label htmlFor="date">Start Date</label>
               <input id="date" name="date" type="date" value={form.date} onChange={update('date')} />
             </div>
           </div>
@@ -300,9 +339,17 @@ const CreateOpportunity = () => {
               <input id="spots" name="spots" type="number" min="1" value={form.spots} onChange={update('spots')} placeholder="e.g. 10" />
             </div>
             <div className="input-group">
+              <label htmlFor="end_date">Application Deadline</label>
+              <input id="end_date" name="end_date" type="date" value={form.end_date} onChange={update('end_date')} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="input-group">
               <label htmlFor="commitment">Commitment</label>
               <input id="commitment" name="commitment" type="text" value={form.commitment} onChange={update('commitment')} placeholder="e.g. 2-4 hrs/week" />
             </div>
+            <div />
           </div>
 
           <div className="input-group">
@@ -311,9 +358,8 @@ const CreateOpportunity = () => {
           </div>
 
           <div className="input-group">
-            <label htmlFor="external_link">External Application Link (Optional)</label>
-            <input id="external_link" name="external_link" type="url" value={form.external_link} onChange={update('external_link')} placeholder="https://example.com/apply" />
-            <p className="text-[11px] text-gray-400 mt-1">If provided, volunteers will be redirected to this link to apply externally.</p>
+            <label htmlFor="benefits">Benefits</label>
+            <textarea id="benefits" name="benefits" value={form.benefits} onChange={update('benefits')} rows={3} placeholder="What will volunteers gain from this opportunity..." />
           </div>
 
           {/* Application Questions Builder */}
@@ -375,8 +421,11 @@ const CreateOpportunity = () => {
                             onChange={(e) => {
                               const newType = e.target.value;
                               updateQuestion(q.question_id, 'type', newType);
-                              if (newType === 'checkbox' && (!q.options || q.options.length === 0)) {
+                              if ((newType === 'checkbox' || newType === 'radio') && (!q.options || q.options.length === 0)) {
                                 updateQuestion(q.question_id, 'options', [{ label: 'Option 1', value: 'option_1' }]);
+                              }
+                              if (newType === 'long_text') {
+                                updateQuestion(q.question_id, 'max_words', q.max_words || 500);
                               }
                             }}
                             className="px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
@@ -386,7 +435,7 @@ const CreateOpportunity = () => {
                             ))}
                           </select>
 
-                          {q.type === 'text' && (
+                          {(q.type === 'text' || q.type === 'long_text') && (
                             <input
                               id={`question-${q.question_id}-placeholder`}
                               name={`question-${q.question_id}-placeholder`}
@@ -395,6 +444,19 @@ const CreateOpportunity = () => {
                               onChange={(e) => updateQuestion(q.question_id, 'placeholder', e.target.value)}
                               placeholder="Placeholder text..."
                               className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
+                            />
+                          )}
+
+                          {q.type === 'long_text' && (
+                            <input
+                              id={`question-${q.question_id}-max-words`}
+                              name={`question-${q.question_id}-max-words`}
+                              type="number"
+                              min="1"
+                              value={q.max_words || ''}
+                              onChange={(e) => updateQuestion(q.question_id, 'max_words', e.target.value ? Number(e.target.value) : undefined)}
+                              placeholder="Max words"
+                              className="w-24 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
                             />
                           )}
 
@@ -411,7 +473,7 @@ const CreateOpportunity = () => {
                           </label>
                         </div>
 
-                        {q.type === 'checkbox' && (
+                        {(q.type === 'checkbox' || q.type === 'radio') && (
                           <div className="space-y-2 pl-1">
                             {(q.options || []).map((opt, optIdx) => (
                               <div key={optIdx} className="flex items-center gap-2">

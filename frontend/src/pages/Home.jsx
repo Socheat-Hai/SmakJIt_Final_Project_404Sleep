@@ -4,14 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/opportunityService';
 import { savedOpportunityService } from '../services/savedOpportunityService';
 import { getImageUrl } from '../utils/getImageUrl';
-import heroTeam from '../assets/images/hero-team.jpg';
+import heroTeam from '../assets/images/Vounteer.png';
 
-const stats = [
-  { value: '12,000+', label: 'Volunteers' },
-  { value: '3,500+', label: 'Opportunities' },
-  { value: '850+', label: 'Organizations' },
-  { value: '45,000+', label: 'Hours Served' },
-];
 
 const steps = [
   {
@@ -223,11 +217,17 @@ const Home = () => {
                       </div>
                   )}
                   <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-[16px] font-medium mb-1 leading-snug group-hover:text-brand-green transition-colors">{opp.title}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-[16px] font-medium leading-snug group-hover:text-brand-green transition-colors line-clamp-1">{opp.title}</h3>
+                      {(opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())) && (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Closed</span>
+                      )}
+                    </div>
                     <div className="text-[12px] text-gray-400 mb-2.5">{opp.organization?.name}</div>
                     <div className="flex gap-3 text-xs text-gray-400 mb-3 flex-wrap">
                       <span>📍 {opp.location}</span>
                       {opp.work_time && <span>🕐 {opp.work_time}</span>}
+                      {opp.end_date && <span>⏰ {new Date(opp.end_date).toLocaleDateString()}</span>}
                     </div>
                     <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-auto">
                       <span className="text-xs text-gray-400">

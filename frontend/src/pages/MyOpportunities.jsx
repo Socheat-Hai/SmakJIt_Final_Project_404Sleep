@@ -76,7 +76,6 @@ const MyOpportunities = () => {
                   </div>
                   <div className="text-[13px] text-gray-500">
                     {opp.location} · {opp.max_volunteers || 'Unlimited'} spots · {opp.work_time || 'Flexible'}
-                    {opp.external_link && ' · External Link'}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">

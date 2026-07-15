@@ -31,6 +31,32 @@ const QuestionRenderer: React.FC<{
         </div>
       );
 
+    case 'long_text': {
+      const maxWords = question.max_words || 0;
+      const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
+      const overLimit = maxWords > 0 && wordCount > maxWords;
+      return (
+        <div className="input-group">
+          <label>
+            {question.text}
+            {question.required && <span className="text-red-400 ml-1">*</span>}
+          </label>
+          <textarea
+            rows={6}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={question.placeholder || 'Type your answer...'}
+          />
+          <div className="flex justify-end mt-1">
+            <span className={`text-[12px] ${overLimit ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+              {wordCount}{maxWords > 0 ? ` / ${maxWords}` : ''} words
+            </span>
+          </div>
+          {error && <p className="form-error">{error}</p>}
+        </div>
+      );
+    }
+
     case 'yes_no':
       return (
         <div className="input-group">
@@ -57,6 +83,47 @@ const QuestionRenderer: React.FC<{
           {error && <p className="form-error">{error}</p>}
         </div>
       );
+
+    case 'radio': {
+      const options = question.options?.length
+        ? question.options
+        : [{ label: 'Option 1', value: 'option_1' }];
+      return (
+        <div className="input-group">
+          <label>
+            {question.text}
+            {question.required && <span className="text-red-400 ml-1">*</span>}
+          </label>
+          <div className="flex flex-col gap-2.5 mt-1">
+            {options.map((opt) => (
+              <label
+                key={opt.value}
+                onClick={(e) => { e.preventDefault(); onChange(opt.value); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                  value === opt.value
+                    ? 'border-brand-green bg-brand-green-light'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+                    value === opt.value
+                      ? 'border-brand-green'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  {value === opt.value && (
+                    <div className="w-2.5 h-2.5 rounded-full bg-brand-green" />
+                  )}
+                </div>
+                <span className="text-sm text-gray-700">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+          {error && <p className="form-error">{error}</p>}
+        </div>
+      );
+    }
 
     case 'checkbox': {
       const options = question.options?.length
@@ -180,6 +247,12 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
     questions.forEach((q) => {
       if (q.required && (!answers[q.question_id] || !answers[q.question_id].trim())) {
         errs[`q_${q.question_id}`] = 'This question is required';
+      }
+      if (q.type === 'long_text' && q.max_words && answers[q.question_id]) {
+        const wordCount = answers[q.question_id].trim().split(/\s+/).length;
+        if (wordCount > q.max_words) {
+          errs[`q_${q.question_id}`] = `Answer exceeds ${q.max_words} word limit (${wordCount} words)`;
+        }
       }
     });
     setErrors(errs);

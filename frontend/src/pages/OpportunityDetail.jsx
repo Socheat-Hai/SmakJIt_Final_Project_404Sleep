@@ -53,7 +53,7 @@ const OpportunityDetail = () => {
 
   useEffect(() => {
     const fetchRecommended = async () => {
-      if (!opp?.skills?.length) return; // FIX: was opp.opportunity_skills — API returns 'skills' (Sequelize alias)
+      if (!opp?.skills?.length) return;
       try {
         const res = await api.get('/opportunities/recommended');
         const filtered = (res.data || []).filter((o) => o.opp_id !== opp.opp_id).slice(0, 3);
@@ -68,11 +68,6 @@ const OpportunityDetail = () => {
       navigate('/login', { state: { from: { pathname: `/opportunities/${id}` } } });
       return;
     }
-    if (opp.external_link) {
-      window.open(opp.external_link, '_blank', 'noopener,noreferrer');
-      showToast('Redirecting to external application...');
-      return;
-    }
     if (user.role !== 'volunteer') {
       showToast('Only volunteers can apply', 'error');
       return;
@@ -81,9 +76,9 @@ const OpportunityDetail = () => {
   };
 
   const getSkillMatchCount = () => {
-    if (!user?.volunteer_skills || !opp?.skills) return 0; // FIX: was opp.opportunity_skills
+    if (!user?.volunteer_skills || !opp?.skills) return 0; 
     const userSkillNames = user.volunteer_skills.map((s) => s.skill_name?.toLowerCase());
-    return opp.skills.filter((os) => // FIX: was opp.opportunity_skills
+    return opp.skills.filter((os) => 
       userSkillNames.includes(os.skill?.skill_name?.toLowerCase())
     ).length;
   };
@@ -103,7 +98,7 @@ const OpportunityDetail = () => {
   }
 
   const skillMatchCount = getSkillMatchCount();
-  const totalOppSkills = opp.skills?.length || 0; // FIX: was opp.opportunity_skills
+  const totalOppSkills = opp.skills?.length || 0; 
 
   if (showApplyForm && user) {
     return (
@@ -138,7 +133,7 @@ const OpportunityDetail = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 <div className="absolute bottom-5 left-6 right-6">
                   <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-white/90 text-brand-green text-xs font-medium uppercase tracking-wider mb-3">
-                    {opp.skills?.[0]?.skill?.skill_name || 'General'} // FIX: was opp.opportunity_skills
+                    {opp.skills?.[0]?.skill?.skill_name || 'General'} 
                   </span>
                   <h1 className="text-white text-[28px] font-medium leading-tight">{opp.title}</h1>
                 </div>
@@ -147,7 +142,7 @@ const OpportunityDetail = () => {
             {!opp.image && (
               <>
                 <span className="inline-flex px-3.5 py-1.5 rounded-sm bg-brand-green-light text-brand-green text-xs font-medium uppercase tracking-wider mb-4">
-                  {opp.skills?.[0]?.skill?.skill_name || 'General'} // FIX: was opp.opportunity_skills
+                  {opp.skills?.[0]?.skill?.skill_name || 'General'} 
                 </span>
                 <h1 className="text-[32px] font-medium mb-2">{opp.title}</h1>
               </>
@@ -164,27 +159,27 @@ const OpportunityDetail = () => {
 
             <section className="mb-8">
               <h3 className="text-lg font-medium mb-3">About this opportunity</h3>
-              <p className="text-gray-600 text-[15px] leading-relaxed">{opp.description}</p>
+              <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-wrap">{opp.description}</p>
             </section>
 
             {(opp.requirement || opp.requirements) && (
               <section className="mb-8">
                 <h3 className="text-lg font-medium mb-3">Requirements</h3>
-                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.requirement || opp.requirements}</p>
+                <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-wrap">{opp.requirement || opp.requirements}</p>
               </section>
             )}
 
             {opp.benefits && (
               <section className="mb-8">
                 <h3 className="text-lg font-medium mb-3">Benefits</h3>
-                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.benefits}</p>
+                <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-wrap">{opp.benefits}</p>
               </section>
             )}
 
             {opp.work_time && (
               <section className="mb-8">
                 <h3 className="text-lg font-medium mb-3">Time Commitment</h3>
-                <p className="text-gray-600 text-[15px] leading-relaxed">{opp.work_time}</p>
+                <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-wrap">{opp.work_time}</p>
               </section>
             )}
 
@@ -227,10 +222,21 @@ const OpportunityDetail = () => {
           </div>
 
           <div className="card sticky top-20">
+            {(opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())) && (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-5">
+                <p className="text-sm text-red-600 font-medium">Applications are closed</p>
+              </div>
+            )}
             {opp.start_date && (
               <div className="mb-5">
                 <div className="text-[13px] text-gray-500 mb-1">Start Date</div>
                 <div className="text-[15px] font-medium">📅 {new Date(opp.start_date).toLocaleDateString()}</div>
+              </div>
+            )}
+            {opp.end_date && (
+              <div className="mb-5">
+                <div className="text-[13px] text-gray-500 mb-1">Application Deadline</div>
+                <div className="text-[15px] font-medium">⏰ {new Date(opp.end_date).toLocaleDateString()}</div>
               </div>
             )}
             <div className="mb-5">
@@ -260,34 +266,14 @@ const OpportunityDetail = () => {
               <Link to={`/opportunities/edit/${id}`} className="btn btn-primary btn-block btn-lg mb-3 inline-block text-center">
                 Edit Opportunity
               </Link>
-            ) : opp.external_link ? (
-              <a
-                href={opp.external_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary btn-block btn-lg mb-3 inline-block text-center"
-              >
-                Apply on External Site →
-              </a>
             ) : (
               <button
                 onClick={handleApply}
-                disabled={hasApplied}
-                className={`btn btn-block btn-lg mb-3 ${hasApplied ? 'btn-outline !text-brand-green !border-brand-green cursor-default' : 'btn-primary'}`}
+                disabled={hasApplied || opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())}
+                className={`btn btn-block btn-lg mb-3 ${opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date()) ? 'bg-gray-200 text-gray-400 cursor-default' : hasApplied ? 'btn-outline !text-brand-green !border-brand-green cursor-default' : 'btn-primary'}`}
               >
-                {hasApplied ? 'Applied ✓' : 'Apply Now'}
+                {opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date()) ? 'Applications Closed' : hasApplied ? 'Applied ✓' : 'Apply Now'}
               </button>
-            )}
-            {isOrgOwner ? (
-              <p className="text-xs text-gray-400 text-center">You are the owner of this opportunity</p>
-            ) : (
-              <p className="text-xs text-gray-400 text-center">{opp._count?.applications || 0} people have applied</p>
-            )}
-
-            {opp.external_link && !isOrgOwner && (
-              <p className="text-[11px] text-gray-400 text-center mt-2">
-                You'll be redirected to an external site to complete your application.
-              </p>
             )}
           </div>
         </div>

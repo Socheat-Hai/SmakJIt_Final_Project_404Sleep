@@ -37,7 +37,6 @@ module.exports = (sequelize, DataTypes) => {
       category_id: DataTypes.INTEGER,
       image: DataTypes.STRING(255),
       max_volunteers: DataTypes.INTEGER,
-      external_link: DataTypes.STRING(500),
       questions: DataTypes.JSONB,
       status: {
         type: DataTypes.STRING(50),

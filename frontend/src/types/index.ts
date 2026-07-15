@@ -29,10 +29,11 @@ export interface QuestionOption {
 export interface OpportunityQuestion {
   question_id: number;
   text: string;
-  type: 'text' | 'yes_no' | 'checkbox' | 'file';
+  type: 'text' | 'long_text' | 'yes_no' | 'checkbox' | 'radio' | 'file';
   required: boolean;
   options?: QuestionOption[];
   placeholder?: string;
+  max_words?: number;
 }
 
 export interface Opportunity {

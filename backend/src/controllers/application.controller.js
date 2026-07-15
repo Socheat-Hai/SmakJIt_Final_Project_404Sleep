@@ -26,6 +26,14 @@ const submit = async (req, res) => {
       return res.status(404).json({ message: 'Opportunity not found' });
     }
 
+    if (opportunity.status === 'closed') {
+      return res.status(400).json({ message: 'Applications are closed for this opportunity' });
+    }
+
+    if (opportunity.end_date && new Date(opportunity.end_date) < new Date()) {
+      return res.status(400).json({ message: 'The application deadline has passed' });
+    }
+
     if (answers && answers.length > 0 && opportunity.questions) {
       const requiredQuestions = opportunity.questions.filter((q) => q.required);
       const answeredIds = new Set(answers.map((a) => a.question_id));

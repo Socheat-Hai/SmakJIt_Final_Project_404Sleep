@@ -133,7 +133,6 @@ const options = {
             category_id: { type: 'integer', example: 3 },
             image: { type: 'string', example: '/uploads/opportunities/opp-123.png' },
             max_volunteers: { type: 'integer', example: 50 },
-            external_link: { type: 'string', example: 'https://signup.example.com' },
             status: {
               type: 'string',
               enum: ['open', 'closed', 'cancelled'],
@@ -158,7 +157,6 @@ const options = {
             org_id: { type: 'integer' },
             category_id: { type: 'integer' },
             max_volunteers: { type: 'integer' },
-            external_link: { type: 'string', format: 'uri'},
           },
         },
         Application: {

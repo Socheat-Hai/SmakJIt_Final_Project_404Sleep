@@ -36,10 +36,10 @@ const Footer = () => {
           <div>
             <h4 className="text-sm font-bold text-gray-200 mb-4 uppercase tracking-wider">Support</h4>
             <div className="flex flex-col gap-2.5">
-              <span className="text-gray-200 text-sm hover:text-brand-green">Help Center</span>
+              <Link to="/help" className="text-gray-200 text-sm hover:text-brand-green">Help Center</Link>
               <a href="mailto:hello@smakjit.com" className="text-gray-200 text-sm hover:text-brand-green">Contact Us</a>
-              <span className="text-gray-200 text-sm hover:text-brand-green">Privacy Policy</span>
-              <span className="text-gray-200 text-sm hover:text-brand-green">Terms of use</span>
+              <Link to="/privacy" className="text-gray-200 text-sm hover:text-brand-green">Privacy Policy</Link>
+              <Link to="/terms" className="text-gray-200 text-sm hover:text-brand-green">Terms of Use</Link>
             </div>
           </div>
         </div>

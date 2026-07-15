@@ -293,9 +293,14 @@ const Opportunities = () => {
   </button>
 </div>
                           <div className="p-4 flex flex-col flex-1">
-                            <h3 className="text-[15px] font-medium mb-1.5 leading-snug group-hover:text-brand-green transition-colors line-clamp-2">
-                              {opp.title}
-                            </h3>
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <h3 className="text-[15px] font-medium leading-snug group-hover:text-brand-green transition-colors line-clamp-2">
+                                {opp.title}
+                              </h3>
+                              {(opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())) && (
+                                <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Closed</span>
+                              )}
+                            </div>
                             <p className="text-[13px] text-gray-500 leading-relaxed mb-3 flex-1 line-clamp-2">
                               {opp.description}
                             </p>
@@ -310,20 +315,18 @@ const Opportunities = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (opp.external_link) {
-                                    window.open(opp.external_link, '_blank', 'noopener,noreferrer');
-                                  } else {
-                                    navigate(`/opportunities/${oppId}`);
-                                  }
+                                  navigate(`/opportunities/${oppId}`);
                                 }}
                                 disabled={isApplied}
                                 className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                                  isApplied
-                                    ? 'bg-brand-green-light text-brand-green cursor-default'
-                                    : 'bg-brand-green text-white hover:bg-brand-green-dark'
+                                  opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())
+                                    ? 'bg-gray-100 text-gray-400 cursor-default'
+                                    : isApplied
+                                      ? 'bg-brand-green-light text-brand-green cursor-default'
+                                      : 'bg-brand-green text-white hover:bg-brand-green-dark'
                                 }`}
                               >
-                                {isApplied ? 'Applied' : opp.external_link ? 'View' : 'Apply'}
+                                {opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date()) ? 'Closed' : isApplied ? 'Applied' : 'Apply'}
                               </button>
                             </div>
                           </div>
