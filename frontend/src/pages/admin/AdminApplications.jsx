@@ -15,6 +15,7 @@ const AdminApplications = () => {
   const { showToast } = useToast();
 
   const fetchApplications = () => {
+    
     setLoading(true);
     const params = {};
     if (statusFilter !== 'all') params.status = statusFilter;
