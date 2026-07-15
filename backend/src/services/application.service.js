@@ -31,12 +31,16 @@ const findById = async (id) => {
   return applicationRepository.findById(id);
 };
 
-const updateStatus = async (id, status) => {
+const updateStatus = async (id, status, acceptanceInfo = null) => {
   if (!VALID_STATUSES.includes(status)) {
     throw new Error(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`);
   }
-  await applicationRepository.updateStatus(id, status);
+  await applicationRepository.updateStatus(id, status, acceptanceInfo);
   return applicationRepository.findById(id);
 };
 
-module.exports = { create, findByUser, findByOpportunity, findById, updateStatus, VALID_STATUSES };
+const findByOrganization = async (orgId) => {
+  return applicationRepository.findByOrganization(orgId);
+};
+
+module.exports = { create, findByUser, findByOpportunity, findByOrganization, findById, updateStatus, VALID_STATUSES };

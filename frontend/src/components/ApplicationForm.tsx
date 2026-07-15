@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type {
   ApplicationFormProps,
   ApplicationAnswer,
@@ -151,11 +152,11 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const navigate = useNavigate();
   const [coverLetter, setCoverLetter] = useState('');
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   const profile = user.volunteer_profile;
@@ -216,8 +217,9 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
         answers: payloadAnswers,
       });
 
-      setSubmitted(true);
       onSuccess?.();
+      navigate(`/opportunities/${opportunity.opp_id}/apply-success`);
+      return;
     } catch (err: any) {
       setErrors({
         submit: err?.response?.data?.message || 'Failed to submit application. Please try again.',
@@ -226,30 +228,6 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
       setSubmitting(false);
     }
   };
-
-  if (submitted) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center py-12">
-        <div className="text-center max-w-md mx-auto">
-          <div className="w-20 h-20 bg-brand-green-light rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Application Submitted!</h2>
-          <p className="text-gray-500 mb-8 leading-relaxed">
-            Your application for <span className="font-medium text-gray-700">{opportunity.title}</span> has been sent to{' '}
-            <span className="font-medium text-gray-700">{opportunity.organization?.name}</span>. You'll be notified when they review it.
-          </p>
-          {onSuccess && (
-            <button onClick={onSuccess} className="btn btn-primary btn-lg">
-              Back to Opportunity
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div ref={formRef} className="py-8 max-w-[680px] mx-auto">

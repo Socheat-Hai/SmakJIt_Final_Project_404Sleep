@@ -539,7 +539,6 @@ module.exports = {
     // Reset sequences so future inserts continue correctly
     await resetSequences(queryInterface);
 
-    // ... leave the rest of the file exactly as it is ...
   },
   
   async down(queryInterface) {

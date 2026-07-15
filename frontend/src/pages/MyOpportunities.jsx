@@ -80,9 +80,6 @@ const MyOpportunities = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
-                  <Link to={`/my-opportunities/${opp.opp_id}/applications`} className="btn btn-ghost btn-sm">
-                    Applications
-                  </Link>
                   <button
                     onClick={() => toggleStatus(opp)}
                     className={`btn btn-sm ${opp.status === 'open' ? 'btn-outline' : 'btn-primary'}`}

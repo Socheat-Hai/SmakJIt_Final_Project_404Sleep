@@ -51,8 +51,10 @@ const findByOpportunity = async (oppId) => {
   });
 };
 
-const updateStatus = async (id, status) => {
-  return Application.update({ status }, { where: { application_id: id } });
+const updateStatus = async (id, status, acceptanceInfo = null) => {
+  const updateData = { status };
+  if (acceptanceInfo) updateData.acceptance_info = acceptanceInfo;
+  return Application.update(updateData, { where: { application_id: id } });
 };
 
 const count = async (where = {}) => {
@@ -65,4 +67,20 @@ const findAllWithIncludes = async ({ status, include, order } = {}) => {
   return Application.findAll({ where, include, order });
 };
 
-module.exports = { create, findById, findByUser, findByOpportunity, updateStatus, count, findAllWithIncludes };
+const findByOrganization = async (orgId) => {
+  return Application.findAll({
+    include: [
+      {
+        model: Opportunity,
+        as: 'opportunity',
+        where: { org_id: orgId },
+        include: [{ model: Organization, as: 'organization', attributes: ['org_id', 'name'] }],
+      },
+      { model: User, as: 'user', attributes: ['user_id', 'full_name', 'email'] },
+      { model: ApplicationAnswer, as: 'answers' },
+    ],
+    order: [['applied_at', 'DESC']],
+  });
+};
+
+module.exports = { create, findById, findByUser, findByOpportunity, findByOrganization, updateStatus, count, findAllWithIncludes };

@@ -57,6 +57,7 @@ router.post('/', authMiddleware, applicationController.submit);
  *         description: List of user's applications
  */
 router.get('/mine', authMiddleware, applicationController.myApplications);
+router.get('/org', authMiddleware, applicationController.orgApplications);
 
 /**
  * @openapi

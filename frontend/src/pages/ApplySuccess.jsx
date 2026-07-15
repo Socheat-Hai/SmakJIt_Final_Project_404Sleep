@@ -61,19 +61,6 @@ const ApplySuccess = () => {
           </div>
         ) : null}
 
-        <div className="bg-amber-50 rounded-xl p-5 mb-9 flex items-start gap-3 text-left">
-          <svg className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-          <div>
-            <div className="text-sm font-medium text-amber-800 mb-0.5">Check your email</div>
-            <p className="text-[13px] text-amber-700">
-              We've sent a confirmation to your email address. You'll also receive updates when the organization responds.
-            </p>
-          </div>
-        </div>
-
         <div className="flex gap-3 justify-center">
           <Link to="/opportunities" className="btn btn-outline">Browse More</Link>
           <Link to="/profile" className="btn btn-primary">View My Applications</Link>

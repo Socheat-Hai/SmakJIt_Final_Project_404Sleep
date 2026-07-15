@@ -1,7 +1,8 @@
+const db = require('../models');
 const applicationService = require('../services/application.service');
 const opportunityService = require('../services/opportunity.service');
 const userService = require('../services/user.service');
-const emailService = require('../services/email.service');
+
 
 const submit = async (req, res) => {
   try {
@@ -10,9 +11,14 @@ const submit = async (req, res) => {
       return res.status(400).json({ message: 'opp_id is required' });
     }
 
-    const volunteer = await userService.findVolunteerProfile(req.user.user_id);
+    let volunteer = await userService.findVolunteerProfile(req.user.user_id);
     if (!volunteer) {
-      return res.status(400).json({ message: 'Only volunteers can apply' });
+      if (req.user.role === 'volunteer') {
+        const { VolunteerProfile } = db;
+        volunteer = await VolunteerProfile.create({ user_id: req.user.user_id });
+      } else {
+        return res.status(400).json({ message: 'Only volunteers can apply' });
+      }
     }
 
     const opportunity = await opportunityService.findById(parseInt(opp_id));
@@ -45,6 +51,7 @@ const submit = async (req, res) => {
         .status(409)
         .json({ message: 'You have already applied to this opportunity' });
     }
+    console.error('POST /api/applications error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -85,7 +92,7 @@ const getAnswers = async (req, res) => {
 
 const updateStage = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, acceptance_info } = req.body;
     if (!status) {
       return res.status(400).json({ message: 'status is required' });
     }
@@ -96,20 +103,13 @@ const updateStage = async (req, res) => {
       });
     }
 
-    const app = await applicationService.updateStatus(parseInt(req.params.id), status);
-    if (!app) {
-      return res.status(404).json({ message: 'Application not found' });
+    if (status === 'accepted' && !acceptance_info) {
+      return res.status(400).json({ message: 'acceptance_info is required when accepting' });
     }
 
-    if (status === 'accepted' || status === 'rejected') {
-      if (app?.user?.email) {
-        await emailService.sendApplicationStatus(
-          app.user.email,
-          app.user.full_name,
-          app.opportunity.title,
-          status,
-        );
-      }
+    const app = await applicationService.updateStatus(parseInt(req.params.id), status, acceptance_info || null);
+    if (!app) {
+      return res.status(404).json({ message: 'Application not found' });
     }
 
     res.json(app);
@@ -118,4 +118,17 @@ const updateStage = async (req, res) => {
   }
 };
 
-module.exports = { submit, myApplications, listByOpportunity, getAnswers, updateStage };
+const orgApplications = async (req, res) => {
+  try {
+    const org = await db.Organization.findOne({ where: { owner_id: req.user.user_id } });
+    if (!org) {
+      return res.status(400).json({ message: 'Organization profile not found' });
+    }
+    const apps = await applicationService.findByOrganization(org.org_id);
+    res.json(apps);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { submit, myApplications, listByOpportunity, getAnswers, updateStage, orgApplications };

@@ -1,4 +1,5 @@
 const opportunityService = require('../services/opportunity.service');
+const db = require('../models');
 
 const list = async (req, res) => {
   try {
@@ -31,6 +32,18 @@ const create = async (req, res) => {
     if (!title || !org_id) {
       return res.status(400).json({ message: 'Title and org_id are required' });
     }
+
+    const org = await db.Organization.findByPk(parseInt(org_id));
+    if (!org) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+    if (org.owner_id !== req.user.user_id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: you do not own this organization' });
+    }
+    if (org.status !== 'approved') {
+      return res.status(403).json({ message: 'Organization must be approved to create opportunities' });
+    }
+
     const opp = await opportunityService.create({
       title,
       description: description || '',
@@ -61,8 +74,11 @@ const update = async (req, res) => {
     // Verify ownership: only the organization owner or admin can modify
     const existingOpp = await opportunityService.findById(parseInt(req.params.id));
     if (!existingOpp) return res.status(404).json({ message: 'Opportunity not found' });
-    if (existingOpp.org_id !== req.user.user_id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden: you do not own this opportunity' });
+    if (req.user.role !== 'admin') {
+      const org = await db.Organization.findOne({ where: { owner_id: req.user.user_id } });
+      if (!org || existingOpp.org_id !== org.org_id) {
+        return res.status(403).json({ message: 'Forbidden: you do not own this opportunity' });
+      }
     }
 
     const data = { ...req.body };
@@ -84,8 +100,11 @@ const remove = async (req, res) => {
     // Verify ownership before deletion
     const existingOpp = await opportunityService.findById(parseInt(req.params.id));
     if (!existingOpp) return res.status(404).json({ message: 'Opportunity not found' });
-    if (existingOpp.org_id !== req.user.user_id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden: you do not own this opportunity' });
+    if (req.user.role !== 'admin') {
+      const org = await db.Organization.findOne({ where: { owner_id: req.user.user_id } });
+      if (!org || existingOpp.org_id !== org.org_id) {
+        return res.status(403).json({ message: 'Forbidden: you do not own this opportunity' });
+      }
     }
     await opportunityService.remove(parseInt(req.params.id));
     res.json({ message: 'Opportunity deleted' });
