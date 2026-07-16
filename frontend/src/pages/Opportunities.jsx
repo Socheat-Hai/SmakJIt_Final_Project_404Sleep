@@ -68,6 +68,7 @@ const Opportunities = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [appliedIds, setAppliedIds] = useState([]);
   const [savedIds, setSavedIds] = useState([]);
   const [savingIds, setSavingIds] = useState([]);
@@ -86,7 +87,9 @@ const Opportunities = () => {
       try {
         const res = await opportunityService.getAll({ page: 1, limit: 50 });
         setOpportunities(res.data.data || res.data);
-      } catch {
+      } catch (err) {
+        console.error('Failed to fetch opportunities:', err.response?.data || err.message || err);
+        setError(err.response?.data?.message || err.message || 'Failed to load opportunities');
         setOpportunities([]);
       } finally {
         setLoading(false);
@@ -204,6 +207,19 @@ const Opportunities = () => {
       <div className="mt-10">
         {loading ? (
           <div className="text-center py-20 text-gray-500">Loading opportunities...</div>
+        ) : error ? (
+          <div className="container-custom">
+            <div className="text-center py-20">
+              <svg className="w-12 h-12 mx-auto mb-4 text-red-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p className="text-base text-red-500 mb-2">Something went wrong</p>
+              <p className="text-sm text-gray-400">{error}</p>
+              <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 text-sm bg-brand-green text-white rounded-lg hover:bg-brand-green-dark transition-colors">
+                Try Again
+              </button>
+            </div>
+          </div>
         ) : grouped.length === 0 ? (
           <div className="container-custom">
             <div className="text-center py-20 text-gray-500">

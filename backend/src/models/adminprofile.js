@@ -21,7 +21,10 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'AdminProfile',
-    tableName: 'AdminProfile',
+    tableName: 'AdminProfiles',
+    timestamps: true,
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
   });
   return AdminProfile;
 };

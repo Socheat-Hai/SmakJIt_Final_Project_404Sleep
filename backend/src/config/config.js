@@ -9,9 +9,7 @@ const defaultConfig = {
     },
   },
   define: {
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    timestamps: false,
     freezeTableName: true,
   },
   benchmark: true,

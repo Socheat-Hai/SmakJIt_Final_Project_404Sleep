@@ -59,7 +59,8 @@ const Home = () => {
       try {
         const res = await opportunityService.getAll({ page: 1, limit: 6 });
         setOpportunities(res.data.data || res.data || []);
-      } catch {
+      } catch (err) {
+        console.error('Failed to fetch opportunities:', err.response?.data || err.message || err);
         setOpportunities([]);
       } finally {
         setLoading(false);
