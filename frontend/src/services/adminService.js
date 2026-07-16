@@ -11,10 +11,11 @@ export const adminService = {
           org_status: u.verificationStatus,
         }));
         return { ...res, data };
-      }),
+  }),
 
   updateUserStatus: (id, status) => api.patch(`/admin/users/${id}/status`, { status }),
   updateOrgVerification: (id, status) => api.patch(`/admin/users/${id}/verification`, { status }),
+  getUserById: (id) => api.get(`/admin/users/${id}`),
   deleteUser: (id) => api.delete(`/admin/users/${id}`), // FIX: was /users/:id — now routes through admin middleware with cascade cleanup
 
   // Dashboard

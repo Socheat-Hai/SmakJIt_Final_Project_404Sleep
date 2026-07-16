@@ -35,6 +35,7 @@ const CreateOpportunity = () => {
   const { showToast } = useToast();
   const isEditing = Boolean(id);
   const [orgId, setOrgId] = useState(null);
+  const [orgStatus, setOrgStatus] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
@@ -61,6 +62,7 @@ const CreateOpportunity = () => {
       try {
         const res = await api.get('/orgs/my');
         if (res.data?.org_id) setOrgId(res.data.org_id);
+        if (res.data?.status) setOrgStatus(res.data.status);
       } catch {}
     };
     if (user) fetchOrg();
@@ -263,6 +265,25 @@ const CreateOpportunity = () => {
 
   if (fetching) {
     return <div className="text-center py-20 text-gray-500">Loading...</div>;
+  }
+
+  if (orgStatus && orgStatus !== 'approved') {
+    return (
+      <div className="py-12">
+        <div className="container-custom max-w-[680px] text-center">
+          <div className="text-5xl mb-4">🕐</div>
+          <h2 className="text-2xl font-medium mb-2">
+            {orgStatus === 'pending' ? 'Awaiting Approval' : 'Registration Rejected'}
+          </h2>
+          <p className="text-gray-500 mb-6">
+            {orgStatus === 'pending'
+              ? 'Your organization must be approved by an admin before you can post opportunities.'
+              : 'Your organization registration was rejected, so you cannot post opportunities. Please contact the admin.'}
+          </p>
+          <button onClick={() => navigate('/profile')} className="btn btn-primary">Go to Profile</button>
+        </div>
+      </div>
+    );
   }
 
   return (

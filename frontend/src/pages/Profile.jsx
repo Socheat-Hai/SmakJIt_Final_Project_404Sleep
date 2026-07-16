@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import OrgProfileSection from '../components/OrgProfileSection';
@@ -18,13 +19,14 @@ const allTabs = [
 ];
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('account');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [experienceBio, setExperienceBio] = useState(user?.volunteer_bio || '');
-  const [experienceSkills, setExperienceSkills] = useState(user?.volunteer_skills?.map((s) => s.skill_name) || []);
+  const [experienceSkills, setExperienceSkills] = useState(user?.volunteer_skills || []);
+  const [editingExperience, setEditingExperience] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(false);
@@ -69,7 +71,7 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setExperienceBio(user.volunteer_bio || '');
-      setExperienceSkills(user.volunteer_skills?.map((s) => s.skill_name) || []);
+      setExperienceSkills(user.volunteer_skills || []);
     }
   }, [user]);
 
@@ -149,7 +151,8 @@ const Profile = () => {
 
   const handleSaveExperience = async () => {
     try {
-      await api.put('/auth/profile', { bio: experienceBio });
+      const res = await api.put('/auth/profile', { bio: experienceBio, skills: experienceSkills });
+      updateUser(res.data);
       showToast('Experience saved');
     } catch {
       showToast('Failed to save experience', 'error');
@@ -380,61 +383,123 @@ const Profile = () => {
               </div>
             ) : (
               savedOpps.map((opp) => (
-                <div key={opp.opp_id} className="card flex flex-col gap-2 p-4">
+                <Link
+                  to={`/opportunities/${opp.opp_id}`}
+                  key={opp.opp_id}
+                  className="card flex flex-col gap-2 p-4 hover:shadow-md hover:border-brand-green/40 transition-all cursor-pointer"
+                >
                   <h4 className="text-[15px] font-medium">{opp.title}</h4>
                   <div className="text-[13px] text-gray-500">{opp.location || 'Various'}</div>
-                </div>
+                </Link>
               ))
             )}
           </div>
         )}
         {activeTab === 'experience' && (
-          <div className="card p-8">
-            <h3 className="text-lg font-medium mb-6">Volunteer Experience</h3>
+            <div className="card p-8">
+              {editingExperience ? (
+                <>
+                  <div className="px-8 pt-8 pb-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Edit Experience</h3>
+                      <div className="flex gap-3">
+                        <button type="button" onClick={() => {
+                          setExperienceBio(user?.volunteer_bio || '');
+                          setExperienceSkills(user?.volunteer_skills?.map((s) => s.skill_name) || []);
+                          setNewSkill('');
+                          setEditingExperience(false);
+                        }} className="btn btn-ghost btn-sm">Cancel</button>
+                        <button type="button" onClick={async () => {
+                          await handleSaveExperience();
+                          setEditingExperience(false);
+                        }} className="btn btn-primary btn-sm">Save Changes</button>
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="mb-7">
-              <label className="text-sm font-medium text-gray-600 block mb-2">About your volunteer experience</label>
-              <textarea
-                value={experienceBio}
-                onChange={(e) => setExperienceBio(e.target.value)}
-                placeholder="Tell us about your past volunteer work..."
-                rows={4}
-                className="w-full p-3 border-2 border-gray-200 rounded-sm text-sm resize-y font-sans outline-none focus:border-brand-green"
-              />
-            </div>
+                  <div className="p-8">
+                    <div className="mb-7">
+                      <label className="text-sm font-medium text-gray-600 block mb-2">About your volunteer experience</label>
+                      <textarea
+                        value={experienceBio}
+                        onChange={(e) => setExperienceBio(e.target.value)}
+                        placeholder="Tell us about your past volunteer work..."
+                        rows={4}
+                        className="w-full p-3 border-2 border-gray-200 rounded-sm text-sm resize-y font-sans outline-none focus:border-brand-green"
+                      />
+                    </div>
 
-            <div className="mb-6">
-              <label className="text-sm font-medium text-gray-600 block mb-2">Skills & Qualifications</label>
-              <div className="flex gap-2 mb-2.5">
-                <input
-                  type="text"
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
-                  placeholder="Add a skill"
-                  className="flex-1 px-3.5 py-2.5 border-2 border-gray-200 rounded-sm text-sm outline-none focus:border-brand-green"
-                />
-                <button onClick={addSkill} className="btn btn-primary btn-sm">Add</button>
-              </div>
-              {experienceSkills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {experienceSkills.map((skill) => (
-                    <span key={skill} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-green-light text-brand-green text-[13px] font-medium">
-                      {skill}
-                      <button onClick={() => removeSkill(skill)} className="text-brand-green text-base leading-none p-0">&times;</button>
-                    </span>
-                  ))}
-                </div>
+                    <div className="mb-6">
+                      <label className="text-sm font-medium text-gray-600 block mb-2">Skills & Qualifications</label>
+                      <div className="flex gap-2 mb-2.5">
+                        <input
+                          type="text"
+                          value={newSkill}
+                          onChange={(e) => setNewSkill(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
+                          placeholder="Add a skill"
+                          className="flex-1 px-3.5 py-2.5 border-2 border-gray-200 rounded-sm text-sm outline-none focus:border-brand-green"
+                        />
+                        <button onClick={addSkill} className="btn btn-primary btn-sm">Add</button>
+                      </div>
+                      {experienceSkills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {experienceSkills.map((skill) => (
+                            <span key={skill} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-green-light text-brand-green text-[13px] font-medium">
+                              {skill}
+                              <button onClick={() => removeSkill(skill)} className="text-brand-green text-base leading-none p-0">&times;</button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-[13px]">No skills added yet.</p>
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
-                <p className="text-gray-400 text-[13px]">No skills added yet.</p>
+                <>
+                  <div className="px-8 pt-8 pb-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Volunteer Experience</h3>
+                      <button onClick={() => setEditingExperience(true)} className="btn btn-outline btn-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                        </svg>
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-8">
+                    <div className="mb-7">
+                      <label className="text-sm font-medium text-gray-600 block mb-2">About your volunteer experience</label>
+                      {experienceBio ? (
+                        <p className="text-sm text-gray-500">{experienceBio}</p>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic text-gray-300">Not set</p>
+                      )}
+                    </div>
+
+                    <div className="mb-6">
+                      <label className="text-sm font-medium text-gray-600 block mb-2">Skills & Qualifications</label>
+                      {experienceSkills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {experienceSkills.map((skill) => (
+                            <span key={skill} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-green-light text-brand-green text-[13px] font-medium">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-[13px]">No skills added yet.</p>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
-
-            <button onClick={handleSaveExperience} className="btn btn-primary">
-              Save Experience
-            </button>
-          </div>
-        )}
+          )}
 
         {activeTab === 'security' && (
           <div className="card p-8">

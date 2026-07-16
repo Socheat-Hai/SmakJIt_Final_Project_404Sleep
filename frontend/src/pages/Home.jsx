@@ -51,6 +51,7 @@ const Home = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState([]);
+  const [savingIds, setSavingIds] = useState([]);
 
 
   useEffect(() => {
@@ -172,17 +173,30 @@ const Home = () => {
             <div className="grid-3">
               {opportunities.map((opp, index) => (
                 <Link to={`/opportunities/${opp.opp_id}`} key={`${opp.opp_id || index}-${index}`} className="group bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex flex-col cursor-pointer hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
-                  {opp.image ? (
-                    <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
-                      <img src={getImageUrl(opp.image)} alt={opp.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                      <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/90 text-brand-green">
-                        {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
-                      </span>
+                  <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
+                    {opp.image ? (
+                      <>
+                        <img src={getImageUrl(opp.image)} alt={opp.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="placeholder image">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" />
+                        </svg>
+                      </div>
+                    )}
+                    <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/90 text-brand-green">
+                      {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
+                    </span>
+                    {user?.role === 'volunteer' && (
                       <button
                         onClick={async (e) => {
+                          e.preventDefault();
                           e.stopPropagation();
+                          if (savingIds.includes(opp.opp_id)) return;
                           const isSaved = savedIds.includes(opp.opp_id);
+                          setSavingIds((prev) => [...prev, opp.opp_id]);
                           try {
                             if (isSaved) {
                               await savedOpportunityService.unsave(opp.opp_id);
@@ -190,9 +204,14 @@ const Home = () => {
                               await savedOpportunityService.save(opp.opp_id);
                             }
                             setSavedIds((prev) => isSaved ? prev.filter((id) => id !== opp.opp_id) : [...prev, opp.opp_id]);
-                          } catch {}
+                          } catch (err) {
+                            console.error('Failed to save opportunity:', err.response?.data || err.message);
+                          } finally {
+                            setSavingIds((prev) => prev.filter((id) => id !== opp.opp_id));
+                          }
                         }}
-                        className={`absolute top-2 right-2 p-1 rounded-full ${savedIds.includes(opp.opp_id) ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} transition-colors`}
+                        disabled={savingIds.includes(opp.opp_id)}
+                        className={`absolute top-2 right-2 z-10 p-2 rounded-full ${savedIds.includes(opp.opp_id) ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} transition-colors ${savingIds.includes(opp.opp_id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title={savedIds.includes(opp.opp_id) ? 'Unsave' : 'Save'}
                       >
                         {savedIds.includes(opp.opp_id) ? (
@@ -205,17 +224,8 @@ const Home = () => {
                           </svg>
                         )}
                       </button>
-                    </div>
-                  ) : (
-                  <div className="relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="placeholder image">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" />
-                        </svg>
-                        <span className="absolute bottom-3 left-3 text-[11px] font-medium uppercase tracking-wider px-2.5 py-1 rounded bg-white/80 text-brand-green">
-                          {opp.opportunity_skills?.[0]?.skill?.skill_name || 'General'}
-                        </span>
-                      </div>
-                  )}
+                    )}
+                  </div>
                   <div className="p-4 flex flex-col flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-[16px] font-medium leading-snug group-hover:text-brand-green transition-colors line-clamp-1">{opp.title}</h3>

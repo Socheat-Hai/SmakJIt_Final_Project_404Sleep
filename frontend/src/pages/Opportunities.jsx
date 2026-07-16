@@ -70,6 +70,7 @@ const Opportunities = () => {
   const [loading, setLoading] = useState(true);
   const [appliedIds, setAppliedIds] = useState([]);
   const [savedIds, setSavedIds] = useState([]);
+  const [savingIds, setSavingIds] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -268,7 +269,9 @@ const Opportunities = () => {
   <button
     onClick={async (e) => {
       e.stopPropagation();
+      if (savingIds.includes(oppId)) return;
       const isSaved = savedIds.includes(oppId);
+      setSavingIds((prev) => [...prev, oppId]);
       try {
         if (isSaved) {
           await savedOpportunityService.unsave(oppId);
@@ -276,9 +279,14 @@ const Opportunities = () => {
           await savedOpportunityService.save(oppId);
         }
         setSavedIds((prev) => isSaved ? prev.filter((id) => id !== oppId) : [...prev, oppId]);
-      } catch {}
+      } catch (err) {
+        console.error('Failed to save opportunity:', err.response?.data || err.message);
+      } finally {
+        setSavingIds((prev) => prev.filter((id) => id !== oppId));
+      }
     }}
-    className={`absolute top-2 right-2 p-1 rounded-full ${savedIds.includes(oppId) ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} transition-colors`}
+    disabled={savingIds.includes(oppId)}
+    className={`absolute top-2 right-2 p-1 rounded-full z-10 ${savedIds.includes(oppId) ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} transition-colors ${savingIds.includes(oppId) ? 'opacity-50 cursor-not-allowed' : ''}`}
     title={savedIds.includes(oppId) ? 'Unsave' : 'Save'}
   >
     {savedIds.includes(oppId) ? (

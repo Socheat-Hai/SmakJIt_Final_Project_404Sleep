@@ -41,6 +41,7 @@ const AdminDashboard = () => {
   ];
 
   const pendingRow = [
+    { label: 'Approved Organizations', value: stats?.approvedOrganizations ?? 0, color: 'bg-brand-green-light text-brand-green', icon: '✅', link: '/admin/verifications' },
     { label: 'Pending Verifications', value: stats?.pendingVerifications ?? 0, color: 'bg-orange-50 text-orange-600', icon: '🕐', link: '/admin/verifications' },
     { label: 'Pending Applications', value: stats?.pendingApplications ?? 0, color: 'bg-rose-50 text-rose-600', icon: '⏳', link: '/admin/applications?status=pending' },
   ];
@@ -67,7 +68,7 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {pendingRow.map((card) => (
           <Link key={card.label} to={card.link} className="card flex items-center gap-3 py-3 px-4 hover:shadow-sm transition-shadow">
             <div className={`w-9 h-9 rounded-lg ${card.color} flex items-center justify-center text-base shrink-0`}>{card.icon}</div>
