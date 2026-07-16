@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const userService = require('../services/user.service');
 const orgService = require('../services/org.service');
 const db = require('../models');
-const { Organization, VolunteerProfile } = db;
+const { Organization, VolunteerProfile, AdminProfile } = db;
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -156,7 +156,6 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    // FIX: Accept both 'name' and 'full_name' from frontend
     const userFields = ['name', 'full_name', 'email'];
     const userUpdates = {};
     for (const field of userFields) {
@@ -197,18 +196,52 @@ const updateProfile = async (req, res) => {
       if (req.body.date_of_birth !== undefined) volUpdates.date_of_birth = new Date(req.body.date_of_birth);
       if (req.body.gender !== undefined) volUpdates.gender = req.body.gender;
       if (req.body.interests !== undefined) {
-        // Validate that interests is an array of strings
         const interests = req.body.interests;
         if (Array.isArray(interests)) {
           volUpdates.interests = interests;
         }
       }
+      if (req.body.skills !== undefined) {
+        const skills = req.body.skills;
+        if (Array.isArray(skills)) {
+          volUpdates.skills = skills;
+        }
+      }
+
       if (Object.keys(volUpdates).length > 0) {
-        // FIX: Use imported VolunteerProfile model instead of undefined variable
-        await VolunteerProfile.update(volUpdates, { where: { user_id: req.user.user_id } });
+        const [affectedCount] = await VolunteerProfile.update(volUpdates, {
+          where: { user_id: req.user.user_id },
+        });
+        if (affectedCount === 0) {
+          await VolunteerProfile.create({
+            user_id: req.user.user_id,
+            ...volUpdates,
+          });
+        }
       }
     }
 
+    if (user.role === 'admin') {
+      const adminUpdates = {};
+      if (req.body.phone_num !== undefined) adminUpdates.phone_num = req.body.phone_num;
+      if (req.body.location !== undefined) adminUpdates.location = req.body.location;
+      if (req.body.bio !== undefined) adminUpdates.bio = req.body.bio;
+      if (req.body.date_of_birth !== undefined) adminUpdates.date_of_birth = new Date(req.body.date_of_birth);
+      if (req.body.gender !== undefined) adminUpdates.gender = req.body.gender;
+
+      if (Object.keys(adminUpdates).length > 0) {
+        const [affectedCount] = await AdminProfile.update(adminUpdates, {
+          where: { user_id: req.user.user_id },
+        });
+        if (affectedCount === 0) {
+          await AdminProfile.create({
+            user_id: req.user.user_id,
+            ...adminUpdates,
+          });
+        }
+      }
+    }
+    
     const updated = await userService.findById(req.user.user_id);
     res.status(200).json(userService.sanitizeUser(updated));
   } catch (error) {

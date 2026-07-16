@@ -1,4 +1,4 @@
-const savedService = require('../services/savedOpportunity.service');
+const savedService = require("../services/savedOpportunity.service");
 
 // GET /saved - list saved opportunities for current user
 const list = async (req, res) => {
@@ -19,8 +19,11 @@ const add = async (req, res) => {
     const userId = req.user.user_id;
     const oppId = parseInt(req.params.oppId);
     await savedService.create(userId, oppId);
-    res.status(201).json({ message: 'Saved' });
+    res.status(201).json({ message: "Saved" });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(200).json({ message: 'Already saved' });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -31,7 +34,7 @@ const remove = async (req, res) => {
     const userId = req.user.user_id;
     const oppId = parseInt(req.params.oppId);
     await savedService.remove(userId, oppId);
-    res.json({ message: 'Unsaved' });
+    res.json({ message: "Unsaved" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

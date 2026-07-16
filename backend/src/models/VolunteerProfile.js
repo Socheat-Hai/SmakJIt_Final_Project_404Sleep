@@ -25,12 +25,18 @@ module.exports = (sequelize, DataTypes) => {
       location: DataTypes.STRING(255),
       gender: DataTypes.STRING(50),
       bio: DataTypes.TEXT,
-      interests: {
-        type: DataTypes.JSONB,
-        allowNull: true,
-        defaultValue: null,
-        comment: 'Array of interest category IDs selected by the volunteer (e.g. ["teaching", "environment"])',
-      },
+        interests: {
+          type: DataTypes.JSONB,
+          allowNull: true,
+          defaultValue: null,
+          comment: 'Array of interest category IDs selected by the volunteer (e.g. ["teaching", "environment"])',
+        },
+        skills: {
+          type: DataTypes.JSONB,
+          allowNull: true,
+          defaultValue: [],
+          comment: 'Array of skill strings for volunteer',
+        },
     },
     {
       sequelize,

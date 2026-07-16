@@ -29,22 +29,24 @@ router.use(requireAdmin);
  */
 router.get('/stats', async (req, res) => {
   try {
-    const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs, pendingApplications] =
+    const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs, approvedOrgs, pendingApplications] =
       await Promise.all([
         userRepository.count({ role: 'volunteer' }),
         orgRepository.count(),
         oppRepository.count(),
         appRepository.count(),
         orgRepository.count({ status: 'pending' }),
+        orgRepository.count({ status: 'approved' }),
         appRepository.count({ status: 'pending' }),
       ])
-    // Align response keys with the frontend dashboard expectations
+
     res.json({
       totalVolunteers: totalUsers,
       totalOrgs,
       totalOpportunities,
       totalApplications,
       pendingVerifications: pendingOrgs,
+      approvedOrganizations: approvedOrgs,
       pendingApplications,
     })
   } catch (error) {
@@ -758,6 +760,7 @@ router.patch('/users/:id/verification', adminController.updateOrgVerification)
  *       409:
  *         description: Cannot delete due to related records
  */
+router.get('/users/:id', adminController.getUserById);
 router.delete('/users/:id', adminController.deleteUser)
 
 module.exports = router;

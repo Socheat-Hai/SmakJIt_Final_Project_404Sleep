@@ -34,6 +34,23 @@ const getUsers = async (req, res) => {
 };
 
 /**
+ * GET /admin/users/:id
+ * Returns a single user with full profile data.
+ */
+const getUserById = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const user = await userService.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const sanitized = userService.sanitizeUser(user);
+    res.status(200).json(sanitized);
+  } catch (error) {
+    console.error('GET USER BY ID ERROR:', error);
+    res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
+};
+
+/**
  * PATCH /admin/users/:id/status
  * Updates a user's status (active, suspended, banned).
  */
@@ -119,4 +136,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, updateUserStatus, updateOrgVerification, deleteUser };
+module.exports = { getUsers, getUserById, updateUserStatus, updateOrgVerification, deleteUser };
