@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload.middleware');
+const { docUpload } = require('../middleware/upload.middleware');
 const uploadController = require('../controllers/upload.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
@@ -119,5 +120,21 @@ router.post('/org-logo', authMiddleware, upload.single('logo'), uploadController
  *                   example: Opportunity image uploaded
  */
 router.post('/opportunity-image', authMiddleware, upload.single('image'), uploadController.uploadOpportunityImage);
+
+router.post('/document', authMiddleware, (req, res, next) => {
+  docUpload.single('document')(req, res, (err) => {
+    if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'File too large. Maximum size is 10MB.'
+        : err.message || 'File upload failed';
+      return res.status(400).json({ message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const url = `/uploads/documents/${req.file.filename}`;
+    res.json({ url, filename: req.file.originalname });
+  });
+});
 
 module.exports = router;

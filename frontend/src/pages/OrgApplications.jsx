@@ -164,12 +164,29 @@ const OrgApplications = () => {
                         <div>
                           <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Answers</p>
                           <div className="space-y-2.5">
-                            {app.answers.map((ans) => (
-                              <div key={ans.answer_id} className="bg-gray-50 rounded-lg px-3.5 py-2.5">
-                                <p className="text-[12px] font-medium text-gray-700 mb-0.5">{ans.question_text}</p>
-                                <p className="text-[13px] text-gray-600 whitespace-pre-wrap">{ans.answer || '—'}</p>
-                              </div>
-                            ))}
+                            {app.answers.map((ans) => {
+                              const isFile = ans.answer && ans.answer.startsWith('/uploads/documents/');
+                              return (
+                                <div key={ans.answer_id} className="bg-gray-50 rounded-lg px-3.5 py-2.5">
+                                  <p className="text-[12px] font-medium text-gray-700 mb-0.5">{ans.question_text}</p>
+                                  {isFile ? (
+                                    <a
+                                      href={ans.answer}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 text-[13px] text-brand-green hover:text-brand-green/80 font-medium"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                      Download file
+                                    </a>
+                                  ) : (
+                                    <p className="text-[13px] text-gray-600 whitespace-pre-wrap">{ans.answer || '—'}</p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}

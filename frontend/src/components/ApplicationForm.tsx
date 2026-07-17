@@ -11,8 +11,9 @@ const QuestionRenderer: React.FC<{
   question: OpportunityQuestion;
   value: string;
   onChange: (val: string) => void;
+  onFileChange?: (file: File | null) => void;
   error?: string;
-}> = ({ question, value, onChange, error }) => {
+}> = ({ question, value, onChange, onFileChange, error }) => {
   switch (question.type) {
     case 'text':
       return (
@@ -192,13 +193,18 @@ const QuestionRenderer: React.FC<{
                 <p className="text-sm text-gray-500">
                   {fileName ? <span className="font-medium text-brand-green">{fileName}</span> : <span>Drag & drop or <span className="font-medium text-brand-green">browse</span></span>}
                 </p>
+                <p className="text-[11px] text-gray-400 mt-1">PDF, DOC, DOCX (Max 10MB)</p>
               </div>
               <input
                 type="file"
                 className="hidden"
+                accept=".pdf,.doc,.docx"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) onChange(file.name);
+                  if (file) {
+                    onChange(file.name);
+                    onFileChange?.(file);
+                  }
                 }}
               />
             </label>
@@ -222,6 +228,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
   const navigate = useNavigate();
   const [coverLetter, setCoverLetter] = useState('');
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [fileAnswers, setFileAnswers] = useState<Record<number, File>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
@@ -239,13 +246,29 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
     });
   }, []);
 
+  const setFileAnswer = useCallback((qid: number, file: File | null) => {
+    if (file) {
+      setFileAnswers((prev) => ({ ...prev, [qid]: file }));
+    } else {
+      setFileAnswers((prev) => {
+        const next = { ...prev };
+        delete next[qid];
+        return next;
+      });
+    }
+  }, []);
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!coverLetter.trim()) {
       errs['cover'] = 'Please write a cover letter';
     }
     questions.forEach((q) => {
-      if (q.required && (!answers[q.question_id] || !answers[q.question_id].trim())) {
+      if (q.type === 'file') {
+        if (q.required && !fileAnswers[q.question_id]) {
+          errs[`q_${q.question_id}`] = 'This question is required';
+        }
+      } else if (q.required && (!answers[q.question_id] || !answers[q.question_id].trim())) {
         errs[`q_${q.question_id}`] = 'This question is required';
       }
       if (q.type === 'long_text' && q.max_words && answers[q.question_id]) {
@@ -267,6 +290,15 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
 
     setSubmitting(true);
     try {
+      const uploadedFiles: Record<number, string> = {};
+
+      for (const [qid, file] of Object.entries(fileAnswers)) {
+        const formData = new FormData();
+        formData.append('document', file);
+        const uploadRes = await api.post('/upload/document', formData);
+        uploadedFiles[parseInt(qid)] = uploadRes.data.url;
+      }
+
       const payloadAnswers: ApplicationAnswer[] = [
         {
           question_id: -1,
@@ -277,10 +309,14 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
 
       questions.forEach((q) => {
         if (answers[q.question_id]) {
+          let answerValue = answers[q.question_id];
+          if (q.type === 'file' && uploadedFiles[q.question_id]) {
+            answerValue = uploadedFiles[q.question_id];
+          }
           payloadAnswers.push({
             question_id: q.question_id,
             question_text: q.text,
-            answer: answers[q.question_id],
+            answer: answerValue,
           });
         }
       });
@@ -396,6 +432,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
                   question={q}
                   value={answers[q.question_id] || ''}
                   onChange={(val) => setAnswer(q.question_id, val)}
+                  onFileChange={q.type === 'file' ? (file) => setFileAnswer(q.question_id, file) : undefined}
                   error={errors[`q_${q.question_id}`]}
                 />
               ))}
