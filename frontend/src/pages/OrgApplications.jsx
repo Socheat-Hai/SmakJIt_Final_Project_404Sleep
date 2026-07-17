@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { applicationService } from '../services/applicationService';
 import { opportunityService } from '../services/opportunityService';
 import { useToast } from '../components/Toast';
+import AcceptanceModal from '../components/AcceptanceModal';
+import InterviewModal from '../components/InterviewModal';
+import api from '../services/api';
 
-const PIPELINE = ['submitted', 'received', 'reviewing', 'interview', 'accepted', 'rejected'];
+const PIPELINE = ['submitted', 'reviewing', 'interview', 'accepted', 'rejected'];
 
 const statusColor = (s) => {
   switch (s) {
@@ -12,19 +16,21 @@ const statusColor = (s) => {
     case 'rejected': return 'bg-red-50 text-red-600';
     case 'interview': return 'bg-blue-50 text-blue-600';
     case 'reviewing': return 'bg-purple-50 text-purple-600';
-    case 'received': return 'bg-amber-50 text-amber-600';
     default: return 'bg-gray-100 text-gray-600';
   }
 };
 
 const OrgApplications = () => {
   const { oppId } = useParams();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [opp, setOpp] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [acceptingApp, setAcceptingApp] = useState(null);
+  const [interviewingApp, setInterviewingApp] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -44,16 +50,33 @@ const OrgApplications = () => {
     load();
   }, [oppId]);
 
-  const handleStatusChange = async (appId, newStatus) => {
+  const handleStatusChange = async (appId, newStatus, info = null) => {
     try {
-      await applicationService.updateStatus(appId, newStatus);
+      const payload = { status: newStatus };
+      if (info) {
+        if (newStatus === 'interview') payload.interview_info = info;
+        else payload.acceptance_info = info;
+      }
+      const res = await api.patch(`/applications/${appId}/stage`, payload);
       setApplications((prev) =>
-        prev.map((a) => (a.application_id === appId ? { ...a, status: newStatus } : a))
+        prev.map((a) => (a.application_id === appId ? { ...a, ...res.data } : a))
       );
       showToast(`Application moved to "${newStatus}"`);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update status', 'error');
     }
+  };
+
+  const handleAcceptConfirm = (data) => {
+    const app = acceptingApp;
+    setAcceptingApp(null);
+    handleStatusChange(app.application_id, 'accepted', data);
+  };
+
+  const handleInterviewConfirm = (data) => {
+    const app = interviewingApp;
+    setInterviewingApp(null);
+    handleStatusChange(app.application_id, 'interview', data);
   };
 
   const filtered = filter === 'all' ? applications : applications.filter((a) => a.status === filter);
@@ -157,7 +180,16 @@ const OrgApplications = () => {
                           {PIPELINE.map((stage) => (
                             <button
                               key={stage}
-                              onClick={(e) => { e.stopPropagation(); handleStatusChange(app.application_id, stage); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (stage === 'accepted') {
+                                  setAcceptingApp(app);
+                                } else if (stage === 'interview') {
+                                  setInterviewingApp(app);
+                                } else {
+                                  handleStatusChange(app.application_id, stage);
+                                }
+                              }}
                               className={`px-2.5 py-1.5 rounded text-[11px] font-medium capitalize transition-all ${
                                 app.status === stage
                                   ? 'bg-brand-green text-white shadow-sm'
@@ -213,6 +245,26 @@ const OrgApplications = () => {
           </div>
         )}
       </div>
+
+      {acceptingApp && (
+        <AcceptanceModal
+          applicantName={acceptingApp.user?.full_name || 'Unknown'}
+          opportunityTitle={acceptingApp.opportunity?.title || 'Opportunity'}
+          orgEmail={user?.email || ''}
+          onConfirm={handleAcceptConfirm}
+          onCancel={() => setAcceptingApp(null)}
+        />
+      )}
+
+      {interviewingApp && (
+        <InterviewModal
+          applicantName={interviewingApp.user?.full_name || 'Unknown'}
+          opportunityTitle={interviewingApp.opportunity?.title || 'Opportunity'}
+          orgEmail={user?.email || ''}
+          onConfirm={handleInterviewConfirm}
+          onCancel={() => setInterviewingApp(null)}
+        />
+      )}
     </div>
   );
 };

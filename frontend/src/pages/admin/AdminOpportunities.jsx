@@ -11,7 +11,7 @@ const AdminOpportunities = () => {
   const [loading, setLoading] = useState(true);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const { showToast } = useToast();
-  const [expandedId, setExpandedId] = useState(null);
+  const [detailOpp, setDetailOpp] = useState(null);
 
   const fetchOpportunities = () => {
     setLoading(true);
@@ -33,8 +33,17 @@ const AdminOpportunities = () => {
       await adminService.deleteOpportunity(id);
       showToast('Opportunity removed');
       setConfirmRemove(null);
+      setDetailOpp(null);
       fetchOpportunities();
     } catch { showToast('Failed to remove opportunity', 'error'); }
+  };
+
+  const handleFlag = async (id, currentFlagged) => {
+    try {
+      await adminService.flagOpportunity(id, !currentFlagged);
+      showToast(currentFlagged ? 'Opportunity unflagged' : 'Opportunity flagged');
+      fetchOpportunities();
+    } catch { showToast('Failed to update flag status', 'error'); }
   };
 
   return (
@@ -71,18 +80,20 @@ const AdminOpportunities = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {opportunities.map((opp) => (
-            <div key={opp.opp_id || opp.opp_id || opp.id} className="card py-3 px-4">
-              <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === opp.opp_id || opp.id ? null : opp.opp_id || opp.id)}>
+            <div key={opp.opp_id || opp.id} className="card py-3 px-4">
+              <div className="flex items-start justify-between cursor-pointer" onClick={() => setDetailOpp(opp)}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                     <h3 className="text-sm font-medium truncate max-w-[240px]">{opp.title}</h3>
                     <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${opp.status === 'open' ? 'bg-brand-green-light text-brand-green' : 'bg-gray-100 text-gray-500'}`}>{opp.status}</span>
-                    {opp.category && <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-purple-light text-brand-purple">{opp.category}</span>}
+                    {opp.is_flagged && <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-600">Flagged</span>}
                   </div>
-                  <div className="text-[12px] text-gray-500 truncate">{opp.orgName} · {opp.location} · {opp.spots} spots</div>
+                  <div className="text-[12px] text-gray-500 truncate">{opp.orgName} · {opp.location}</div>
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                  {confirmRemove === opp.opp_id || opp.id ? (
+                  <button onClick={(e) => { e.stopPropagation(); handleFlag(opp.opp_id || opp.id, opp.is_flagged); }}
+                    className={`text-[11px] font-medium hover:underline ${opp.is_flagged ? 'text-red-500' : 'text-amber-500'}`}>{opp.is_flagged ? 'Unflag' : 'Flag'}</button>
+                  {confirmRemove === (opp.opp_id || opp.id) ? (
                     <>
                       <button onClick={(e) => { e.stopPropagation(); handleRemove(opp.opp_id || opp.id); }} className="text-red-500 text-[11px] font-medium hover:underline">Confirm</button>
                       <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }} className="text-gray-500 text-[11px] hover:underline">Cancel</button>
@@ -91,29 +102,90 @@ const AdminOpportunities = () => {
                     <button onClick={(e) => { e.stopPropagation(); setConfirmRemove(opp.opp_id || opp.id); }}
                       className="text-gray-400 hover:text-red-500 text-[11px] font-medium">Remove</button>
                   )}
-                  <span className="text-gray-300 text-[10px]">{expandedId === opp.opp_id || opp.id ? '▲' : '▼'}</span>
                 </div>
               </div>
-              {expandedId === opp.opp_id || opp.id && (
-                <div className="mt-2.5 pt-2.5 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-2.5 leading-relaxed">{opp.description}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[12px] text-gray-500">
-                    <div><span className="font-medium text-gray-700">Date:</span> {opp.date}</div>
-                    <div><span className="font-medium text-gray-700">Location:</span> {opp.location}</div>
-                    <div><span className="font-medium text-gray-700">Spots:</span> {opp.spots}</div>
-                    <div><span className="font-medium text-gray-700">Created:</span> {new Date(opp.created_at).toLocaleDateString()}</div>
-                  </div>
-                  {opp.requirements && <div className="mt-1.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Requirements:</span> {opp.requirements}</div>}
-                  {opp.benefits && <div className="mt-0.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Benefits:</span> {opp.benefits}</div>}
-                  {opp.commitment && <div className="mt-0.5 text-[12px] text-gray-500"><span className="font-medium text-gray-700">Commitment:</span> {opp.commitment}</div>}
-                </div>
-              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {detailOpp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetailOpp(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-start justify-between rounded-t-2xl">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 leading-snug">{detailOpp.title}</h3>
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${detailOpp.status === 'open' ? 'bg-brand-green-light text-brand-green' : 'bg-gray-100 text-gray-500'}`}>{detailOpp.status}</span>
+                  {detailOpp.is_flagged && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-600">Flagged</span>}
+                  {detailOpp.category && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-purple-light text-brand-purple">{detailOpp.category}</span>}
+                </div>
+              </div>
+              <button onClick={() => setDetailOpp(null)} className="ml-3 text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <Section title="Description">
+                {detailOpp.description ? (
+                  <p className="text-[12px] text-gray-700 whitespace-pre-line">{detailOpp.description}</p>
+                ) : (
+                  <p className="text-[12px] text-gray-400 italic">No description</p>
+                )}
+              </Section>
+
+              <Section title="Opportunity Details">
+                <InfoRow label="Organization" value={detailOpp.orgName} />
+                <InfoRow label="Location" value={detailOpp.location} />
+                <InfoRow label="Date" value={detailOpp.date} />
+                <InfoRow label="Spots" value={detailOpp.spots} />
+                <InfoRow label="Created" value={new Date(detailOpp.created_at).toLocaleDateString()} />
+              </Section>
+
+              {detailOpp.requirements && (
+                <Section title="Requirements">
+                  <p className="text-[12px] text-gray-700 whitespace-pre-line">{detailOpp.requirements}</p>
+                </Section>
+              )}
+
+              {detailOpp.benefits && (
+                <Section title="Benefits">
+                  <p className="text-[12px] text-gray-700 whitespace-pre-line">{detailOpp.benefits}</p>
+                </Section>
+              )}
+
+              {detailOpp.commitment && (
+                <Section title="Commitment">
+                  <p className="text-[12px] text-gray-700 whitespace-pre-line">{detailOpp.commitment}</p>
+                </Section>
+              )}
+            </div>
+            <div className="sticky bottom-0 bg-white px-6 py-3 border-t border-gray-100 rounded-b-2xl">
+              <button onClick={() => setDetailOpp(null)} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Close</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 };
+
+function Section({ title, children }) {
+  return (
+    <div className="border-l-2 border-gray-100 pl-3">
+      <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{title}</h4>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className="flex gap-2 text-[12px]">
+      <span className="text-gray-500 shrink-0 w-24">{label}:</span>
+      <span className="text-gray-800 font-medium">{value}</span>
+    </div>
+  );
+}
 
 export default AdminOpportunities;

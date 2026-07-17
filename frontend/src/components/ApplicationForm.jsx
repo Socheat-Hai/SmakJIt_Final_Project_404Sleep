@@ -1,19 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type {
-  ApplicationFormProps,
-  ApplicationAnswer,
-  OpportunityQuestion,
-} from '../types';
 import api from '../services/api';
 
-const QuestionRenderer: React.FC<{
-  question: OpportunityQuestion;
-  value: string;
-  onChange: (val: string) => void;
-  onFileChange?: (file: File | null) => void;
-  error?: string;
-}> = ({ question, value, onChange, onFileChange, error }) => {
+const QuestionRenderer = ({ question, value, onChange, onFileChange, error }) => {
   switch (question.type) {
     case 'text':
       return (
@@ -131,7 +120,7 @@ const QuestionRenderer: React.FC<{
         ? question.options
         : [{ label: 'Yes', value: 'yes' }];
       const selected = value ? value.split(',').map((s) => s.trim()) : [];
-      const toggle = (val: string) => {
+      const toggle = (val) => {
         const next = selected.includes(val)
           ? selected.filter((v) => v !== val)
           : [...selected, val];
@@ -219,7 +208,7 @@ const QuestionRenderer: React.FC<{
   }
 };
 
-const ApplicationForm: React.FC<ApplicationFormProps> = ({
+const ApplicationForm = ({
   opportunity,
   user,
   onSuccess,
@@ -227,17 +216,17 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const [coverLetter, setCoverLetter] = useState('');
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [fileAnswers, setFileAnswers] = useState<Record<number, File>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState({});
+  const [fileAnswers, setFileAnswers] = useState({});
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef(null);
 
   const profile = user.volunteer_profile;
   const skills = user.volunteer_skills?.map((s) => s.skill?.skill_name).filter(Boolean) || [];
   const questions = opportunity.questions || [];
 
-  const setAnswer = useCallback((qid: number, val: string) => {
+  const setAnswer = useCallback((qid, val) => {
     setAnswers((prev) => ({ ...prev, [qid]: val }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -246,7 +235,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
     });
   }, []);
 
-  const setFileAnswer = useCallback((qid: number, file: File | null) => {
+  const setFileAnswer = useCallback((qid, file) => {
     if (file) {
       setFileAnswers((prev) => ({ ...prev, [qid]: file }));
     } else {
@@ -258,8 +247,8 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
     }
   }, []);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
+  const validate = () => {
+    const errs = {};
     if (!coverLetter.trim()) {
       errs['cover'] = 'Please write a cover letter';
     }
@@ -290,7 +279,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
 
     setSubmitting(true);
     try {
-      const uploadedFiles: Record<number, string> = {};
+      const uploadedFiles = {};
 
       for (const [qid, file] of Object.entries(fileAnswers)) {
         const formData = new FormData();
@@ -299,7 +288,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
         uploadedFiles[parseInt(qid)] = uploadRes.data.url;
       }
 
-      const profileAnswers: ApplicationAnswer[] = [
+      const profileAnswers = [
         {
           question_id: -2,
           question_text: 'Full Name',
@@ -322,7 +311,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
         },
       ];
 
-      const payloadAnswers: ApplicationAnswer[] = [
+      const payloadAnswers = [
         {
           question_id: -1,
           question_text: 'Cover Letter',
@@ -353,7 +342,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
       onSuccess?.();
       navigate(`/opportunities/${opportunity.opp_id}/apply-success`);
       return;
-    } catch (err: any) {
+    } catch (err) {
       setErrors({
         submit: err?.response?.data?.message || 'Failed to submit application. Please try again.',
       });

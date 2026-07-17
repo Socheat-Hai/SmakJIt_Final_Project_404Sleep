@@ -42,12 +42,8 @@ const AdminDashboard = () => {
 
   const pendingRow = [
     { label: 'Approved Organizations', value: stats?.approvedOrganizations ?? 0, color: 'bg-brand-green-light text-brand-green', icon: '✅', link: '/admin/verifications' },
-    { label: 'Pending Verifications', value: stats?.pendingVerifications ?? 0, color: 'bg-orange-50 text-orange-600', icon: '🕐', link: '/admin/verifications' },
-    { label: 'Pending Applications', value: stats?.pendingApplications ?? 0, color: 'bg-rose-50 text-rose-600', icon: '⏳', link: '/admin/applications?status=pending' },
+    { label: 'Submitted Applications', value: stats?.submittedApplications ?? 0, color: 'bg-rose-50 text-rose-600', icon: '⏳', link: '/admin/applications?status=submitted' },
   ];
-
-  const maxCatCount = Math.max(...(stats?.topCategories?.map((c) => c.count) || [1]));
-  const maxAppCount = Math.max(...(stats?.applicationsOverTime?.map((a) => a.count) || [1]));
 
   return (
     <div className="max-w-full">
@@ -78,43 +74,6 @@ const AdminDashboard = () => {
             </div>
           </Link>
         ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="card py-4 px-4">
-          <h3 className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wider">Top Categories</h3>
-          {stats?.topCategories?.length ? (
-            <div className="flex flex-col gap-2">
-              {stats.topCategories.map((cat, i) => (
-                <div key={cat.category} className="flex items-center gap-2">
-                  <span className="w-5 text-[11px] font-medium text-gray-400 text-right shrink-0">#{i + 1}</span>
-                  <span className="w-24 text-sm text-gray-700 truncate shrink-0">{cat.category}</span>
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-green rounded-full" style={{ width: `${(cat.count / maxCatCount) * 100}%` }} />
-                  </div>
-                  <span className="w-5 text-xs font-medium text-gray-500 text-right shrink-0">{cat.count}</span>
-                </div>
-              ))}
-            </div>
-          ) : <p className="text-sm text-gray-400">No data yet</p>}
-        </div>
-
-        <div className="card py-4 px-4">
-          <h3 className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wider">Applications Over Time</h3>
-          {stats?.applicationsOverTime?.length ? (
-            <div className="flex flex-col gap-2">
-              {stats.applicationsOverTime.map((item) => (
-                <div key={item.month} className="flex items-center gap-2">
-                  <span className="w-14 text-[11px] text-gray-500 shrink-0">{item.month}</span>
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-purple rounded-full" style={{ width: `${(item.count / maxAppCount) * 100}%` }} />
-                  </div>
-                  <span className="w-5 text-xs font-medium text-gray-500 text-right shrink-0">{item.count}</span>
-                </div>
-              ))}
-            </div>
-          ) : <p className="text-sm text-gray-400">No data yet</p>}
-        </div>
       </div>
     </div>
   );

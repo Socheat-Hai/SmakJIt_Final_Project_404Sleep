@@ -8,6 +8,7 @@ import VolunteerProfileSection from '../components/VolunteerProfileSection';
 import api from '../services/api';
 import { applicationService } from '../services/applicationService';
 import AcceptanceModal from '../components/AcceptanceModal';
+import InterviewModal from '../components/InterviewModal';
 
 const allTabs = [
   { id: 'account', label: 'Account Info' },
@@ -34,8 +35,9 @@ const Profile = () => {
   const [savedLoading, setSavedLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [acceptingApp, setAcceptingApp] = useState(null);
+  const [interviewingApp, setInterviewingApp] = useState(null);
 
-  const PIPELINE = ['submitted', 'received', 'reviewing', 'interview', 'accepted', 'rejected'];
+  const PIPELINE = ['submitted', 'reviewing', 'interview', 'accepted', 'rejected'];
 
   const statusColor = (s) => {
     switch (s) {
@@ -43,7 +45,6 @@ const Profile = () => {
       case 'rejected': return 'bg-red-50 text-red-600';
       case 'interview': return 'bg-blue-50 text-blue-600';
       case 'reviewing': return 'bg-purple-50 text-purple-600';
-      case 'received': return 'bg-amber-50 text-amber-600';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -51,7 +52,10 @@ const Profile = () => {
   const handleStatusChange = async (appId, newStatus, acceptanceInfo = null) => {
     try {
       const payload = { status: newStatus };
-      if (acceptanceInfo) payload.acceptance_info = acceptanceInfo;
+      if (acceptanceInfo) {
+        if (newStatus === 'interview') payload.interview_info = acceptanceInfo;
+        else payload.acceptance_info = acceptanceInfo;
+      }
       const res = await api.patch(`/applications/${appId}/stage`, payload);
       setApplications((prev) =>
         prev.map((a) => (a.application_id === appId ? { ...a, ...res.data } : a))
@@ -66,6 +70,12 @@ const Profile = () => {
     const app = acceptingApp;
     setAcceptingApp(null);
     handleStatusChange(app.application_id, 'accepted', data);
+  };
+
+  const handleInterviewConfirm = (data) => {
+    const app = interviewingApp;
+    setInterviewingApp(null);
+    handleStatusChange(app.application_id, 'interview', data);
   };
 
   useEffect(() => {
@@ -293,6 +303,8 @@ const Profile = () => {
                                   e.stopPropagation();
                                   if (stage === 'accepted') {
                                     setAcceptingApp(app);
+                                  } else if (stage === 'interview') {
+                                    setInterviewingApp(app);
                                   } else {
                                     handleStatusChange(app.application_id, stage);
                                   }
@@ -359,7 +371,81 @@ const Profile = () => {
 
                     {isExpanded && user?.role !== 'organization' && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
-                        {app.status === 'accepted' && app.acceptance_info ? (
+                        {app.status === 'interview' && app.interview_info ? (
+                          <div>
+                            <p className="text-[11px] font-medium text-blue-500 uppercase tracking-wider mb-2">Interview Details</p>
+                            <div className="bg-blue-50/50 rounded-lg px-3.5 py-3 space-y-2">
+                              {app.interview_info.interview_date && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Date:</span>
+                                  <span className="font-medium text-gray-800">{new Date(app.interview_info.interview_date).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                              {app.interview_info.interview_time && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Time:</span>
+                                  <span className="font-medium text-gray-800">{app.interview_info.interview_time}</span>
+                                </div>
+                              )}
+                              {app.interview_info.format && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Format:</span>
+                                  <span className="font-medium text-gray-800">{app.interview_info.format === 'physical' ? 'In-person' : 'Online / Remote'}</span>
+                                </div>
+                              )}
+                              {app.interview_info.location && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Location:</span>
+                                  <span className="font-medium text-gray-800">{app.interview_info.location}</span>
+                                </div>
+                              )}
+                              {app.interview_info.meeting_link && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Meeting Link:</span>
+                                  <a href={app.interview_info.meeting_link} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-green hover:text-brand-green/80 break-all">{app.interview_info.meeting_link}</a>
+                                </div>
+                              )}
+                              {app.interview_info.interviewer && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Interviewer:</span>
+                                  <span className="font-medium text-gray-800">{app.interview_info.interviewer}</span>
+                                </div>
+                              )}
+                              {app.interview_info.duration && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Duration:</span>
+                                  <span className="font-medium text-gray-800">{app.interview_info.duration}</span>
+                                </div>
+                              )}
+                              {app.interview_info.notes && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Notes:</span>
+                                  <span className="text-gray-700">{app.interview_info.notes}</span>
+                                </div>
+                              )}
+                              {app.interview_info.contact_method && app.interview_info.contact_detail && (
+                                <div className="space-y-1">
+                                  <div className="flex gap-2 text-sm">
+                                    <span className="text-gray-500 shrink-0">Contact:</span>
+                                    {app.interview_info.contact_method === 'email' ? (
+                                      <a href={`mailto:${app.interview_info.contact_detail}`} className="font-medium text-brand-green hover:text-brand-green/80">{app.interview_info.contact_detail}</a>
+                                    ) : app.interview_info.contact_method === 'phone' ? (
+                                      <a href={`tel:${app.interview_info.contact_detail}`} className="font-medium text-brand-green hover:text-brand-green/80">{app.interview_info.contact_detail}</a>
+                                    ) : (
+                                      <span className="font-medium text-gray-800">{app.interview_info.contact_detail}</span>
+                                    )}
+                                  </div>
+                                  {app.interview_info.contact_method === 'telegram' && app.interview_info.contact_phone && (
+                                    <div className="flex gap-2 text-sm">
+                                      <span className="text-gray-500 shrink-0">Phone:</span>
+                                      <a href={`tel:${app.interview_info.contact_phone}`} className="font-medium text-brand-green hover:text-brand-green/80">{app.interview_info.contact_phone}</a>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : app.status === 'accepted' && app.acceptance_info ? (
                           <div>
                             <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Acceptance Details</p>
                             <div className="bg-brand-green-light/50 rounded-lg px-3.5 py-3 space-y-2">
@@ -375,19 +461,53 @@ const Profile = () => {
                                   <span className="font-medium text-gray-800">{app.acceptance_info.location}</span>
                                 </div>
                               )}
+                              {app.acceptance_info.schedule && (
+                                <div className="flex gap-2 text-sm">
+                                  <span className="text-gray-500 shrink-0">Schedule:</span>
+                                  <span className="font-medium text-gray-800">{app.acceptance_info.schedule}</span>
+                                </div>
+                              )}
                               {app.acceptance_info.notes && (
                                 <div className="flex gap-2 text-sm">
                                   <span className="text-gray-500 shrink-0">Notes:</span>
                                   <span className="text-gray-700">{app.acceptance_info.notes}</span>
                                 </div>
                               )}
+                              {app.acceptance_info.contact_method && app.acceptance_info.contact_detail && (
+                                <div className="space-y-1">
+                                  <div className="flex gap-2 text-sm">
+                                    <span className="text-gray-500 shrink-0">Contact:</span>
+                                    {app.acceptance_info.contact_method === 'email' ? (
+                                      <a href={`mailto:${app.acceptance_info.contact_detail}`} className="font-medium text-brand-green hover:text-brand-green/80">{app.acceptance_info.contact_detail}</a>
+                                    ) : app.acceptance_info.contact_method === 'phone' ? (
+                                      <a href={`tel:${app.acceptance_info.contact_detail}`} className="font-medium text-brand-green hover:text-brand-green/80">{app.acceptance_info.contact_detail}</a>
+                                    ) : (
+                                      <span className="font-medium text-gray-800">{app.acceptance_info.contact_detail}</span>
+                                    )}
+                                  </div>
+                                  {app.acceptance_info.contact_method === 'telegram' && app.acceptance_info.contact_phone && (
+                                    <div className="flex gap-2 text-sm">
+                                      <span className="text-gray-500 shrink-0">Phone:</span>
+                                      <a href={`tel:${app.acceptance_info.contact_phone}`} className="font-medium text-brand-green hover:text-brand-green/80">{app.acceptance_info.contact_phone}</a>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
+                        ) : app.status === 'reviewing' ? (
+                          <div className="bg-purple-50/60 rounded-lg px-3.5 py-3">
+                            <p className="text-[13px] text-gray-700 leading-relaxed">
+                              Your application for <span className="font-medium">{app.opportunity?.title || 'this opportunity'}</span> is currently being reviewed. We'll be in touch soon with an update — thank you for your patience.
+                            </p>
+                          </div>
                         ) : app.status === 'rejected' ? (
-                          <p className="text-[13px] text-gray-500 italic">Your application has been reviewed and the organization has decided to move forward with other candidates.</p>
-                        ) : (
-                          <p className="text-[13px] text-gray-400 italic">Your application is being reviewed. You'll be notified when there's an update.</p>
-                        )}
+                          <div className="bg-red-50/60 rounded-lg px-3.5 py-3">
+                            <p className="text-[13px] text-gray-700 leading-relaxed">
+                              Thank you for applying to <span className="font-medium">{app.opportunity?.title || 'this opportunity'}</span>. After careful consideration, we've decided to move forward with other candidates for this role. We appreciate your interest and encourage you to explore other opportunities on SmakJit.
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     )}
                   </div>
@@ -550,8 +670,19 @@ const Profile = () => {
         <AcceptanceModal
           applicantName={acceptingApp.user?.full_name || 'Unknown'}
           opportunityTitle={acceptingApp.opportunity?.title || 'Opportunity'}
+          orgEmail={user?.email || ''}
           onConfirm={handleAcceptConfirm}
           onCancel={() => setAcceptingApp(null)}
+        />
+      )}
+
+      {interviewingApp && (
+        <InterviewModal
+          applicantName={interviewingApp.user?.full_name || 'Unknown'}
+          opportunityTitle={interviewingApp.opportunity?.title || 'Opportunity'}
+          orgEmail={user?.email || ''}
+          onConfirm={handleInterviewConfirm}
+          onCancel={() => setInterviewingApp(null)}
         />
       )}
     </div>

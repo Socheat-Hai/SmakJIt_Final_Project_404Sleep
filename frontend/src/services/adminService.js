@@ -31,9 +31,9 @@ export const adminService = {
   // Opportunities
   getOpportunities: (params) => api.get('/admin/opportunities', { params }),
   deleteOpportunity: (id) => api.delete(`/admin/opportunities/${id}`),
+  flagOpportunity: (id, is_flagged) => api.patch(`/admin/opportunities/${id}/flag`, { is_flagged }),
 
   // Applications
   getApplications: (params) => api.get('/admin/applications', { params }),
-  updateApplicationStatus: (id, status) => api.patch(`/applications/${id}/stage`, { status }), // FIX: was /admin/applications/:id (404) — now uses existing stage endpoint
 };
 
