@@ -299,12 +299,36 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
         uploadedFiles[parseInt(qid)] = uploadRes.data.url;
       }
 
+      const profileAnswers: ApplicationAnswer[] = [
+        {
+          question_id: -2,
+          question_text: 'Full Name',
+          answer: profile?.full_name || '',
+        },
+        {
+          question_id: -3,
+          question_text: 'Email',
+          answer: user.email || '',
+        },
+        {
+          question_id: -4,
+          question_text: 'Skills',
+          answer: skills.join(', ') || '',
+        },
+        {
+          question_id: -5,
+          question_text: 'Location',
+          answer: profile?.location || '',
+        },
+      ];
+
       const payloadAnswers: ApplicationAnswer[] = [
         {
           question_id: -1,
           question_text: 'Cover Letter',
           answer: coverLetter.trim(),
         },
+        ...profileAnswers,
       ];
 
       questions.forEach((q) => {
@@ -348,48 +372,6 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({
       </div>
 
       <div className="space-y-6">
-        {/* Core Info Preview */}
-        <div className="card">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 bg-brand-green-light rounded-full flex items-center justify-center">
-              <svg className="w-4.5 h-4.5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <h3 className="text-base font-semibold text-gray-900">Your Profile</h3>
-            <span className="ml-auto text-[12px] text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">Auto-filled</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-[13px] text-gray-500 mb-0.5">Full Name</p>
-              <p className="text-sm font-medium text-gray-900">{profile?.full_name || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[13px] text-gray-500 mb-0.5">Email</p>
-              <p className="text-sm font-medium text-gray-900">{user.email}</p>
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-[13px] text-gray-500 mb-1.5">Skills</p>
-              {skills.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {skills.map((s) => (
-                    <span key={s} className="px-2.5 py-1 rounded-full bg-brand-green-light text-brand-green text-[12px] font-medium">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400 italic">No skills added yet</p>
-              )}
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-[13px] text-gray-500 mb-0.5">Location</p>
-              <p className="text-sm font-medium text-gray-900">{profile?.location || '—'}</p>
-            </div>
-          </div>
-        </div>
-
         {/* Cover Letter */}
         <div className="card">
           <div className="flex items-center gap-3 mb-4">

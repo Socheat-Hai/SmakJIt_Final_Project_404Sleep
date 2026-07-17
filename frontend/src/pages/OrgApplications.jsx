@@ -110,6 +110,17 @@ const OrgApplications = () => {
           <div className="flex flex-col gap-2">
             {filtered.map((app) => {
               const isExpanded = expandedId === app.application_id;
+
+              const profileAnswerIds = new Set([-2, -3, -4, -5]);
+              const hasProfileAnswers = app.answers?.some((a) => profileAnswerIds.has(a.question_id));
+              const baseAnswers = app.answers || [];
+              const allAnswers = hasProfileAnswers ? baseAnswers : [
+                { answer_id: 'profile-name', question_id: -2, question_text: 'Full Name', answer: app.user?.full_name || '' },
+                { answer_id: 'profile-email', question_id: -3, question_text: 'Email', answer: app.user?.email || '' },
+                { answer_id: 'profile-skills', question_id: -4, question_text: 'Skills', answer: Array.isArray(app.user?.profile?.skills) ? app.user.profile.skills.join(', ') : (app.user?.profile?.skills || '') },
+                { answer_id: 'profile-location', question_id: -5, question_text: 'Location', answer: app.user?.profile?.location || '' },
+                ...baseAnswers,
+              ];
               return (
                 <div key={app.application_id} className="card py-3 px-4">
                   <div
@@ -160,11 +171,11 @@ const OrgApplications = () => {
                       </div>
 
                       {/* Answers */}
-                      {app.answers && app.answers.length > 0 && (
+                      {allAnswers && allAnswers.length > 0 && (
                         <div>
                           <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Answers</p>
                           <div className="space-y-2.5">
-                            {app.answers.map((ans) => {
+                            {allAnswers.map((ans) => {
                               const isFile = ans.answer && ans.answer.startsWith('/uploads/documents/');
                               return (
                                 <div key={ans.answer_id} className="bg-gray-50 rounded-lg px-3.5 py-2.5">
@@ -191,7 +202,7 @@ const OrgApplications = () => {
                         </div>
                       )}
 
-                      {!app.answers?.length && (
+                      {!allAnswers?.length && (
                         <p className="text-[13px] text-gray-400 italic">No answers submitted</p>
                       )}
                     </div>

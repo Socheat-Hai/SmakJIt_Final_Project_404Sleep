@@ -44,7 +44,16 @@ const findByOpportunity = async (oppId) => {
   return Application.findAll({
     where: { opp_id: oppId },
     include: [
-      { model: User, as: 'user', attributes: ['user_id', 'full_name', 'email'] },
+      {
+        model: User,
+        as: 'user',
+        attributes: ['user_id', 'full_name', 'email'],
+        include: [{
+          model: db.VolunteerProfile,
+          as: 'profile',
+          attributes: ['location', 'skills'],
+        }],
+      },
       { model: ApplicationAnswer, as: 'answers' },
     ],
     order: [['applied_at', 'DESC']],
@@ -76,7 +85,16 @@ const findByOrganization = async (orgId) => {
         where: { org_id: orgId },
         include: [{ model: Organization, as: 'organization', attributes: ['org_id', 'name'] }],
       },
-      { model: User, as: 'user', attributes: ['user_id', 'full_name', 'email'] },
+      {
+        model: User,
+        as: 'user',
+        attributes: ['user_id', 'full_name', 'email'],
+        include: [{
+          model: db.VolunteerProfile,
+          as: 'profile',
+          attributes: ['location', 'skills'],
+        }],
+      },
       { model: ApplicationAnswer, as: 'answers' },
     ],
     order: [['applied_at', 'DESC']],
