@@ -128,7 +128,7 @@ router.get('/:id/answers', authMiddleware, applicationController.getAnswers);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [submitted, received, reviewing, interview, accepted, rejected]
+ *                 enum: [submitted, reviewing, interview, accepted, rejected]
  *     responses:
  *       200:
  *         description: Application stage updated

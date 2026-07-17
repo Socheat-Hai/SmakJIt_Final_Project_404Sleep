@@ -100,7 +100,11 @@ const getAnswers = async (req, res) => {
 
 const updateStage = async (req, res) => {
   try {
-    const { status, acceptance_info } = req.body;
+    if (req.user.role !== 'organization') {
+      return res.status(403).json({ message: 'Only organizations can update application status' });
+    }
+
+    const { status, acceptance_info, interview_info } = req.body;
     if (!status) {
       return res.status(400).json({ message: 'status is required' });
     }
@@ -115,12 +119,36 @@ const updateStage = async (req, res) => {
       return res.status(400).json({ message: 'acceptance_info is required when accepting' });
     }
 
-    const app = await applicationService.updateStatus(parseInt(req.params.id), status, acceptance_info || null);
+    if (status === 'interview' && !interview_info) {
+      return res.status(400).json({ message: 'interview_info is required when scheduling an interview' });
+    }
+
+    const app = await applicationService.findById(parseInt(req.params.id));
     if (!app) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    res.json(app);
+    const org = await db.Organization.findOne({ where: { owner_id: req.user.user_id } });
+    if (!org) {
+      return res.status(403).json({ message: 'Organization profile not found' });
+    }
+
+    const opportunity = await opportunityService.findById(app.opp_id);
+    if (!opportunity || opportunity.org_id !== org.org_id) {
+      return res.status(403).json({ message: 'You can only update applications for your own opportunities' });
+    }
+
+    const updated = await applicationService.updateStatus(
+      parseInt(req.params.id),
+      status,
+      acceptance_info || null,
+      interview_info || null,
+    );
+    if (!updated) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

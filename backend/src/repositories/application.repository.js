@@ -32,7 +32,7 @@ const findByUser = async (userId) => {
       {
         model: Opportunity,
         as: 'opportunity',
-        include: [{ model: Organization, as: 'organization', attributes: ['org_id', 'name'] }],
+        include: [{ model: Organization, as: 'organization', attributes: ['org_id', 'name', 'contact_email'] }],
       },
       { model: ApplicationAnswer, as: 'answers' },
     ],
@@ -60,9 +60,10 @@ const findByOpportunity = async (oppId) => {
   });
 };
 
-const updateStatus = async (id, status, acceptanceInfo = null) => {
+const updateStatus = async (id, status, acceptanceInfo = null, interviewInfo = null) => {
   const updateData = { status };
   if (acceptanceInfo) updateData.acceptance_info = acceptanceInfo;
+  if (interviewInfo) updateData.interview_info = interviewInfo;
   return Application.update(updateData, { where: { application_id: id } });
 };
 

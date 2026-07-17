@@ -42,6 +42,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(50),
         defaultValue: 'open',
       },
+      is_flagged: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

@@ -29,15 +29,15 @@ router.use(requireAdmin);
  */
 router.get('/stats', async (req, res) => {
   try {
-    const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs, approvedOrgs, pendingApplications] =
+    const [totalUsers, totalOrgs, totalOpportunities, totalApplications, pendingOrgs, approvedOrgs, submittedApplications] =
       await Promise.all([
         userRepository.count({ role: 'volunteer' }),
         orgRepository.count(),
-        oppRepository.count(),
+        oppRepository.count({ status: 'open' }),
         appRepository.count(),
         orgRepository.count({ status: 'pending' }),
         orgRepository.count({ status: 'approved' }),
-        appRepository.count({ status: 'pending' }),
+        appRepository.count({ status: 'submitted' }),
       ])
 
     res.json({
@@ -47,7 +47,7 @@ router.get('/stats', async (req, res) => {
       totalApplications,
       pendingVerifications: pendingOrgs,
       approvedOrganizations: approvedOrgs,
-      pendingApplications,
+      submittedApplications,
     })
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -579,12 +579,53 @@ router.delete('/opportunities/:id', async (req, res) => {
     const opp = await oppRepository.findById(oppId);
     if (!opp) return res.status(404).json({ message: 'Opportunity not found' })
 
-    // FIX: Clean up related records before deleting to prevent orphans
-    await db.OpportunitySkill.destroy({ where: { opp_id: oppId } });
-    await db.SavedOpportunity.destroy({ where: { opp_id: oppId } });
-    await db.Application.destroy({ where: { opp_id: oppId } });
-    await oppRepository.remove(oppId)
-    res.json({ message: 'Opportunity deleted' })
+    await oppRepository.update(oppId, { status: 'closed' });
+    res.json({ message: 'Opportunity removed' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * @openapi
+ * /api/admin/opportunities/{id}/flag:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Flag/unflag an opportunity (admin)
+ *     description: Toggles the is_flagged status of an opportunity for content moderation.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Opportunity ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               is_flagged:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Opportunity flagged/unflagged
+ *       404:
+ *         description: Opportunity not found
+ */
+router.patch('/opportunities/:id/flag', async (req, res) => {
+  try {
+    const oppId = parseInt(req.params.id);
+    const opp = await oppRepository.findById(oppId);
+    if (!opp) return res.status(404).json({ message: 'Opportunity not found' })
+
+    const { is_flagged } = req.body;
+    await oppRepository.update(oppId, { is_flagged: !!is_flagged });
+    res.json({ message: is_flagged ? 'Opportunity flagged' : 'Opportunity unflagged', is_flagged: !!is_flagged })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
@@ -647,8 +688,23 @@ router.get('/applications', async (req, res) => {
     const apps = await appRepository.findAllWithIncludes({
       status,
       include: [
-        { model: db.Opportunity, as: 'opportunity', attributes: ['title', 'opp_id'] },
-        { model: db.User, as: 'user', attributes: ['full_name', 'email'] },
+        {
+          model: db.Opportunity,
+          as: 'opportunity',
+          attributes: ['title', 'opp_id', 'description', 'requirement', 'benefits', 'location', 'work_time', 'start_date', 'end_date', 'format'],
+          include: [{ model: db.Organization, as: 'organization', attributes: ['org_id', 'name', 'contact_email'] }],
+        },
+        {
+          model: db.User,
+          as: 'user',
+          attributes: ['user_id', 'full_name', 'email'],
+          include: [{
+            model: db.VolunteerProfile,
+            as: 'profile',
+            attributes: ['phone_num', 'location', 'bio', 'skills', 'interests', 'gender', 'date_of_birth'],
+          }],
+        },
+        { model: db.ApplicationAnswer, as: 'answers' },
       ],
       order: [['applied_at', 'DESC']],
     })

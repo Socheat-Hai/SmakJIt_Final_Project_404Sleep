@@ -1,7 +1,7 @@
 const db = require('../models');
 const applicationRepository = require('../repositories/application.repository');
 
-const VALID_STATUSES = ['submitted', 'received', 'reviewing', 'interview', 'accepted', 'rejected'];
+const VALID_STATUSES = ['submitted', 'reviewing', 'interview', 'accepted', 'rejected'];
 
 const create = async ({ user_id, opp_id, answers }) => {
   const transaction = await db.sequelize.transaction();
@@ -31,11 +31,11 @@ const findById = async (id) => {
   return applicationRepository.findById(id);
 };
 
-const updateStatus = async (id, status, acceptanceInfo = null) => {
+const updateStatus = async (id, status, acceptanceInfo = null, interviewInfo = null) => {
   if (!VALID_STATUSES.includes(status)) {
     throw new Error(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`);
   }
-  await applicationRepository.updateStatus(id, status, acceptanceInfo);
+  await applicationRepository.updateStatus(id, status, acceptanceInfo, interviewInfo);
   return applicationRepository.findById(id);
 };
 

@@ -36,6 +36,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSONB,
         allowNull: true,
       },
+      interview_info: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
     },
     {
       sequelize,
