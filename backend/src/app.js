@@ -10,6 +10,8 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+app.set('etag', false);
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
@@ -23,7 +25,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
-app.use('/api', routes);
+// Prevent caching on all /api routes so clients always get fresh data
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+}, routes);
 
 app.use((err, req, res, next) => {
   logger.error(err.stack);
