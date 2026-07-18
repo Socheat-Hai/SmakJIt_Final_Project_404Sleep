@@ -223,7 +223,7 @@ const ApplicationForm = ({
   const formRef = useRef(null);
 
   const profile = user.volunteer_profile;
-  const skills = user.volunteer_skills?.map((s) => s.skill?.skill_name).filter(Boolean) || [];
+  const skills = user.volunteer_skills?.map((s) => typeof s === 'string' ? s : (s.skill?.skill_name || s.skill_name)).filter(Boolean) || [];
   const questions = opportunity.questions || [];
 
   const setAnswer = useCallback((qid, val) => {

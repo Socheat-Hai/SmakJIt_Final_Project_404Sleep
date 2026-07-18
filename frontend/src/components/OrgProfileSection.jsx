@@ -139,7 +139,10 @@ const OrgProfileSection = () => {
             <div className="flex items-center gap-5 mb-8 pb-6 border-b border-gray-100">
               <ImageUpload
                 currentImage={orgLogo}
-                onUpload={setOrgLogo}
+                onUpload={(url) => {
+                  setOrgLogo(url);
+                  updateUser({ org_logo: url });
+                }}
                 endpoint="org-logo"
                 label="Change Logo"
               />

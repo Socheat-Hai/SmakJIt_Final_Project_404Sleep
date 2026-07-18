@@ -51,7 +51,7 @@ const findByOpportunity = async (oppId) => {
         include: [{
           model: db.VolunteerProfile,
           as: 'profile',
-          attributes: ['location', 'skills'],
+          attributes: ['location', 'skills', 'phone_num', 'date_of_birth', 'gender', 'bio', 'profile_picture'],
         }],
       },
       { model: ApplicationAnswer, as: 'answers' },
@@ -93,7 +93,7 @@ const findByOrganization = async (orgId) => {
         include: [{
           model: db.VolunteerProfile,
           as: 'profile',
-          attributes: ['location', 'skills'],
+          attributes: ['location', 'skills', 'phone_num', 'date_of_birth', 'gender', 'bio', 'profile_picture'],
         }],
       },
       { model: ApplicationAnswer, as: 'answers' },

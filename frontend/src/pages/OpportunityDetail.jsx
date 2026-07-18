@@ -77,7 +77,7 @@ const OpportunityDetail = () => {
 
   const getSkillMatchCount = () => {
     if (!user?.volunteer_skills || !opp?.skills) return 0; 
-    const userSkillNames = user.volunteer_skills.map((s) => s.skill_name?.toLowerCase());
+    const userSkillNames = user.volunteer_skills.map((s) => (typeof s === 'string' ? s : s.skill_name)?.toLowerCase());
     return opp.skills.filter((os) => 
       userSkillNames.includes(os.skill?.skill_name?.toLowerCase())
     ).length;

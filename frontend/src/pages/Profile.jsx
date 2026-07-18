@@ -323,14 +323,20 @@ const Profile = () => {
 
                         {/* Answers */}
                         {(() => {
-                          const profileAnswerIds = new Set([-2, -3, -4, -5]);
+                          const profileAnswerIds = new Set([-2, -3, -4, -5, -6, -7, -8, -9, -10]);
                           const hasProfileAnswers = app.answers?.some((a) => profileAnswerIds.has(a.question_id));
                           const baseAnswers = app.answers || [];
+                          const profile = app.user?.profile;
                           const allAnswers = hasProfileAnswers ? baseAnswers : [
+                            { answer_id: 'profile-photo', question_id: -9, question_text: 'Profile Photo', answer: profile?.profile_picture || '' },
                             { answer_id: 'profile-name', question_id: -2, question_text: 'Full Name', answer: app.user?.full_name || '' },
                             { answer_id: 'profile-email', question_id: -3, question_text: 'Email', answer: app.user?.email || '' },
-                            { answer_id: 'profile-skills', question_id: -4, question_text: 'Skills', answer: Array.isArray(app.user?.profile?.skills) ? app.user.profile.skills.join(', ') : (app.user?.profile?.skills || '') },
-                            { answer_id: 'profile-location', question_id: -5, question_text: 'Location', answer: app.user?.profile?.location || '' },
+                            { answer_id: 'profile-phone', question_id: -6, question_text: 'Phone Number', answer: profile?.phone_num || '' },
+                            { answer_id: 'profile-location', question_id: -5, question_text: 'Location', answer: profile?.location || '' },
+                            { answer_id: 'profile-dob', question_id: -7, question_text: 'Date of Birth', answer: profile?.date_of_birth || '' },
+                            { answer_id: 'profile-gender', question_id: -8, question_text: 'Gender', answer: profile?.gender || '' },
+                            { answer_id: 'profile-skills', question_id: -4, question_text: 'Skills', answer: Array.isArray(profile?.skills) ? profile.skills.join(', ') : (profile?.skills || '') },
+                            { answer_id: 'profile-bio', question_id: -10, question_text: 'Bio', answer: profile?.bio || '' },
                             ...baseAnswers,
                           ];
                           return allAnswers.length > 0 ? (
@@ -339,10 +345,14 @@ const Profile = () => {
                               <div className="space-y-2.5">
                                 {allAnswers.map((ans) => {
                                   const isFile = ans.answer && ans.answer.startsWith('/uploads/documents/');
+                                  const isProfilePhoto = ans.question_id === -9;
+                                  const isImage = isProfilePhoto && ans.answer && ans.answer.startsWith('/uploads/');
                                   return (
                                     <div key={ans.answer_id} className="bg-gray-50 rounded-lg px-3.5 py-2.5">
                                       <p className="text-[12px] font-medium text-gray-700 mb-0.5">{ans.question_text}</p>
-                                      {isFile ? (
+                                      {isProfilePhoto && isImage ? (
+                                        <img src={ans.answer} alt="Profile" className="w-16 h-16 rounded-full object-cover mt-1" />
+                                      ) : isFile ? (
                                         <a
                                           href={ans.answer}
                                           target="_blank"
@@ -552,7 +562,7 @@ const Profile = () => {
                       <div className="flex gap-3">
                         <button type="button" onClick={() => {
                           setExperienceBio(user?.volunteer_bio || '');
-                          setExperienceSkills(user?.volunteer_skills?.map((s) => s.skill_name) || []);
+                          setExperienceSkills(user?.volunteer_skills?.map((s) => typeof s === 'string' ? s : s.skill_name) || []);
                           setNewSkill('');
                           setEditingExperience(false);
                         }} className="btn btn-ghost btn-sm">Cancel</button>

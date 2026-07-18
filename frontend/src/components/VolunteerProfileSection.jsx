@@ -103,7 +103,10 @@ const VolunteerProfileSection = () => {
             <div className="flex items-center gap-5 mb-8 pb-6 border-b border-gray-100">
               <ImageUpload
                 currentImage={profilePhoto}
-                onUpload={setProfilePhoto}
+                onUpload={(url) => {
+                  setProfilePhoto(url);
+                  updateUser({ profile_photo: url });
+                }}
                 endpoint="profile-photo"
                 label="Change Photo"
               />
@@ -219,11 +222,11 @@ const VolunteerProfileSection = () => {
 
             {skills.length > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-100">
-                <p className="text-[13px] text-gray-400 font-medium mb-3">Skills & Interests</p>
+                <p className="text-[13px] text-gray-400 font-medium mb-3">Skills</p>
                 <div className="flex flex-wrap gap-2">
                   {skills.map((skill, i) => (
                     <span key={i} className="px-3.5 py-1.5 rounded-full bg-brand-green-light text-brand-green text-[13px] font-medium">
-                      {skill.skill_name}
+                      {typeof skill === 'string' ? skill : skill.skill_name}
                     </span>
                   ))}
                 </div>

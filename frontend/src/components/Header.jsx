@@ -53,8 +53,14 @@ const Header = () => {
                 {user.role === 'organization' && (
                   <Link to="/my-opportunities" className="btn btn-ghost btn-sm">My Postings</Link>
                 )}
-                <Link to="/profile" className="relative w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center text-sm font-medium ml-2 hover:ring-2 hover:ring-brand-purple/30 transition-all shrink-0">
-                  {user.name?.charAt(0).toUpperCase()}
+                <Link to="/profile" className="relative ml-2 shrink-0 hover:ring-2 hover:ring-brand-purple/30 transition-all">
+                  {(user.profile_photo || user.org_logo) ? (
+                    <img src={user.profile_photo || user.org_logo} alt="" className="w-9 h-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center text-sm font-medium">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold uppercase bg-gray-900 text-white px-1.5 py-[1px] rounded-full whitespace-nowrap leading-tight">
                     {user.role === 'organization' ? 'NGO' : user.role === 'admin' ? 'Admin' : 'Vol'}
                   </span>
