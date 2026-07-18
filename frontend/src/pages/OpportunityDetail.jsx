@@ -108,9 +108,12 @@ const OpportunityDetail = () => {
     return (
       <div className="py-12">
         <div className="container-custom">
-          <Link to={`/opportunities/${id}`} className="text-gray-500 text-sm inline-flex items-center gap-1.5 mb-6 hover:text-gray-700">
+          <button
+            onClick={() => setShowApplyForm(false)}
+            className="text-gray-500 text-sm inline-flex items-center gap-1.5 mb-6 hover:text-gray-700"
+          >
             ← Back to opportunity
-          </Link>
+          </button>
           <ApplicationForm
             opportunity={opp}
             user={user}
