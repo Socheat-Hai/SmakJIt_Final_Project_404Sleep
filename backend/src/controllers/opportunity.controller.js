@@ -28,7 +28,7 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { title, description, requirement, requirements, benefits, location, org_id, work_time, start_date, end_date, format, category_id, max_volunteers, image, questions } = req.body;
+    const { title, description, requirement, requirements, benefits, location, org_id, work_time, start_date, end_date, format, category_id, max_volunteers, image, customQuestions } = req.body;
     if (!title || !org_id) {
       return res.status(400).json({ message: 'Title and org_id are required' });
     }
@@ -59,7 +59,7 @@ const create = async (req, res) => {
       category_id: category_id ? parseInt(category_id) : 1,
       max_volunteers: max_volunteers !== undefined ? parseInt(max_volunteers) : null,
       image: image || null,
-      questions: questions || null,
+      customQuestions: customQuestions || [],
       status: 'open',
     });
     res.status(201).json(opp);
@@ -85,7 +85,7 @@ const update = async (req, res) => {
       data.requirement = data.requirements;
       delete data.requirements;
     }
-    // FIX: Use explicit undefined check so max_volunteers=0 is handled correctly
+    
     if (data.max_volunteers !== undefined) data.max_volunteers = parseInt(data.max_volunteers);
     const opp = await opportunityService.update(parseInt(req.params.id), data);
     res.json(opp);

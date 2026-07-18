@@ -104,8 +104,8 @@ const CreateOpportunity = () => {
           format: opp.format || '',
           image: opp.image || '',
         });
-        if (opp.questions && Array.isArray(opp.questions)) {
-          const loaded = opp.questions.map((q) => ({
+        if (opp.customQuestions && Array.isArray(opp.customQuestions)) {
+          const loaded = opp.customQuestions.map((q) => ({
             ...q,
             question_id: q.question_id || makeQid(),
             options: q.options || [],
@@ -234,7 +234,7 @@ const CreateOpportunity = () => {
       }
 
       if (questions.length > 0) {
-        payload.questions = questions.map((q, idx) => ({
+        payload.customQuestions = questions.map((q, idx) => ({
           question_id: idx + 1,
           text: q.text.trim(),
           type: q.type,
@@ -244,7 +244,7 @@ const CreateOpportunity = () => {
           max_words: q.type === 'long_text' ? (q.max_words || undefined) : undefined,
         }));
       } else {
-        payload.questions = null;
+        payload.customQuestions = [];
       }
 
       if (isEditing) {

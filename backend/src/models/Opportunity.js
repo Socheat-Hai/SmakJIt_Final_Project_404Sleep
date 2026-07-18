@@ -46,6 +46,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
+      customQuestions: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+        defaultValue: [],
+        field: 'custom_questions' 
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

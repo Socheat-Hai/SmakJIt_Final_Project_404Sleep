@@ -11,7 +11,6 @@ module.exports = (sequelize, DataTypes) => {
     {
       answer_id:      { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       application_id: { type: DataTypes.INTEGER, allowNull: false },
-      question_id:    { type: DataTypes.INTEGER, allowNull: false },
       question_text:  { type: DataTypes.TEXT, allowNull: false },
       answer:         { type: DataTypes.TEXT, allowNull: false },
     },
