@@ -6,7 +6,6 @@ const create = async (data, answers = [], transaction) => {
   if (answers.length > 0) {
     const answerRows = answers.map((a) => ({
       application_id: app.application_id,
-      question_id: a.question_id,
       question_text: a.question_text,
       answer: a.answer,
     }));

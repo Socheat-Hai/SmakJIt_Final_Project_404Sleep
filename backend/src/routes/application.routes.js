@@ -27,8 +27,6 @@ const authMiddleware = require('../middleware/auth.middleware');
  *                 items:
  *                   type: object
  *                   properties:
- *                     question_id:
- *                       type: integer
  *                     question_text:
  *                       type: string
  *                     answer:

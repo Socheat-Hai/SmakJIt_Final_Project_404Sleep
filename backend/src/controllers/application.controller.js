@@ -34,14 +34,15 @@ const submit = async (req, res) => {
       return res.status(400).json({ message: 'The application deadline has passed' });
     }
 
-    if (answers && answers.length > 0 && opportunity.questions) {
-      const requiredQuestions = opportunity.questions.filter((q) => q.required);
-      const answeredIds = new Set(answers.map((a) => a.question_id));
-      const missing = requiredQuestions.filter((q) => !answeredIds.has(q.question_id));
+    const questions = opportunity.customQuestions || opportunity.questions || [];
+    if (answers && answers.length > 0 && questions.length > 0) {
+      const requiredQuestions = questions.filter((q) => q.required);
+      const answeredTexts = new Set(answers.map((a) => a.question_text));
+      const missing = requiredQuestions.filter((q) => !answeredTexts.has(q.text));
       if (missing.length > 0) {
         return res.status(400).json({
           message: 'Missing required answers',
-          missing_questions: missing.map((q) => ({ question_id: q.question_id, text: q.text })),
+          missing_questions: missing.map((q) => ({ text: q.text })),
         });
       }
     }
