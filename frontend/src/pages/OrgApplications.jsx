@@ -169,46 +169,46 @@ const OrgApplications = () => {
                     </div>
                   </div>
 
-                  {/* Applicant Information - always visible */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Applicant Information</p>
-                    <div className="bg-gray-50 rounded-lg px-3.5 py-2.5 space-y-2">
-                      {[
-                        { label: 'Full Name', value: app.user?.full_name },
-                        { label: 'Email', value: app.user?.email },
-                        { label: 'Phone Number', value: app.user?.profile?.phone_num },
-                        { label: 'Location', value: app.user?.profile?.location },
-                        { label: 'Date of Birth', value: app.user?.profile?.date_of_birth },
-                        { label: 'Gender', value: app.user?.profile?.gender },
-                      ].filter((f) => f.value).map((f) => (
-                        <div key={f.label}>
-                          <span className="text-[11px] font-medium text-gray-500">{f.label}</span>
-                          <p className="text-[13px] text-gray-700">{f.value}</p>
-                        </div>
-                      ))}
-                      {app.user?.profile?.bio && (
-                        <div>
-                          <span className="text-[11px] font-medium text-gray-500">Bio</span>
-                          <p className="text-[12px] text-gray-700 whitespace-pre-wrap">{app.user.profile.bio}</p>
-                        </div>
-                      )}
-                      {app.user?.profile?.skills?.length > 0 && (
-                        <div>
-                          <span className="text-[11px] font-medium text-gray-500">Skills</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {app.user.profile.skills.map((skill, i) => (
-                              <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px]">{skill}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
                   {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-4">
+                      {/* Applicant Information */}
+                      <div>
+                        <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Applicant Information</p>
+                        <div className="bg-gray-50 rounded-lg px-3.5 py-2.5 space-y-2">
+                          {[
+                            { label: 'Full Name', value: app.user?.full_name },
+                            { label: 'Email', value: app.user?.email },
+                            { label: 'Phone Number', value: app.user?.profile?.phone_num },
+                            { label: 'Location', value: app.user?.profile?.location },
+                            { label: 'Date of Birth', value: app.user?.profile?.date_of_birth },
+                            { label: 'Gender', value: app.user?.profile?.gender },
+                          ].filter((f) => f.value).map((f) => (
+                            <div key={f.label}>
+                              <span className="text-[11px] font-medium text-gray-500">{f.label}</span>
+                              <p className="text-[13px] text-gray-700">{f.value}</p>
+                            </div>
+                          ))}
+                          {app.user?.profile?.bio && (
+                            <div>
+                              <span className="text-[11px] font-medium text-gray-500">Bio</span>
+                              <p className="text-[12px] text-gray-700 whitespace-pre-wrap">{app.user.profile.bio}</p>
+                            </div>
+                          )}
+                          {app.user?.profile?.skills?.length > 0 && (
+                            <div>
+                              <span className="text-[11px] font-medium text-gray-500">Skills</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {app.user.profile.skills.map((skill, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px]">{skill}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Pipeline status buttons */}
-                      <div className="mb-4">
+                      <div>
                         <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Move to stage</p>
                         <div className="flex flex-wrap gap-1.5">
                           {PIPELINE.map((stage) => (

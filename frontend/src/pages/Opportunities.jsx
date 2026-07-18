@@ -72,6 +72,7 @@ const Opportunities = () => {
   const [appliedIds, setAppliedIds] = useState([]);
   const [savedIds, setSavedIds] = useState([]);
   const [savingIds, setSavingIds] = useState([]);
+  const [recommended, setRecommended] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -113,6 +114,20 @@ const Opportunities = () => {
       .catch(() => setSavedIds([]));
   }, [user]);
 
+  // Load recommended opportunities for logged-in volunteers
+  useEffect(() => {
+    if (!user || user.role !== 'volunteer') return;
+    const fetchRecommended = async () => {
+      try {
+        const res = await api.get('/opportunities/recommended');
+        setRecommended((res.data || []).slice(0, 6));
+      } catch {
+        setRecommended([]);
+      }
+    };
+    fetchRecommended();
+  }, [user]);
+
   const categories = useMemo(() => {
     const cats = [...new Set(opportunities.map((o) => o.category?.category_name).filter(Boolean))];
     return cats.sort();
@@ -135,6 +150,31 @@ const Opportunities = () => {
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
   }, [filtered]);
+
+  const getSkillMatchCount = (opp) => {
+    if (!user?.volunteer_skills || !opp?.skills?.length) return 0;
+    const userSkillNames = user.volunteer_skills.map((s) => (typeof s === 'string' ? s : s.skill_name)?.toLowerCase());
+    return opp.skills.filter((os) => userSkillNames.includes(os.skill?.skill_name?.toLowerCase())).length;
+  };
+
+  const hasCategoryMatch = (opp) => {
+    if (!user?.volunteer_interests?.length || !opp?.category) return false;
+    const interestCategoryMap = {
+      teaching: 'Education', healthcare: 'Healthcare', environment: 'Environment',
+      animals: 'Environment', arts: 'Arts & Culture', technology: 'Technology',
+      construction: 'Community Development', food: 'Community Development',
+      sports: 'Community Development', music: 'Arts & Culture',
+      elderly: 'Healthcare', youth: 'Education', fundraising: 'Community Development',
+      legal: 'Community Development', marketing: 'Community Development',
+      photography: 'Arts & Culture', 'mental-health': 'Healthcare',
+      disability: 'Healthcare', international: 'Community Development',
+      disaster: 'Community Development',
+    };
+    const matchedCatNames = new Set(
+      user.volunteer_interests.map((i) => interestCategoryMap[i]).filter(Boolean)
+    );
+    return matchedCatNames.has(opp.category.category_name);
+  };
 
   const totalLocations = useMemo(() => {
     const locs = new Set(opportunities.map((o) => o.location).filter(Boolean));
@@ -203,6 +243,77 @@ const Opportunities = () => {
           </div>
         </div>
       </section>
+
+      {recommended.length > 0 && (
+        <section className="mt-10 container-custom">
+          <h2 className="text-xl font-medium text-gray-900 mb-4">Recommended for You</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+            {recommended.map((opp) => {
+              const oppId = opp.opp_id || opp._id || opp.id;
+              const matchCat = hasCategoryMatch(opp);
+              const skillMatches = getSkillMatchCount(opp);
+              const totalSkills = opp.skills?.length || 0;
+              return (
+                <div
+                  key={oppId}
+                  onClick={() => oppId && navigate(`/opportunities/${oppId}`)}
+                  className="group bg-white rounded-xl border border-gray-200 hover:border-brand-green/40 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col overflow-hidden min-w-[280px] max-w-[300px] snap-start shrink-0"
+                >
+                  <div className="relative aspect-[16/9] bg-gray-100 overflow-hidden">
+                    {opp.image ? (
+                      <img
+                        src={getImageUrl(opp.image)}
+                        alt={opp.title}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <h3 className="text-[15px] font-medium leading-snug group-hover:text-brand-green transition-colors line-clamp-2">
+                        {opp.title}
+                      </h3>
+                      {(opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())) && (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Closed</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                      {matchCat && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-green-light text-brand-green">
+                          ✓ Match
+                        </span>
+                      )}
+                      {skillMatches > 0 && totalSkills > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+                          🎯 {skillMatches}/{totalSkills} skills
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-gray-500 leading-relaxed mb-3 flex-1 line-clamp-2">
+                      {opp.description}
+                    </p>
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                        </svg>
+                        {opp.location || 'Various'}
+                      </div>
+                      <span className="text-xs font-medium text-brand-green">View →</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <div className="mt-10">
         {loading ? (
@@ -325,6 +436,20 @@ const Opportunities = () => {
                                 <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Closed</span>
                               )}
                             </div>
+                            {(() => {
+                              const matchCount = getSkillMatchCount(opp);
+                              const totalSkills = opp.skills?.length || 0;
+                              if (matchCount > 0 && totalSkills > 0) {
+                                return (
+                                  <div className="mb-2">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-green-light text-brand-green">
+                                      🎯 {matchCount}/{totalSkills} skills match
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                             <p className="text-[13px] text-gray-500 leading-relaxed mb-3 flex-1 line-clamp-2">
                               {opp.description}
                             </p>

@@ -55,13 +55,17 @@ const OpportunityDetail = () => {
     const fetchRecommended = async () => {
       if (!opp?.skills?.length) return;
       try {
-        const res = await api.get('/opportunities/recommended');
+        const params = {};
+        if (user?.volunteer_interests?.length) {
+          params.interests = user.volunteer_interests.join(',');
+        }
+        const res = await api.get('/opportunities/recommended', { params });
         const filtered = (res.data || []).filter((o) => o.opp_id !== opp.opp_id).slice(0, 3);
         setRecommended(filtered);
       } catch {}
     };
     if (opp) fetchRecommended();
-  }, [opp]);
+  }, [opp, user]);
 
   const handleApply = () => {
     if (!user) {
@@ -207,15 +211,29 @@ const OpportunityDetail = () => {
               <section className="mt-10 pt-8 border-t border-gray-200">
                 <h3 className="text-lg font-medium mb-4">Similar Opportunities You Might Like</h3>
                 <div className="flex flex-col gap-3">
-                  {recommended.map((r) => (
-                    <Link key={r.opp_id} to={`/opportunities/${r.opp_id}`} className="card flex items-center justify-between py-3 px-4 hover:shadow-sm transition-shadow">
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium truncate">{r.title}</div>
-                        <div className="text-[12px] text-gray-500">{r.organization?.name}</div>
-                      </div>
-                      <span className="text-[11px] text-brand-green font-medium shrink-0">View →</span>
-                    </Link>
-                  ))}
+                  {recommended.map((r) => {
+                    const matchScore = r.matchScore || r.dataValues?.matchScore || 0;
+                    const totalSkills = r.skills?.length || 0;
+                    const hasCategoryMatch = matchScore >= 10;
+                    const skillMatches = hasCategoryMatch ? matchScore - 10 : matchScore;
+                    return (
+                      <Link key={r.opp_id} to={`/opportunities/${r.opp_id}`} className="card flex items-center justify-between py-3 px-4 hover:shadow-sm transition-shadow">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">{r.title}</div>
+                          <div className="text-[12px] text-gray-500">
+                            {r.organization?.name}
+                            {hasCategoryMatch && (
+                              <span className="ml-2 text-brand-green font-medium">✓ Match</span>
+                            )}
+                            {skillMatches > 0 && totalSkills > 0 && (
+                              <span className="ml-2 text-blue-600 font-medium">🎯 {skillMatches}/{totalSkills} skills</span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-[11px] text-brand-green font-medium shrink-0">View →</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -262,11 +280,7 @@ const OpportunityDetail = () => {
               </div>
             </div>
 
-            {isOrgOwner ? (
-              <Link to={`/opportunities/edit/${id}`} className="btn btn-primary btn-block btn-lg mb-3 inline-block text-center">
-                Edit Opportunity
-              </Link>
-            ) : (
+            {!isOrgOwner && (
               <button
                 onClick={handleApply}
                 disabled={hasApplied || opp.status === 'closed' || (opp.end_date && new Date(opp.end_date) < new Date())}

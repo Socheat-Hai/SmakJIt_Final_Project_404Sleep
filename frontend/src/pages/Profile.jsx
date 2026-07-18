@@ -240,6 +240,57 @@ const Profile = () => {
                 <div className="text-4xl mb-3">📝</div>
                 <p>No applications yet.</p>
               </div>
+            ) : user?.role === 'organization' ? (
+              (() => {
+                const grouped = {};
+                applications.forEach((app) => {
+                  const oppId = app.opportunity?.opp_id;
+                  if (!oppId) return;
+                  if (!grouped[oppId]) {
+                    grouped[oppId] = {
+                      opp_id: oppId,
+                      title: app.opportunity?.title || 'Opportunity',
+                      is_flagged: app.opportunity?.is_flagged,
+                      counts: { submitted: 0, reviewing: 0, interview: 0, accepted: 0, rejected: 0 },
+                      total: 0,
+                    };
+                  }
+                  if (grouped[oppId].counts[app.status] !== undefined) {
+                    grouped[oppId].counts[app.status]++;
+                  }
+                  grouped[oppId].total++;
+                });
+                const opps = Object.values(grouped);
+                return opps.length === 0 ? (
+                  <div className="card text-center py-10 text-gray-500">
+                    <div className="text-4xl mb-3">📝</div>
+                    <p>No applications yet.</p>
+                  </div>
+                ) : (
+                  opps.map((opp) => (
+                    <Link
+                      key={opp.opp_id}
+                      to={`/my-opportunities/${opp.opp_id}/applications`}
+                      className="card py-4 px-5 hover:shadow-md transition-shadow cursor-pointer block"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-[15px] font-medium">{opp.title}</h3>
+                        {opp.is_flagged && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-600">Flagged</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-gray-500">
+                        <span>Submitted: {opp.counts.submitted}</span>
+                        <span>Reviewing: {opp.counts.reviewing}</span>
+                        <span>Interview: {opp.counts.interview}</span>
+                        <span>Accepted: {opp.counts.accepted}</span>
+                        <span>Rejected: {opp.counts.rejected}</span>
+                      </div>
+                      <div className="text-[12px] text-gray-400 mt-1">{opp.total} total application{opp.total !== 1 ? 's' : ''}</div>
+                    </Link>
+                  ))
+                );
+              })()
             ) : (
               applications.map((app) => {
                 const isExpanded = expandedId === app.application_id;
@@ -250,43 +301,18 @@ const Profile = () => {
                       onClick={() => setExpandedId(isExpanded ? null : app.application_id)}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        {user?.role === 'organization' && (
-                          app.user?.profile?.profile_picture ? (
-                            <img src={app.user.profile.profile_picture} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-brand-green-light text-brand-green flex items-center justify-center text-sm font-medium shrink-0">
-                              {app.user?.full_name?.charAt(0)?.toUpperCase() || '?'}
-                            </div>
-                          )
-                        )}
                         <div className="min-w-0">
-                          {user?.role === 'organization' ? (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium truncate">{app.user?.full_name || 'Unknown'}</span>
-                                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColor(app.status)}`}>
-                                  {app.status}
-                                </span>
-                              </div>
-                              <div className="text-[12px] text-gray-500">
-                                {app.opportunity?.title} · {new Date(app.applied_at || app.createdAt).toLocaleDateString()}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-[15px] font-medium mb-0.5">{app.opportunity?.title || 'Opportunity'}</h4>
-                                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
-                                  app.status === 'accepted' ? 'bg-brand-green-light text-brand-green' :
-                                  app.status === 'rejected' ? 'bg-red-50 text-red-600' :
-                                  'bg-amber-50 text-amber-600'
-                                }`}>
-                                  {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                                </span>
-                              </div>
-                              <div className="text-[13px] text-gray-500">Applied {new Date(app.applied_at || app.createdAt).toLocaleDateString()}</div>
-                            </>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-[15px] font-medium mb-0.5">{app.opportunity?.title || 'Opportunity'}</h4>
+                            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                              app.status === 'accepted' ? 'bg-brand-green-light text-brand-green' :
+                              app.status === 'rejected' ? 'bg-red-50 text-red-600' :
+                              'bg-amber-50 text-amber-600'
+                            }`}>
+                              {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                            </span>
+                          </div>
+                          <div className="text-[13px] text-gray-500">Applied {new Date(app.applied_at || app.createdAt).toLocaleDateString()}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 ml-2 shrink-0">
@@ -294,80 +320,7 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {isExpanded && user?.role === 'organization' && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        {/* Pipeline status buttons */}
-                        <div className="mb-4">
-                          <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Move to stage</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {PIPELINE.map((stage) => (
-                              <button
-                                key={stage}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (stage === 'accepted') {
-                                    setAcceptingApp(app);
-                                  } else if (stage === 'interview') {
-                                    setInterviewingApp(app);
-                                  } else {
-                                    handleStatusChange(app.application_id, stage);
-                                  }
-                                }}
-                                className={`px-2.5 py-1.5 rounded text-[11px] font-medium capitalize transition-all ${
-                                  app.status === stage
-                                    ? 'bg-brand-green text-white shadow-sm'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                              >
-                                {stage}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Answers */}
-                        {(() => {
-                          const excludedTexts = new Set(['Profile Photo', 'Full Name', 'Email', 'Location', 'Skills', 'Date of Birth', 'Gender', 'Bio']);
-                          const filteredAnswers = (app.answers || []).filter(
-                            (a) => !excludedTexts.has(a.question_text) && a.answer
-                          );
-                          return filteredAnswers.length > 0 ? (
-                            <div>
-                              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Answers</p>
-                              <div className="space-y-2.5">
-                                {filteredAnswers.map((ans) => {
-                                  const isFile = ans.answer && ans.answer.startsWith('/uploads/documents/');
-                                  return (
-                                    <div key={ans.answer_id} className="bg-gray-50 rounded-lg px-3.5 py-2.5">
-                                      <p className="text-[12px] font-medium text-gray-700 mb-0.5">{ans.question_text}</p>
-                                      {isFile ? (
-                                        <a
-                                          href={ans.answer}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-2 text-[13px] text-brand-green hover:text-brand-green/80 font-medium"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                          </svg>
-                                          Download file
-                                        </a>
-                                      ) : (
-                                        <p className="text-[13px] text-gray-600 whitespace-pre-wrap">{ans.answer}</p>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-[13px] text-gray-400 italic">No answers submitted</p>
-                          );
-                        })()}
-                      </div>
-                    )}
-
-                    {isExpanded && user?.role !== 'organization' && (
+                    {isExpanded && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         {app.status === 'interview' && app.interview_info ? (
                           <div>

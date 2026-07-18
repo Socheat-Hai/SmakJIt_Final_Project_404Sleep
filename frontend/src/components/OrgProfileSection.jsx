@@ -72,14 +72,18 @@ const OrgProfileSection = () => {
     setEditing(false);
   };
 
-  const InfoItem = ({ icon, label, value, fullWidth }) => (
+  const InfoItem = ({ icon, label, value, fullWidth, href }) => (
     <div className={`flex items-start gap-3 ${fullWidth ? 'sm:col-span-2' : ''}`}>
       <div className="w-9 h-9 rounded-lg bg-brand-purple-light flex items-center justify-center shrink-0 mt-0.5">
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-[13px] text-gray-400 font-medium">{label}</p>
-        <p className="text-[15px] text-gray-800 mt-0.5 truncate">{value || <span className="text-gray-300 italic">Not set</span>}</p>
+        {href && value ? (
+          <a href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] text-brand-green hover:text-brand-green/80 mt-0.5 block break-all">{value}</a>
+        ) : (
+          <p className="text-[15px] text-gray-800 mt-0.5">{value || <span className="text-gray-300 italic">Not set</span>}</p>
+        )}
       </div>
     </div>
   );
@@ -263,11 +267,13 @@ const OrgProfileSection = () => {
                 icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
                 label="Website"
                 value={orgWebsite}
+                href={orgWebsite}
               />
               <InfoItem
                 icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>}
                 label="Social Media"
                 value={socialLink}
+                href={socialLink}
                 fullWidth
               />
             </div>
