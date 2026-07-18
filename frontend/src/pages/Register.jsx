@@ -12,7 +12,23 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [phoneDigits, setPhoneDigits] = useState('');
+
+  const formatPhone = (digits) => {
+    if (!digits) return '';
+    let formatted = '+885 ';
+    if (digits.length > 0) formatted += digits.slice(0, 2);
+    if (digits.length > 2) formatted += ' ' + digits.slice(2, 5);
+    if (digits.length > 5) formatted += ' ' + digits.slice(5, 8);
+    return formatted;
+  };
+
+  const handlePhoneChange = (e) => {
+    let raw = e.target.value.replace(/\D/g, '');
+    if (raw.startsWith('885')) raw = raw.slice(3);
+    raw = raw.replace(/^0+/, '');
+    setPhoneDigits(raw.slice(0, 8));
+  };
   const [location, setLocation] = useState('');
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
@@ -27,7 +43,7 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      const payload = { name, email, password, role, phone, location };
+      const payload = { name, email, password, role, phone: formatPhone(phoneDigits), location };
       if (isVolunteer) {
         if (dob) payload.date_of_birth = dob;
         if (gender) payload.gender = gender;
@@ -47,8 +63,9 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ background: '#F8F7F4' }}>
       <div className="card w-full max-w-[480px] p-10">
-        <Link to="/" className="text-xl font-medium text-brand-green inline-block mb-2">
-          SmakJit
+        <Link to="/" className="flex flex-col items-center mb-6">
+          <span className="text-xl font-irish font-bold text-brand-green">SmakJit</span>
+          <span className="text-[10px] text-gray-500 tracking-wide font-sans mt-0.5">NGO & Volunteer Hub</span>
         </Link>
 
         <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium capitalize mb-6 ${
@@ -105,9 +122,9 @@ const Register = () => {
               />
               <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">
                 {passwordVisible ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.05 10.05 0 0112 20c-5.5 0-10-5-10-8 1.12-2.06 2.71-3.77 4.58-4.96M1 1l22 22"/></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 )}
               </button>
             </div>
@@ -118,9 +135,9 @@ const Register = () => {
               <label>Phone Number</label>
               <input
                 type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+855 xx xxx xxx"
+                value={formatPhone(phoneDigits)}
+                onChange={handlePhoneChange}
+                placeholder="+885 xx xxx xx"
               />
             </div>
             <div className="input-group">

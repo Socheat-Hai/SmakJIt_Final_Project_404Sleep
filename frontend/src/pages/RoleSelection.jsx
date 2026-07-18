@@ -34,8 +34,9 @@ const RoleSelection = () => {
   return (
     <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#F8F7F4' }}>
       <div className="w-full max-w-[600px] text-center">
-        <Link to="/" className="text-xl font-medium text-brand-green inline-block mb-10">
-          SmakJit
+        <Link to="/" className="flex flex-col items-center mb-10">
+          <span className="text-xl font-irish font-bold text-brand-green">SmakJit</span>
+          <span className="text-[10px] text-gray-500 tracking-wide font-sans mt-0.5">NGO & Volunteer Hub</span>
         </Link>
 
         <h2 className="text-[28px] font-medium mb-2">Join as a volunteer or organization</h2>
