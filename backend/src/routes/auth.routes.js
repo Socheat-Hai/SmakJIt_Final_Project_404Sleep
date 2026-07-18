@@ -82,7 +82,7 @@ router.post("/register", authController.register);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/login", authController.login);
-router.post("/google", authController.googleLogin);
+
 
 /**
  * @openapi
