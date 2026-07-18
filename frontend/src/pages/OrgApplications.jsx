@@ -134,22 +134,10 @@ const OrgApplications = () => {
             {filtered.map((app) => {
               const isExpanded = expandedId === app.application_id;
 
-              const profileAnswerIds = new Set([-2, -3, -4, -5, -6, -7, -8, -9]);
-              const hasProfileAnswers = app.answers?.some((a) => profileAnswerIds.has(a.question_id));
-              const baseAnswers = app.answers || [];
-              const profile = app.user?.profile;
-              const allAnswers = hasProfileAnswers ? baseAnswers : [
-                { answer_id: 'profile-photo', question_id: -9, question_text: 'Profile Photo', answer: profile?.profile_picture || '' },
-                { answer_id: 'profile-name', question_id: -2, question_text: 'Full Name', answer: app.user?.full_name || '' },
-                { answer_id: 'profile-email', question_id: -3, question_text: 'Email', answer: app.user?.email || '' },
-                { answer_id: 'profile-phone', question_id: -6, question_text: 'Phone Number', answer: profile?.phone_num || '' },
-                { answer_id: 'profile-location', question_id: -5, question_text: 'Location', answer: profile?.location || '' },
-                { answer_id: 'profile-dob', question_id: -7, question_text: 'Date of Birth', answer: profile?.date_of_birth || '' },
-                { answer_id: 'profile-gender', question_id: -8, question_text: 'Gender', answer: profile?.gender || '' },
-                { answer_id: 'profile-skills', question_id: -4, question_text: 'Skills', answer: Array.isArray(profile?.skills) ? profile.skills.join(', ') : (profile?.skills || '') },
-                { answer_id: 'profile-bio', question_id: -10, question_text: 'Bio', answer: profile?.bio || '' },
-                ...baseAnswers,
-              ];
+              const excludedTexts = new Set(['Profile Photo', 'Full Name', 'Email', 'Phone Number', 'Location', 'Date of Birth', 'Gender', 'Skills', 'Bio']);
+              const allAnswers = (app.answers || []).filter(
+                (a) => !excludedTexts.has(a.question_text) && a.answer
+              );
               return (
                 <div key={app.application_id} className="card py-3 px-4">
                   <div
@@ -157,9 +145,13 @@ const OrgApplications = () => {
                     onClick={() => setExpandedId(isExpanded ? null : app.application_id)}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-brand-green-light text-brand-green flex items-center justify-center text-sm font-medium shrink-0">
-                        {app.user?.full_name?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
+                      {app.user?.profile?.profile_picture ? (
+                        <img src={app.user.profile.profile_picture} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-brand-green-light text-brand-green flex items-center justify-center text-sm font-medium shrink-0">
+                          {app.user?.full_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium truncate">{app.user?.full_name || 'Unknown'}</span>
@@ -174,6 +166,42 @@ const OrgApplications = () => {
                     </div>
                     <div className="flex items-center gap-1.5 ml-2 shrink-0">
                       <span className="text-gray-300 text-[10px]">{isExpanded ? '▲' : '▼'}</span>
+                    </div>
+                  </div>
+
+                  {/* Applicant Information - always visible */}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Applicant Information</p>
+                    <div className="bg-gray-50 rounded-lg px-3.5 py-2.5 space-y-2">
+                      {[
+                        { label: 'Full Name', value: app.user?.full_name },
+                        { label: 'Email', value: app.user?.email },
+                        { label: 'Phone Number', value: app.user?.profile?.phone_num },
+                        { label: 'Location', value: app.user?.profile?.location },
+                        { label: 'Date of Birth', value: app.user?.profile?.date_of_birth },
+                        { label: 'Gender', value: app.user?.profile?.gender },
+                      ].filter((f) => f.value).map((f) => (
+                        <div key={f.label}>
+                          <span className="text-[11px] font-medium text-gray-500">{f.label}</span>
+                          <p className="text-[13px] text-gray-700">{f.value}</p>
+                        </div>
+                      ))}
+                      {app.user?.profile?.bio && (
+                        <div>
+                          <span className="text-[11px] font-medium text-gray-500">Bio</span>
+                          <p className="text-[12px] text-gray-700 whitespace-pre-wrap">{app.user.profile.bio}</p>
+                        </div>
+                      )}
+                      {app.user?.profile?.skills?.length > 0 && (
+                        <div>
+                          <span className="text-[11px] font-medium text-gray-500">Skills</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {app.user.profile.skills.map((skill, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px]">{skill}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -215,14 +243,10 @@ const OrgApplications = () => {
                           <div className="space-y-2.5">
                             {allAnswers.map((ans) => {
                               const isFile = ans.answer && ans.answer.startsWith('/uploads/documents/');
-                              const isImage = ans.answer && (ans.answer.startsWith('/uploads/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(ans.answer));
-                              const isProfilePhoto = ans.question_id === -9;
                               return (
                                 <div key={ans.answer_id} className="bg-gray-50 rounded-lg px-3.5 py-2.5">
                                   <p className="text-[12px] font-medium text-gray-700 mb-0.5">{ans.question_text}</p>
-                                  {isProfilePhoto && isImage ? (
-                                    <img src={ans.answer} alt="Profile" className="w-16 h-16 rounded-full object-cover mt-1" />
-                                  ) : isFile ? (
+                                  {isFile ? (
                                     <a
                                       href={ans.answer}
                                       target="_blank"
@@ -235,7 +259,7 @@ const OrgApplications = () => {
                                       Download file
                                     </a>
                                   ) : (
-                                    <p className="text-[13px] text-gray-600 whitespace-pre-wrap">{ans.answer || '—'}</p>
+                                    <p className="text-[13px] text-gray-600 whitespace-pre-wrap">{ans.answer}</p>
                                   )}
                                 </div>
                               );

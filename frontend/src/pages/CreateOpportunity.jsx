@@ -19,14 +19,8 @@ const provinces = [
 const questionTypes = [
   { value: 'text', label: 'Short Answer', icon: 'T' },
   { value: 'long_text', label: 'Long Answer', icon: '¶' },
-  { value: 'yes_no', label: 'Yes / No', icon: 'YN' },
-  { value: 'radio', label: 'Multiple Choice', icon: '◉' },
-  { value: 'checkbox', label: 'Checkboxes', icon: '☑' },
   { value: 'file', label: 'File Upload', icon: '⬆' },
 ];
-
-let nextQid = 1;
-const makeQid = () => nextQid++;
 
 const CreateOpportunity = () => {
   const { id } = useParams();
@@ -107,11 +101,9 @@ const CreateOpportunity = () => {
         if (opp.customQuestions && Array.isArray(opp.customQuestions)) {
           const loaded = opp.customQuestions.map((q) => ({
             ...q,
-            question_id: q.question_id || makeQid(),
             options: q.options || [],
           }));
           setQuestions(loaded);
-          nextQid = loaded.length + 1;
         }
       } catch {
         showToast('Failed to load opportunity', 'error');
@@ -129,62 +121,27 @@ const CreateOpportunity = () => {
     setQuestions((prev) => [
       ...prev,
       {
-        question_id: makeQid(),
         text: '',
         type,
         required: false,
-        options: (type === 'checkbox' || type === 'radio') ? [{ label: 'Option 1', value: 'option_1' }] : [],
         placeholder: '',
         max_words: type === 'long_text' ? 500 : undefined,
       },
     ]);
   };
 
-  const updateQuestion = (qid, field, value) => {
+  const updateQuestion = (idx, field, value) => {
     setQuestions((prev) =>
-      prev.map((q) => (q.question_id === qid ? { ...q, [field]: value } : q))
+      prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q))
     );
   };
 
-  const removeQuestion = (qid) => {
-    setQuestions((prev) => prev.filter((q) => q.question_id !== qid));
+  const removeQuestion = (idx) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const addOption = (qid) => {
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.question_id !== qid) return q;
-        const num = (q.options?.length || 0) + 1;
-        return { ...q, options: [...(q.options || []), { label: `Option ${num}`, value: `option_${num}` }] };
-      })
-    );
-  };
-
-  const updateOption = (qid, idx, field, value) => {
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.question_id !== qid) return q;
-        const opts = [...(q.options || [])];
-        opts[idx] = { ...opts[idx], [field]: value };
-        return { ...q, options: opts };
-      })
-    );
-  };
-
-  const removeOption = (qid, idx) => {
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.question_id !== qid) return q;
-        const opts = (q.options || []).filter((_, i) => i !== idx);
-        return { ...q, options: opts };
-      })
-    );
-  };
-
-  const moveQuestion = (qid, dir) => {
+  const moveQuestion = (idx, dir) => {
     setQuestions((prev) => {
-      const idx = prev.findIndex((q) => q.question_id === qid);
-      if (idx < 0) return prev;
       const newIdx = idx + dir;
       if (newIdx < 0 || newIdx >= prev.length) return prev;
       const copy = [...prev];
@@ -234,12 +191,10 @@ const CreateOpportunity = () => {
       }
 
       if (questions.length > 0) {
-        payload.customQuestions = questions.map((q, idx) => ({
-          question_id: idx + 1,
+        payload.customQuestions = questions.map((q) => ({
           text: q.text.trim(),
           type: q.type,
           required: q.required,
-          options: (q.type === 'checkbox' || q.type === 'radio') ? (q.options || []).map((o) => ({ label: o.label, value: o.value })) : undefined,
           placeholder: (q.type === 'text' || q.type === 'long_text') ? (q.placeholder || '') : undefined,
           max_words: q.type === 'long_text' ? (q.max_words || undefined) : undefined,
         }));
@@ -400,12 +355,12 @@ const CreateOpportunity = () => {
             {questions.length > 0 && (
               <div className="mt-4 space-y-3">
                 {questions.map((q, idx) => (
-                  <div key={q.question_id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start gap-3 mb-3">
                       <div className="flex flex-col gap-1 pt-1">
                         <button
                           type="button"
-                          onClick={() => moveQuestion(q.question_id, -1)}
+                          onClick={() => moveQuestion(idx, -1)}
                           disabled={idx === 0}
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-30 p-0.5"
                           title="Move up"
@@ -414,7 +369,7 @@ const CreateOpportunity = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => moveQuestion(q.question_id, 1)}
+                          onClick={() => moveQuestion(idx, 1)}
                           disabled={idx === questions.length - 1}
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-30 p-0.5"
                           title="Move down"
@@ -425,28 +380,25 @@ const CreateOpportunity = () => {
 
                       <div className="flex-1 space-y-3">
                         <input
-                          id={`question-${q.question_id}-text`}
-                          name={`question-${q.question_id}-text`}
+                          id={`question-${idx}-text`}
+                          name={`question-${idx}-text`}
                           type="text"
                           value={q.text}
-                          onChange={(e) => updateQuestion(q.question_id, 'text', e.target.value)}
+                          onChange={(e) => updateQuestion(idx, 'text', e.target.value)}
                           placeholder="Type your question here..."
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green/20 transition-all"
                         />
 
                         <div className="flex flex-wrap items-center gap-2">
                           <select
-                            id={`question-${q.question_id}-type`}
-                            name={`question-${q.question_id}-type`}
+                            id={`question-${idx}-type`}
+                            name={`question-${idx}-type`}
                             value={q.type}
                             onChange={(e) => {
                               const newType = e.target.value;
-                              updateQuestion(q.question_id, 'type', newType);
-                              if ((newType === 'checkbox' || newType === 'radio') && (!q.options || q.options.length === 0)) {
-                                updateQuestion(q.question_id, 'options', [{ label: 'Option 1', value: 'option_1' }]);
-                              }
+                              updateQuestion(idx, 'type', newType);
                               if (newType === 'long_text') {
-                                updateQuestion(q.question_id, 'max_words', q.max_words || 500);
+                                updateQuestion(idx, 'max_words', q.max_words || 500);
                               }
                             }}
                             className="px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
@@ -458,11 +410,11 @@ const CreateOpportunity = () => {
 
                           {(q.type === 'text' || q.type === 'long_text') && (
                             <input
-                              id={`question-${q.question_id}-placeholder`}
-                              name={`question-${q.question_id}-placeholder`}
+                              id={`question-${idx}-placeholder`}
+                              name={`question-${idx}-placeholder`}
                               type="text"
                               value={q.placeholder || ''}
-                              onChange={(e) => updateQuestion(q.question_id, 'placeholder', e.target.value)}
+                              onChange={(e) => updateQuestion(idx, 'placeholder', e.target.value)}
                               placeholder="Placeholder text..."
                               className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
                             />
@@ -470,12 +422,12 @@ const CreateOpportunity = () => {
 
                           {q.type === 'long_text' && (
                             <input
-                              id={`question-${q.question_id}-max-words`}
-                              name={`question-${q.question_id}-max-words`}
+                              id={`question-${idx}-max-words`}
+                              name={`question-${idx}-max-words`}
                               type="number"
                               min="1"
                               value={q.max_words || ''}
-                              onChange={(e) => updateQuestion(q.question_id, 'max_words', e.target.value ? Number(e.target.value) : undefined)}
+                              onChange={(e) => updateQuestion(idx, 'max_words', e.target.value ? Number(e.target.value) : undefined)}
                               placeholder="Max words"
                               className="w-24 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
                             />
@@ -483,53 +435,22 @@ const CreateOpportunity = () => {
 
                           <label className="flex items-center gap-1.5 text-[13px] text-gray-600 cursor-pointer select-none ml-auto">
                             <input
-                              id={`question-${q.question_id}-required`}
-                              name={`question-${q.question_id}-required`}
+                              id={`question-${idx}-required`}
+                              name={`question-${idx}-required`}
                               type="checkbox"
                               checked={q.required}
-                              onChange={(e) => updateQuestion(q.question_id, 'required', e.target.checked)}
+                              onChange={(e) => updateQuestion(idx, 'required', e.target.checked)}
                               className="w-3.5 h-3.5 rounded border-gray-300 text-brand-green focus:ring-brand-green/20"
                             />
                             Required
                           </label>
                         </div>
 
-                        {(q.type === 'checkbox' || q.type === 'radio') && (
-                          <div className="space-y-2 pl-1">
-                            {(q.options || []).map((opt, optIdx) => (
-                              <div key={optIdx} className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded border-2 border-gray-300 shrink-0" />
-                                <input
-                                  id={`question-${q.question_id}-option-${optIdx}`}
-                                  name={`question-${q.question_id}-option-${optIdx}`}
-                                  type="text"
-                                  value={opt.label}
-                                  onChange={(e) => updateOption(q.question_id, optIdx, 'label', e.target.value)}
-                                  className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] bg-white outline-none focus:border-brand-green"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => removeOption(q.question_id, optIdx)}
-                                  className="text-gray-400 hover:text-red-500 p-0.5"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
-                              </div>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => addOption(q.question_id)}
-                              className="text-[13px] text-brand-purple font-medium hover:underline"
-                            >
-                              + Add option
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       <button
                         type="button"
-                        onClick={() => removeQuestion(q.question_id)}
+                        onClick={() => removeQuestion(idx)}
                         className="text-gray-400 hover:text-red-500 p-1 shrink-0"
                         title="Remove question"
                       >

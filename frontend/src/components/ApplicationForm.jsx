@@ -47,124 +47,6 @@ const QuestionRenderer = ({ question, value, onChange, onFileChange, error }) =>
       );
     }
 
-    case 'yes_no':
-      return (
-        <div className="input-group">
-          <label>
-            {question.text}
-            {question.required && <span className="text-red-400 ml-1">*</span>}
-          </label>
-          <div className="flex gap-3 mt-1">
-            {['Yes', 'No'].map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => onChange(opt)}
-                className={`flex-1 px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
-                  value === opt
-                    ? 'border-brand-green bg-brand-green-light text-brand-green'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-          {error && <p className="form-error">{error}</p>}
-        </div>
-      );
-
-    case 'radio': {
-      const options = question.options?.length
-        ? question.options
-        : [{ label: 'Option 1', value: 'option_1' }];
-      return (
-        <div className="input-group">
-          <label>
-            {question.text}
-            {question.required && <span className="text-red-400 ml-1">*</span>}
-          </label>
-          <div className="flex flex-col gap-2.5 mt-1">
-            {options.map((opt) => (
-              <label
-                key={opt.value}
-                onClick={(e) => { e.preventDefault(); onChange(opt.value); }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                  value === opt.value
-                    ? 'border-brand-green bg-brand-green-light'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                    value === opt.value
-                      ? 'border-brand-green'
-                      : 'border-gray-300'
-                  }`}
-                >
-                  {value === opt.value && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-brand-green" />
-                  )}
-                </div>
-                <span className="text-sm text-gray-700">{opt.label}</span>
-              </label>
-            ))}
-          </div>
-          {error && <p className="form-error">{error}</p>}
-        </div>
-      );
-    }
-
-    case 'checkbox': {
-      const options = question.options?.length
-        ? question.options
-        : [{ label: 'Yes', value: 'yes' }];
-      const selected = value ? value.split(',').map((s) => s.trim()) : [];
-      const toggle = (val) => {
-        const next = selected.includes(val)
-          ? selected.filter((v) => v !== val)
-          : [...selected, val];
-        onChange(next.join(', '));
-      };
-      return (
-        <div className="input-group">
-          <label>
-            {question.text}
-            {question.required && <span className="text-red-400 ml-1">*</span>}
-          </label>
-          <div className="flex flex-col gap-2.5 mt-1">
-            {options.map((opt) => (
-              <label
-                key={opt.value}
-                onClick={(e) => { e.preventDefault(); toggle(opt.value); }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                  selected.includes(opt.value)
-                    ? 'border-brand-green bg-brand-green-light'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                    selected.includes(opt.value)
-                      ? 'border-brand-green bg-brand-green'
-                      : 'border-gray-300'
-                  }`}
-                >
-                  {selected.includes(opt.value) && (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <span className="text-sm text-gray-700">{opt.label}</span>
-              </label>
-            ))}
-          </div>
-          {error && <p className="form-error">{error}</p>}
-        </div>
-      );
-    }
-
     case 'file': {
       const fileName = value || '';
       return (
@@ -224,7 +106,7 @@ const ApplicationForm = ({
 
   const profile = user.volunteer_profile;
   const skills = user.volunteer_skills?.map((s) => typeof s === 'string' ? s : (s.skill?.skill_name || s.skill_name)).filter(Boolean) || [];
-  const questions = opportunity.questions || [];
+  const questions = opportunity.customQuestions || opportunity.questions || [];
 
   const setAnswer = useCallback((qid, val) => {
     setAnswers((prev) => ({ ...prev, [qid]: val }));
@@ -252,18 +134,18 @@ const ApplicationForm = ({
     if (!coverLetter.trim()) {
       errs['cover'] = 'Please write a cover letter';
     }
-    questions.forEach((q) => {
+    questions.forEach((q, idx) => {
       if (q.type === 'file') {
-        if (q.required && !fileAnswers[q.question_id]) {
-          errs[`q_${q.question_id}`] = 'This question is required';
+        if (q.required && !fileAnswers[idx]) {
+          errs[`q_${idx}`] = 'This question is required';
         }
-      } else if (q.required && (!answers[q.question_id] || !answers[q.question_id].trim())) {
-        errs[`q_${q.question_id}`] = 'This question is required';
+      } else if (q.required && (!answers[idx] || !answers[idx].trim())) {
+        errs[`q_${idx}`] = 'This question is required';
       }
-      if (q.type === 'long_text' && q.max_words && answers[q.question_id]) {
-        const wordCount = answers[q.question_id].trim().split(/\s+/).length;
+      if (q.type === 'long_text' && q.max_words && answers[idx]) {
+        const wordCount = answers[idx].trim().split(/\s+/).length;
         if (wordCount > q.max_words) {
-          errs[`q_${q.question_id}`] = `Answer exceeds ${q.max_words} word limit (${wordCount} words)`;
+          errs[`q_${idx}`] = `Answer exceeds ${q.max_words} word limit (${wordCount} words)`;
         }
       }
     });
@@ -281,53 +163,27 @@ const ApplicationForm = ({
     try {
       const uploadedFiles = {};
 
-      for (const [qid, file] of Object.entries(fileAnswers)) {
+      for (const [idx, file] of Object.entries(fileAnswers)) {
         const formData = new FormData();
         formData.append('document', file);
         const uploadRes = await api.post('/upload/document', formData);
-        uploadedFiles[parseInt(qid)] = uploadRes.data.url;
+        uploadedFiles[idx] = uploadRes.data.url;
       }
-
-      const profileAnswers = [
-        {
-          question_id: -2,
-          question_text: 'Full Name',
-          answer: profile?.full_name || '',
-        },
-        {
-          question_id: -3,
-          question_text: 'Email',
-          answer: user.email || '',
-        },
-        {
-          question_id: -4,
-          question_text: 'Skills',
-          answer: skills.join(', ') || '',
-        },
-        {
-          question_id: -5,
-          question_text: 'Location',
-          answer: profile?.location || '',
-        },
-      ];
 
       const payloadAnswers = [
         {
-          question_id: -1,
           question_text: 'Cover Letter',
           answer: coverLetter.trim(),
         },
-        ...profileAnswers,
       ];
 
-      questions.forEach((q) => {
-        if (answers[q.question_id]) {
-          let answerValue = answers[q.question_id];
-          if (q.type === 'file' && uploadedFiles[q.question_id]) {
-            answerValue = uploadedFiles[q.question_id];
+      questions.forEach((q, idx) => {
+        if (answers[idx]) {
+          let answerValue = answers[idx];
+          if (q.type === 'file' && uploadedFiles[idx]) {
+            answerValue = uploadedFiles[idx];
           }
           payloadAnswers.push({
-            question_id: q.question_id,
             question_text: q.text,
             answer: answerValue,
           });
@@ -397,14 +253,14 @@ const ApplicationForm = ({
               <h3 className="text-base font-semibold text-gray-900">Additional Questions</h3>
             </div>
             <div className="space-y-5">
-              {questions.map((q) => (
+              {questions.map((q, idx) => (
                 <QuestionRenderer
-                  key={q.question_id}
+                  key={idx}
                   question={q}
-                  value={answers[q.question_id] || ''}
-                  onChange={(val) => setAnswer(q.question_id, val)}
-                  onFileChange={q.type === 'file' ? (file) => setFileAnswer(q.question_id, file) : undefined}
-                  error={errors[`q_${q.question_id}`]}
+                  value={answers[idx] || ''}
+                  onChange={(val) => setAnswer(idx, val)}
+                  onFileChange={q.type === 'file' ? (file) => setFileAnswer(idx, file) : undefined}
+                  error={errors[`q_${idx}`]}
                 />
               ))}
             </div>

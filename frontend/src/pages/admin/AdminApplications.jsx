@@ -67,6 +67,9 @@ const AdminApplications = () => {
               <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === item._id ? null : item._id)}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
+                    {item.user?.profile?.profile_picture ? (
+                      <img src={item.user.profile.profile_picture} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                    ) : null}
                     <h3 className="text-sm font-medium truncate">{item.volunteerName}</h3>
                     <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColor(item.status)}`}>{item.status}</span>
                   </div>
@@ -106,22 +109,30 @@ const AdminApplications = () => {
                   </Section>
 
                   {/* Application Answers */}
-                  {app.answers?.length > 0 && (
-                    <Section title="Application Answers">
-                      {app.answers.map((ans) => (
-                        <div key={ans.answer_id} className="mb-2">
-                          <span className="text-[11px] font-medium text-gray-500 block mb-0.5">{ans.question_text}</span>
-                          <p className="text-[12px] text-gray-700 bg-gray-50 p-2.5 rounded whitespace-pre-wrap">{ans.answer}</p>
-                        </div>
-                      ))}
-                    </Section>
-                  )}
+                  {(() => {
+                    const excludedTexts = new Set(['Profile Photo', 'Full Name', 'Email', 'Location', 'Skills', 'Date of Birth', 'Gender', 'Bio']);
+                    const filteredAnswers = (app.answers || []).filter(
+                      (a) => !excludedTexts.has(a.question_text) && a.answer
+                    );
+                    return filteredAnswers.length > 0 ? (
+                      <Section title="Application Answers">
+                        {filteredAnswers.map((ans) => {
+                          return (
+                            <div key={ans.answer_id} className="mb-2">
+                              <span className="text-[11px] font-medium text-gray-500 block mb-0.5">{ans.question_text}</span>
+                              <p className="text-[12px] text-gray-700 bg-gray-50 p-2.5 rounded whitespace-pre-wrap">{ans.answer}</p>
+                            </div>
+                          );
+                        })}
+                      </Section>
+                    ) : null;
+                  })()}
 
                   {/* Application Meta */}
                   <Section title="Application Info">
                     <InfoRow label="Applied" value={new Date(item.applied_at || item.createdAt).toLocaleDateString()} />
                     <InfoRow label="Status" value={item.status} />
-                    {item.opportunity?.questions?.length > 0 && app.answers?.length === 0 && (
+                    {(item.opportunity?.customQuestions?.length > 0 || item.opportunity?.questions?.length > 0) && app.answers?.length === 0 && (
                       <p className="text-[12px] text-gray-400 italic">No answers submitted</p>
                     )}
                   </Section>
