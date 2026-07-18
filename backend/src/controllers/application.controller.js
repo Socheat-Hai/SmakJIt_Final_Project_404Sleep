@@ -34,7 +34,7 @@ const submit = async (req, res) => {
       return res.status(400).json({ message: 'The application deadline has passed' });
     }
 
-    const questions = opportunity.customQuestions || opportunity.questions || [];
+    const questions = opportunity.customQuestions || [];
     if (answers && answers.length > 0 && questions.length > 0) {
       const requiredQuestions = questions.filter((q) => q.required);
       const answeredTexts = new Set(answers.map((a) => a.question_text));
