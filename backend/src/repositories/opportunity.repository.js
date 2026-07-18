@@ -42,26 +42,74 @@ const count = async (where = {}) => {
   return Opportunity.count({ where });
 };
 
-const findRecommended = async (skillIds, limit = 10) => {
-  // FIX: Guard against empty or invalid skillIds to prevent SQL crash
-  if (!skillIds || skillIds.length === 0) return [];
-  const safeIds = skillIds.map(Number).filter(n => !isNaN(n) && Number.isFinite(n));
-  if (safeIds.length === 0) return [];
+const findRecommended = async (skillIds, catNames = [], limit = 10) => {
+  const safeSkillIds = (skillIds || []).map(Number).filter(n => !isNaN(n) && Number.isFinite(n));
+  const hasSkills = safeSkillIds.length > 0;
+  const hasCats = catNames && catNames.length > 0;
+
+  if (!hasSkills && !hasCats) return [];
+
+  const where = { status: 'open' };
+
+  // Match by skills OR by category
+  const orConditions = [];
+  if (hasSkills) {
+    const idList = safeSkillIds.join(',');
+    orConditions.push(
+      db.sequelize.literal(
+        `(SELECT COUNT(*) FROM "OpportunitySkill" WHERE "OpportunitySkill"."opp_id" = "Opportunity"."opp_id" AND "OpportunitySkill"."skill_id" IN (${idList})) > 0`
+      )
+    );
+  }
+  if (hasCats) {
+    const catList = catNames.map(c => `'${c.replace(/'/g, "''")}'`).join(',');
+    orConditions.push(
+      db.sequelize.literal(
+        `"Opportunity"."category_id" IN (SELECT "category_id" FROM "Category" WHERE "name" IN (${catList}))`
+      )
+    );
+  }
+
+  if (orConditions.length === 1) {
+    where[db.Sequelize.Op.and] = [orConditions[0]];
+  } else {
+    where[db.Sequelize.Op.or] = orConditions;
+  }
+
+  // Build match score: skill matches + category bonus (10 per category match)
+  const scoreParts = [];
+  if (hasSkills) {
+    const idList = safeSkillIds.join(',');
+    scoreParts.push(
+      db.sequelize.literal(
+        `(SELECT COUNT(*) FROM "OpportunitySkill" WHERE "OpportunitySkill"."opp_id" = "Opportunity"."opp_id" AND "OpportunitySkill"."skill_id" IN (${idList}))`
+      )
+    );
+  }
+  if (hasCats) {
+    const catList = catNames.map(c => `'${c.replace(/'/g, "''")}'`).join(',');
+    scoreParts.push(
+      db.sequelize.literal(
+        `CASE WHEN "Opportunity"."category_id" IN (SELECT "category_id" FROM "Category" WHERE "name" IN (${catList})) THEN 10 ELSE 0 END`
+      )
+    );
+  }
+
+  const scoreExpr = scoreParts.length === 1
+    ? scoreParts[0]
+    : db.sequelize.literal(scoreParts.map((part) => `(${part.val})`).join(' + '));
 
   return Opportunity.findAll({
-    where: {
-      status: 'open',
-      opp_id: {
-        [db.Sequelize.Op.in]: db.sequelize.literal(
-          `(SELECT opp_id FROM "OpportunitySkill" WHERE skill_id IN (${safeIds.join(',')}))`
-        ),
-      },
+    where,
+    attributes: {
+      include: [[scoreExpr, 'matchScore']],
     },
     include: [
       { model: Organization, as: 'organization', attributes: ['org_id', 'name', 'logo'] },
       { model: Category, as: 'category' },
+      { model: OpportunitySkill, as: 'skills', separate: true, include: [{ model: Skill, as: 'skill' }] },
     ],
-    order: [['created_at', 'DESC']],
+    order: [[db.sequelize.literal('"matchScore"'), 'DESC'], ['created_at', 'DESC']],
     limit,
   });
 };

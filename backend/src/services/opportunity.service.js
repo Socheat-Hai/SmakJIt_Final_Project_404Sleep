@@ -35,8 +35,8 @@ const create = async (data) => {
   return oppRepository.create(data);
 };
 
-const findRecommended = async (skillIds) => {
-  return oppRepository.findRecommended(skillIds);
+const findRecommended = async (skillIds, catNames = []) => {
+  return oppRepository.findRecommended(skillIds, catNames);
 };
 
 const update = async (id, data) => {

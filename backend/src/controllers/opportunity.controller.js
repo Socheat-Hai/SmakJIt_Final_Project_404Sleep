@@ -136,39 +136,93 @@ const interestSkillMap = {
   photography: ['Photography', 'Attention to Detail', 'Technology'],
 };
 
-// FIX: Actually use interestSkillMap for personalized recommendations
+const interestCategoryMap = {
+  teaching: 'Education',
+  healthcare: 'Healthcare',
+  environment: 'Environment',
+  animals: 'Environment',
+  arts: 'Arts & Culture',
+  technology: 'Technology',
+  construction: 'Community Development',
+  food: 'Community Development',
+  sports: 'Community Development',
+  music: 'Arts & Culture',
+  elderly: 'Healthcare',
+  youth: 'Education',
+  fundraising: 'Community Development',
+  legal: 'Community Development',
+  marketing: 'Community Development',
+  photography: 'Arts & Culture',
+  'mental-health': 'Healthcare',
+  disability: 'Healthcare',
+  international: 'Community Development',
+  disaster: 'Community Development',
+};
+
 const getRecommended = async (req, res) => {
   try {
-    const { interests } = req.query;
+    const { Skill, Category } = db;
+    const skillIdsSet = new Set();
+    const categoryNames = new Set();
+    let allInterests = [];
 
-    // If user passes interests, try to match skills
-    if (interests) {
-      const interestList = interests.split(',').map(i => i.trim().toLowerCase());
-      const skillNames = new Set();
-      for (const interest of interestList) {
-        const skills = interestSkillMap[interest];
-        if (skills) skills.forEach(s => skillNames.add(s));
+    // 1. Load volunteer profile if logged in
+    let profile = null;
+    if (req.user?.user_id) {
+      profile = await db.VolunteerProfile.findOne({ where: { user_id: req.user.user_id } });
+
+      // Direct volunteer skills
+      if (profile?.skills && profile.skills.length > 0) {
+        const skillNames = profile.skills.map(s => (typeof s === 'string' ? s : s.skill_name));
+        const skillRecords = await Skill.findAll({
+          where: { skill_name: { [require('sequelize').Op.in]: skillNames } },
+        });
+        skillRecords.forEach(s => skillIdsSet.add(s.skill_id));
       }
 
-      if (skillNames.size > 0) {
-        const db = require('../models');
-        const { Skill } = db;
-        const skillRecords = await Skill.findAll({
-          where: { skill_name: { [require('sequelize').Op.in]: [...skillNames] } },
-        });
-        const skillIds = skillRecords.map(s => s.skill_id);
-
-        if (skillIds.length > 0) {
-          const recommended = await opportunityService.findRecommended(skillIds);
-          return res.json(recommended);
-        }
+      // Collect interests from profile
+      if (profile?.interests && profile.interests.length > 0) {
+        allInterests = profile.interests.map(i => i.trim().toLowerCase());
       }
     }
 
-    // Fallback: return latest 10 open opportunities
+    // 2. Also support explicit ?interests= query param (overrides profile interests)
+    if (req.query.interests) {
+      allInterests = req.query.interests.split(',').map(i => i.trim().toLowerCase());
+    }
+
+    // 3. Map interests → skill IDs (secondary signal)
+    const interestSkillNames = new Set();
+    for (const interest of allInterests) {
+      const skills = interestSkillMap[interest];
+      if (skills) skills.forEach(s => interestSkillNames.add(s));
+    }
+    if (interestSkillNames.size > 0) {
+      const skillRecords = await Skill.findAll({
+        where: { skill_name: { [require('sequelize').Op.in]: [...interestSkillNames] } },
+      });
+      skillRecords.forEach(s => skillIdsSet.add(s.skill_id));
+    }
+
+    // 4. Map interests → category names (primary signal — most direct match)
+    for (const interest of allInterests) {
+      const catName = interestCategoryMap[interest];
+      if (catName) categoryNames.add(catName);
+    }
+
+    const skillIds = [...skillIdsSet];
+    const catNames = [...categoryNames];
+
+    if (skillIds.length > 0 || catNames.length > 0) {
+      const recommended = await opportunityService.findRecommended(skillIds, catNames);
+      return res.json(recommended);
+    }
+
+    // Fallback: return latest open opportunities
     const all = await opportunityService.findAll({ page: 1, limit: 10 });
     return res.json(all.data);
   } catch (error) {
+    console.error('[Recommended] error:', error);
     res.status(500).json({ message: error.message });
   }
 };
