@@ -1,0 +1,9 @@
+# Environment variables / secrets
+.env
+
+# Database backups
+**/*.dump
+
+# Build output
+dist/
+build/
