@@ -18,7 +18,7 @@ const userInclude = [
 
 const findByEmail = async (email) => {
   // Use case‑insensitive search to match stored emails regardless of case
-  return User.findOne({ where: { email: { [Op.iLike]: email } }, include: userInclude });
+  return User.findOne({ where: { email: { [Op.eq]: email.toLowerCase().trim() } }, include: userInclude });
 };
 
 const create = async (data) => {

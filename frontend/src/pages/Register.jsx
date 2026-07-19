@@ -19,7 +19,7 @@ const Register = () => {
     let formatted = '+885 ';
     if (digits.length > 0) formatted += digits.slice(0, 2);
     if (digits.length > 2) formatted += ' ' + digits.slice(2, 5);
-    if (digits.length > 5) formatted += ' ' + digits.slice(5, 8);
+    if (digits.length > 5) formatted += ' ' + digits.slice(5, 9);
     return formatted;
   };
 
@@ -27,8 +27,9 @@ const Register = () => {
     let raw = e.target.value.replace(/\D/g, '');
     if (raw.startsWith('885')) raw = raw.slice(3);
     raw = raw.replace(/^0+/, '');
-    setPhoneDigits(raw.slice(0, 8));
+    setPhoneDigits(raw.slice(0, 9));
   };
+
   const [location, setLocation] = useState('');
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
