@@ -1,33 +1,8 @@
 'use strict';
 
-/*
- * ─── Demo Data Seeder ─────────────────────────────────────────────
- * Generates a reproducible set of demo records for all tables.
- *
- * All user accounts share the same password:
- *   Password123
- *
- * ID ranges (deterministic ── never use Math.random):
- *   Users:          1-33   (1-3 admin, 4-13 org_owner, 14-33 volunteer)
- *   Organizations:  1-10
- *   Categories:     1-5
- *   Skills:         1-10
- *   VolunteerProfiles: 1-20  (maps to user_id 14-33)
- *   Opportunities:  1-50
- *   Applications:   1-60
- *   SavedOpportunities: 1-30
- *
- * After bulk-inserts, every affected auto-increment sequence is
- * advanced past the highest explicit ID.
- */
-
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 
-// -------------------------------------------------------------------
-// Configurable constants  (tweak here to scale, then verify with
-//   `node scripts/verify-seeder.js`)
-// -------------------------------------------------------------------
 
 const ADMIN_COUNT = 3;
 const ORG_OWNER_COUNT = 10;
@@ -35,6 +10,10 @@ const VOLUNTEER_COUNT = 20;
 
 const DEMO_PASSWORD = 'Password123';
 const PASSWORD_HASH = bcrypt.hashSync(DEMO_PASSWORD, 10);
+
+const now = new Date();
+const OPP_START_DATE = new Date(now.getFullYear(), now.getMonth(), 1); // 1st of this month
+const OPP_END_DATE = new Date(now.getFullYear(), now.getMonth() + 6, 0); // ~6 months out
 
 const CATEGORY_NAMES = [
   'Education',
@@ -58,6 +37,15 @@ const SKILL_NAMES = [
   'Fundraising',
   'Technology',
 ];
+
+const SKILLS_BY_CATEGORY = {
+  Education: ['Teaching', 'Event Planning', 'Fundraising'],
+  Healthcare: ['Nursing', 'Cooking', 'Event Planning'],
+  Environment: ['Gardening', 'Driving', 'Fundraising'],
+  'Community Development': ['Event Planning', 'Fundraising', 'Cooking', 'Driving'],
+  'Arts & Culture': ['Photography', 'Event Planning', 'Teaching'],
+  Technology: ['IT Support', 'Technology', 'Teaching'],
+};
 
 const ORG_NAMES = [
   'EduCare Foundation',
@@ -208,9 +196,6 @@ const VOLUNTEER_PROFILE_IDS = Array.from(
   (_, i) => i + 1,
 );
 
-// -------------------------------------------------------------------
-// Build rows  (pure loops, no randomness)
-// -------------------------------------------------------------------
 
 function buildUsers() {
   const rows = [];
@@ -366,8 +351,8 @@ function buildOpportunities() {
         benefits: 'Certificate of participation, networking opportunities, skill development.',
         location: LOCATIONS[(oppId * 7) % LOCATIONS.length],
         work_time: orgIdx % 3 === 0 ? 'weekdays' : orgIdx % 3 === 1 ? 'weekends' : 'flexible',
-        start_date: '2025-08-01',
-        end_date: '2025-12-31',
+        start_date: OPP_START_DATE,
+        end_date: OPP_END_DATE,
         format: orgIdx % 2 === 0 ? 'onsite' : 'hybrid',
         org_id: orgId,
         posted_by: ownerId,
@@ -389,22 +374,27 @@ function buildOpportunities() {
 function buildOpportunitySkills() {
   const rows = [];
   const usedPairs = new Set();
+  const skillNameToId = Object.fromEntries(
+    SKILL_NAMES.map((name, i) => [name, SKILL_IDS[i]])
+  );
 
-  for (let oppIdx = 0; oppIdx < OPPORTUNITY_IDS.length; oppIdx++) {
-    const oppId = OPPORTUNITY_IDS[oppIdx];
-    const skillCount =
-      oppIdx % 2 === 0
-        ? SKILLS_PER_OPP_RANGE[0]
-        : SKILLS_PER_OPP_RANGE[1];
+  let oppId = 1;
+  for (let catIdx = 0; catIdx < CATEGORY_NAMES.length; catIdx++) {
+    const categoryName = CATEGORY_NAMES[catIdx];
+    const pool = SKILLS_BY_CATEGORY[categoryName];
 
-    for (let s = 0; s < skillCount; s++) {
-      const skillId = ((oppIdx + s * 3) % SKILL_IDS.length) + 1;
-      const key = `${oppId}-${skillId}`;
+    for (let orgIdx = 0; orgIdx < ORG_OWNER_COUNT; orgIdx++) {
+      const skillCount = orgIdx % 2 === 0 ? SKILLS_PER_OPP_RANGE[0] : SKILLS_PER_OPP_RANGE[1];
 
-      if (!usedPairs.has(key)) {
-        usedPairs.add(key);
-        rows.push({ opp_id: oppId, skill_id: skillId });
+      for (let s = 0; s < skillCount && s < pool.length; s++) {
+        const skillId = skillNameToId[pool[s]];
+        const key = `${oppId}-${skillId}`;
+        if (!usedPairs.has(key)) {
+          usedPairs.add(key);
+          rows.push({ opp_id: oppId, skill_id: skillId });
+        }
       }
+      oppId++;
     }
   }
 
